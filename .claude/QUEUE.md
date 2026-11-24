@@ -7,7 +7,6 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 ## Queue
 
 - [q18] Re-run `scripts/e2e.sh --paid` on `d63c0ba` or later: the answer schema gained `hazard_orders` after the last passing run (`1b455ab`). Paid, about 0.05 USD on Haiku; the owner approves it (the auto-mode permission check refused it unasked). Then update `docs/EVAL_RESULTS.md` "The final end-to-end run", the README status line, and q6's proof, and commit the run record with `git add -f`. → `docs/EVAL_RESULTS.md`
-- [q17] Session 05 transcript: commit `docs/ai-session/05-results.txt` once the owner has exported it (its index line is written). → `docs/ai-session/README.md`
 - [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. A public URL spends the owner's API credit on every message, so it needs an access guard. → `docs/PLAN.md` section 13
 - [q21] Run the README's page check by hand before a demo (owner; one paid question, under a cent on Haiku). → `.claude/OPEN_ISSUES.md`, "The page's own logic has no automated test"
 - [q19] Owner decision: the queue guard also refuses a line under Done / Dropped without "Done <date>" or "dropped" (an open item was filed under Done in session 05 and the guard let it through). → `.claude/hooks/queue-guard.py`
@@ -16,6 +15,7 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Done / Dropped
 
+- [q17] Session 05 transcript committed. Done 2026-11-25. Proof: commit `3339d36`; the work-address check, the session-link search (`claude\.ai/code/session_[A-Za-z0-9]`) and a search for key-like text (`sk-ant-`) all printed 0 on the file before it was committed.
 - [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. Done 2026-11-25. Proof: `scripts/e2e.sh --paid` passed on `1b455ab` (354 tests in a fresh clone, 6 of 6 API questions, `wra eval --reps 3` 42 of 42, target met, about 0.05 USD; run `20261124T232102Z-claude`); `docs/EVAL_RESULTS.md`, `docs/ARCHITECTURE.md`, `docs/SUMMARY.md`; the Fable review's eight findings fixed in `1b455ab`; the owner chose Haiku 5.5 (decision log).
 - [q13] Terms explained where they appear. Done 2026-11-25. Proof: commit `cca0acd` (21 tests, 331 passed on that tree); a live `wra ask` on Denver snowfall explained "measurable" and "trace" in plain words (0.041 USD, session 05), as did the shipped model's answer in `docs/EVAL_RESULTS.md`; the owner confirmed the answers read right.
 - [q16] How the page's own logic is checked. Done 2026-11-24. Proof: the owner chose a written check by hand; it is in `README.md`, "Checking the page by hand before a demo", added in the commit that moves this line. Running it before the demo stays open in `.claude/OPEN_ISSUES.md`.
