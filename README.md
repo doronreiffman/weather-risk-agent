@@ -42,7 +42,7 @@ The full Claude Code sessions are in [docs/ai-session/](docs/ai-session/). Two t
 ## Data sources
 
 - Iowa Environmental Mesonet warning archive: past National Weather Service warnings for each hub's location.
-- FEMA National Risk Index: yearly hurricane frequency for each hub's county.
+- FEMA National Risk Index: yearly hurricane frequency for each hub's county, and FEMA's frequencies for the other hazards as a cross-check. Endpoint: `https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0` (FEMA's National Risk Index Counties map service), dataset version "December 2025", retrieved 2026-11-24 (10:42 UTC, as the fetch log records).
 - NOAA airport weather stations, through the ACIS web service: measured daily snowfall and rainfall.
 
-This product uses the Federal Emergency Management Agency's National Risk Index dataset API or downloadable datasets but is not endorsed by FEMA.
+This product uses the Federal Emergency Management Agency's National Risk Index dataset API or downloadable datasets but is not endorsed by FEMA. The Federal Government or FEMA cannot vouch for the data or analyses derived from these data after the data have been retrieved from the Agency's website(s).
