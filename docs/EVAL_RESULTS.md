@@ -1,6 +1,6 @@
 # Evaluation results
 
-Milestone 5, run on 24 November 2026 (UTC), on commits `4e4ae6a` to `7197faa` (the tree each run used is named below). The agent ships on **Claude Haiku 5.5**, the owner's choice from the comparison in this document.
+Milestone 5, run on 24 November 2026 (UTC), on commits `4e4ae6a` to `27c5b6d` (the tree each run used is named below). The agent ships on **Claude Haiku 5.5**, the owner's choice from the comparison in this document.
 
 ## What was run
 
@@ -27,7 +27,9 @@ The first three runs used the agent as of commit `4e4ae6a`; the last used `7197f
 
 ## The final end-to-end run
 
-`scripts/e2e.sh --paid` on commit `1b455ab`, after the fixes from the final review, in a fresh clone with no `.env` of its own. The database was built offline and `uv run pytest -q` passed 354 tests in the clone. Through the HTTP API, the four assignment questions, the follow-up and the Seattle question all passed (6 of 6, about 0.01 USD); the follow-up named Columbus and showed the Midwest winter table. The evaluation then ran on Haiku 5.5: **42 of 42 case runs passed, no answer refused, none repaired, target met**, 0.039 USD (run `20261124T232102Z-claude`). The four assignment answers in that run follow the same lines as those quoted below; its Dallas answer names no warning types.
+`scripts/e2e.sh --paid` on commit `27c5b6d`, which carries the fixes from the final review (`1b455ab`) and each hazard's order as a checked field of the answer (`d63c0ba`); the commits after `d63c0ba` change only documents. It ran in a fresh clone with no `.env` of its own. The database was built offline and `uv run pytest -q` passed 360 tests in the clone. Through the HTTP API, the four assignment questions, the follow-up and the Seattle question all passed (6 of 6, about 0.01 USD); the follow-up named Columbus and showed the Midwest winter table. The evaluation then ran on Haiku 5.5: **42 of 42 case runs passed, no answer refused, none repaired, target met**, 0.043 USD, all 57 answers served by Haiku 5.5 (run `20261124T234915Z-claude`). In all three repetitions the Miami and Houston answer stated each hazard's order in the checked field, and the order matched the result: Miami leads on hurricanes, Houston on floods. The four assignment answers follow the same lines as those quoted below; its Dallas answers name no warning types.
+
+An earlier run on `1b455ab`, before the hazard order field, also passed 42 of 42 (run `20261124T232102Z-claude`, 0.039 USD).
 
 ## What failed, and why
 
