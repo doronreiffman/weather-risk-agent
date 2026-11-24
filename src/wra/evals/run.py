@@ -25,6 +25,7 @@ CHECKS = ("status", "tool", "hubs", "numbers", "mentions")
 # Plan section 10.3: errors are reported by kind, apart from wrong answers, and the report says how
 # often each check forced a repair. Both are read from the agent's own messages.
 ERROR_KINDS = {"could not be reached": "API or network", "declined": "declined", "cut off": "cut off",
+               "still being answered": "busy",
                "failed validation twice": "failed validation twice", "No final answer within": "call limit",
                "has no model": "no model (stub)"}  # fmt: skip
 REPAIR_CAUSES = {"numbers are not in the cited": "grounding", "evidence": "evidence", "hubs_ranked": "hub order",

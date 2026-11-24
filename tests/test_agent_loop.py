@@ -295,3 +295,44 @@ def test_cost_is_priced_per_response_at_its_own_model(ctx):
     reply = a.answer(None, "Which hubs?")
     # Two responses of 100 input and 50 output tokens at Opus 5.5's 4 and 20 dollars per million.
     assert reply.trace.usage["cost_usd"] == round(2 * (100 * 4 + 50 * 20) / 1e6, 6)
+
+
+# --- milestone 4 readiness: timeouts and two messages at once --------------------------------
+
+
+def test_the_real_client_uses_the_configured_timeout_and_retries(monkeypatch):
+    import anthropic
+    import dotenv
+
+    from wra.agent.loop import AnthropicClient
+
+    made = {}
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: None)  # no .env is read in tests
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kwargs: made.update(kwargs))
+    AnthropicClient(load_settings(REPO / "config" / "agent.toml"))
+    assert made == {"timeout": 60.0, "max_retries": 1}
+
+
+def test_a_second_message_while_the_first_is_answered_is_refused(ctx):
+    import threading
+
+    started, release = threading.Event(), threading.Event()
+
+    class Slow(Scripted):
+        def create(self, **request):
+            started.set()
+            release.wait(5)
+            return super().create(**request)
+
+    client = Slow(tool("rank_hubs", WINTER_MIDWEST), final())
+    a = ClaudeAgent(ctx, load_settings(REPO / "config" / "agent.toml"), client)
+    replies = {}
+    first = threading.Thread(target=lambda: replies.update(first=a.answer("s1", "Which hubs?")))
+    first.start()
+    started.wait(5)
+    replies["second"] = a.answer("s1", "Which hubs, again?")
+    release.set()
+    first.join(5)
+    assert replies["second"].status == "error" and "still being answered" in replies["second"].error
+    assert replies["first"].status == "answered"
+    assert [m["role"] for m in a.sessions["s1"].messages] == ["user", "assistant", "user", "assistant"]

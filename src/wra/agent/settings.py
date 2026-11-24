@@ -16,6 +16,8 @@ class AgentSettings:
     effort: str
     max_tokens: int
     max_model_calls: int
+    timeout_seconds: float
+    max_retries: int
     fallback_beta: str
     fallbacks: str
     prices: dict[str, dict[str, float]]
@@ -48,6 +50,8 @@ def load_settings(path: Path | None = None) -> AgentSettings:
         effort=effort,
         max_tokens=int(raw["max_tokens"]),
         max_model_calls=int(raw["max_model_calls"]),
+        timeout_seconds=float(raw["timeout_seconds"]),
+        max_retries=int(raw["max_retries"]),
         fallback_beta=raw["fallback_beta"],
         fallbacks=raw["fallbacks"],
         prices={model: dict(p) for model, p in raw.get("prices", {}).items()},

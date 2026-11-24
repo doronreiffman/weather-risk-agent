@@ -17,6 +17,7 @@ evidence; the milestone 3 spike showed the model invents ids it cannot see.
 """
 
 import json
+import threading
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -47,19 +48,23 @@ class ModelClient(Protocol):
 
 
 class AnthropicClient:
-    """The real client. The key comes from the environment, which `.env` fills via python-dotenv."""
+    """The real client. The key comes from the environment, which `.env` fills via python-dotenv.
+    Each call gives up after the configured time and is retried at most the configured number of times."""
 
-    def __init__(self) -> None:
+    def __init__(self, settings: AgentSettings) -> None:
         import anthropic
         from dotenv import load_dotenv
 
         from wra import paths
 
         load_dotenv(paths.root() / ".env")
-        self._client = anthropic.Anthropic()
+        self._client = anthropic.Anthropic(timeout=settings.timeout_seconds, max_retries=settings.max_retries)
 
     def create(self, **request: Any) -> Any:
         return self._client.beta.messages.create(**request)
+
+
+BUSY = "The last question in this conversation is still being answered. Send this one when it has finished."
 
 
 @dataclass
@@ -67,6 +72,7 @@ class Session:
     id: str
     messages: list[dict] = field(default_factory=list)
     results: dict[str, CitedResult] = field(default_factory=dict)
+    busy: threading.Lock = field(default_factory=threading.Lock, repr=False)
 
 
 class ClaudeAgent:
@@ -75,8 +81,9 @@ class ClaudeAgent:
     def __init__(self, ctx: ToolContext, settings: AgentSettings | None = None, client: ModelClient | None = None):
         self.ctx = ctx
         self.settings = settings or load_settings()
-        self.client = client or AnthropicClient()
+        self.client = client or AnthropicClient(self.settings)
         self.sessions: dict[str, Session] = {}
+        self._sessions_lock = threading.Lock()
         hub_ids = list(ctx.data.hubs)
         self.tools = tool_definitions(hub_ids)
         self.answer_schema = final_answer_schema(hub_ids)
@@ -100,10 +107,22 @@ class ClaudeAgent:
         return request
 
     def answer(self, session_id: str | None, message: str) -> AgentReply:
-        session = self.sessions.get(session_id) if session_id else None
-        if session is None:
-            session = Session(id=session_id or uuid.uuid4().hex)
-            self.sessions[session.id] = session
+        """Answer one message. A second message on a conversation that is still being answered is refused
+        at once (owner, 2026-11-24): two turns at the same moment would corrupt the conversation."""
+        with self._sessions_lock:
+            session = self.sessions.get(session_id) if session_id else None
+            if session is None:
+                session = Session(id=session_id or uuid.uuid4().hex)
+                self.sessions[session.id] = session
+        if not session.busy.acquire(blocking=False):
+            return AgentReply(session_id=session.id, status="error", verdict="", error=BUSY,
+                              trace=Trace(model=self.settings.model))  # fmt: skip
+        try:
+            return self._answer(session, message)
+        finally:
+            session.busy.release()
+
+    def _answer(self, session: Session, message: str) -> AgentReply:
         kept_messages, kept_results = len(session.messages), set(session.results)
         session.messages.append({"role": "user", "content": message})
         started = time.monotonic()
