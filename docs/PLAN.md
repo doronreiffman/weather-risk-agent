@@ -659,6 +659,14 @@ Changes forced by reality are appended here, newest last.
 - *Bold is the only Markdown the page shows (section 8.3 said "Markdown").* The system prompt now says so. `docs/ASSUMPTIONS.md`, milestone 4 section, point 4.
 - *No `api/sessions.py` (section 11).* The conversations already live in the agent (milestone 3), so `src/wra/api/` holds `__init__.py`, `app.py` and `static/index.html` only.
 
+**2026-11-24, milestone 5. What the end-to-end build changed.**
+
+- *Before milestone 5, the text code writes explains its terms (queue q13, owner).* Each term an analyst may not know is defined where it appears, and the system prompt asks the model to do the same. `docs/ASSUMPTIONS.md` O15.
+- *`scripts/e2e.sh` runs the paid steps only when asked (section 13, final check).* Without arguments it runs steps 1 to 3, which cost nothing; `--paid` adds steps 4 to 6. Claude's choice, so that running the script is never an unapproved spend (CLAUDE.md rule 12).
+- *The API step is Python, `src/wra/evals/e2e.py`, tested on the scripted fake model (`tests/test_e2e.py`).* The follow-up ("And which is the least exposed?" after the Midwest winter question) counts as using the earlier context when the reply's `hubs_ranked` holds the last hub of the Midwest winter ranking, worked out from the scoring code (Columbus today). The server runs on port 8765, so the owner's own `wra serve` on 8000 can stay up.
+- *`wra eval` reports the target, and `--require-target` makes a miss fail the command (section 10.3 stated the target; nothing computed it).* The script's step 6 relies on it.
+- *A check by hand of the page before the demo (owner, queue q16).* README, "Checking the page by hand before a demo".
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks
