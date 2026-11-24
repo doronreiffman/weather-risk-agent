@@ -31,7 +31,9 @@ finish() {
     tail -n 30 "$work/server.log"
   fi
   rm -rf "$work"
-  if [ "$status" -eq 0 ]; then printf '\nEnd-to-end check: PASSED\n'; else printf '\nEnd-to-end check: FAILED (exit %s)\n' "$status"; fi
+  local what="End-to-end check"
+  [ "$paid" = true ] || what="End-to-end check, free part only (steps 1 to 3)"
+  if [ "$status" -eq 0 ]; then printf '\n%s: PASSED\n' "$what"; else printf '\n%s: FAILED (exit %s)\n' "$what" "$status"; fi
 }
 trap finish EXIT
 
@@ -66,7 +68,8 @@ if curl --silent --max-time 2 "http://127.0.0.1:$port/healthz" > /dev/null; then
 fi
 
 step "4 and 5. Six questions through the HTTP API: schema, expected status, and the follow-up's context"
-uv run wra serve --port "$port" > "$work/server.log" 2>&1 &
+# The date is pinned as in the evaluation, so "last year" is 2025, the last year the data covers.
+WRA_TODAY=2026-11-24 uv run wra serve --port "$port" > "$work/server.log" 2>&1 &
 server=$!
 uv run python -m wra.evals.e2e "http://127.0.0.1:$port"
 

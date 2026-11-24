@@ -119,7 +119,8 @@ def _display(ctx: ToolContext, d: dict, snow: bool) -> Display:
             ["Days with a trace only", d["days_trace"]],
             ["Days observed", d["days_observed"]],
             ["Days missing", d["days_missing"]],
-            ["Share of observed days (%)", d["pct_of_observed"]],
+            # As text, at the one decimal the tool rounds to: padded to two, 7.1 would read 7.10 (true: 7.14).
+            ["Share of observed days (%)", None if d["pct_of_observed"] is None else f"{d['pct_of_observed']:.1f}"],
         ],
         what_counts=what_counts,
     )

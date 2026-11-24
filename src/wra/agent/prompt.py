@@ -32,6 +32,7 @@ arguments. Do no arithmetic of your own: the tools return differences, ratios, r
 such as a trace, a forecast zone, a watch or an advisory, say what it means in plain words in the same sentence, \
 as the result's own text defines it. Spell out an abbreviation the first time you use it.
 - When the user's question rests on a premise the data contradicts, say so and give the real figure and band.
+- Name the warning types behind a hub's figure only when a result lists them for that hub. A table's what-counts line lists every type the score counts, not the ones that hit a given hub.
 - When a result's confidence is low or medium, say what that means for the claim in plain words, using its \
 confidence_reason.
 - For a follow-up, cite an earlier result if it already answers the question; otherwise call the tool again.

@@ -11,7 +11,7 @@ from test_agent_loop import WINTER_MIDWEST, Scripted, final, tool
 from wra.agent.loop import ClaudeAgent
 from wra.agent.settings import load_settings
 from wra.api.app import create_app
-from wra.evals.e2e import QUESTIONS, check, least_exposed_midwest_winter
+from wra.evals.e2e import QUESTIONS, check, follow_up_expectation
 from wra.scoring.config import load_scoring_config
 from wra.stored import load_stored
 from wra.tools.context import ToolContext
@@ -40,13 +40,14 @@ def test_the_six_questions_are_the_assignments_four_a_follow_up_and_one_out_of_s
     assert "Seattle" in QUESTIONS[-1].text
 
 
-def test_the_follow_ups_expected_hub_comes_from_the_scoring_code(ctx):
-    assert least_exposed_midwest_winter(ctx) == "CMH"
+def test_the_follow_ups_expected_hub_and_table_come_from_the_scoring_code(ctx):
+    expected = follow_up_expectation(ctx)
+    assert expected.hub == "CMH" and expected.table.startswith("Winter weather exposure, Midwest hubs")
 
 
 def test_six_right_replies_pass(ctx):
     http = served(ctx, *answered(), FOLLOW_UP, *answered(), *answered(), *answered(), SEATTLE)
-    lines, ok = check(http, "CMH")
+    lines, ok = check(http, follow_up_expectation(ctx))
     assert ok, lines
     assert lines[-1].startswith("API questions: 6 of 6 passed.")
 
@@ -55,9 +56,21 @@ def test_a_follow_up_that_lost_the_context_and_a_wrong_status_fail(ctx):
     # The follow-up names the top of the ranking, not its bottom; the Seattle question comes back answered.
     lost = final(hubs=("MSP", "MCI"))
     http = served(ctx, *answered(), lost, *answered(), *answered(), *answered(), *answered())
-    lines, ok = check(http, "CMH")
+    lines, ok = check(http, follow_up_expectation(ctx))
     assert not ok
     failed = [line for line in lines if line.startswith("FAIL")]
     assert len(failed) == 2
     assert "does not name CMH" in failed[0] and "status answered, expected out_of_scope" in failed[1]
     assert lines[-1].startswith("API questions: 4 of 6 passed.")
+
+
+def test_a_follow_up_that_dropped_winter_fails_though_it_names_columbus(ctx):
+    # Review, 2026-11-25: Columbus is last in the Midwest overall ranking too, so the hub alone cannot show the
+    # hazard was kept.
+    overall_midwest = {"hazard": "overall", "region": "midwest", "top_n": None, "weight_changes": []}
+    dropped = [tool("rank_hubs", overall_midwest),
+               final(verdict="Columbus is the least exposed.", evidence=("R2",), hubs=["CMH"], hubs_from="bottom")]
+    http = served(ctx, *answered(), *dropped, *answered(), *answered(), *answered(), SEATTLE)
+    lines, ok = check(http, follow_up_expectation(ctx))
+    assert not ok
+    assert "does not show the Midwest winter table" in next(line for line in lines if line.startswith("FAIL"))

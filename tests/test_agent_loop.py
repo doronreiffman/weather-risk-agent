@@ -629,3 +629,27 @@ def test_the_prompt_asks_for_unfamiliar_terms_to_be_explained_in_plain_words(ctx
     prompt = system_prompt(ctx)
     assert "say what it means in plain words in the same sentence" in prompt
     assert "Spell out an abbreviation the first time you use it." in prompt
+
+
+# --- review findings, 2026-11-25 ---------------------------------------------------------------
+
+
+def test_the_prompt_says_not_to_name_warning_types_no_result_gives_for_the_hub(ctx):
+    # The shipped model said Dallas's winter risk comes "mainly under ... blizzard warnings"; Dallas had none.
+    assert "only when a result lists them for that hub" in system_prompt(ctx)
+
+
+def test_two_cited_results_each_label_their_confidence_reason(ctx):
+    answer = final(verdict="In this what-if Miami moves to first at 3.37 days a year, in the Very high band.",
+                   evidence=("R2", "R1"), hubs=("MIA",), what_if=True)  # fmt: skip
+    a, _ = agent(ctx, tool("rank_hubs", OFFICIAL_OVERALL), tool("rank_hubs", WHAT_IF_OVERALL, "toolu_2"), answer)
+    reason = a.answer(None, "What if a hurricane counted double?").footnote.confidence_reason
+    assert reason.startswith("WHAT-IF (hurricanes weight x 2), not the official ranking. Overall exposure, all hubs: ")
+    assert " Overall exposure, all hubs: Data coverage" in reason
+
+
+def test_a_period_two_results_share_is_shown_once(ctx):
+    answer = final(evidence=("R1", "R2"))
+    a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), tool("explain_hub", {"hub_id": "MSP"}, "toolu_2"), answer)
+    reply = a.answer(None, "Which hubs in the Midwest are most exposed, and why Minneapolis?")
+    assert reply.footnote.period == "2016-2025; hurricanes 1851-2024"

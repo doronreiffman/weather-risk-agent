@@ -354,3 +354,12 @@ def test_no_tool_text_uses_a_retired_term(ctx, name, args):
     text = " ".join([d.title, *d.columns, d.what_counts, *d.notes, p.confidence_reason, *map(SOURCE_NAMES.get, p.sources),
                      json.dumps(r.data)])  # fmt: skip
     assert [t for t in RETIRED_TERMS if t in text] == []
+
+
+def test_the_snowfall_share_shows_at_the_precision_the_tool_rounds_it(ctx):
+    # Review, 2026-11-25: 26 of 364 is 7.14%, so "7.10" claimed a precision the figure does not have.
+    from wra.tools.text import display_text
+
+    result = run_tool(ctx, "daily_weather_stats", stats_args())
+    assert result.display.rows[-1] == ["Share of observed days (%)", "7.1"]
+    assert "7.10" not in display_text(result.display)

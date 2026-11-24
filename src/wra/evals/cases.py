@@ -99,6 +99,7 @@ class Case:
     is_what_if: bool | None = None
     required: list[str | Callable[[ToolContext], str]] = field(default_factory=list)  # whole words or numbers
     band_of: str | None = None  # the first band the verdict names must be this hub's real band (owner, 2026-11-24)
+    leads: tuple[tuple[str, tuple[str, ...]], ...] = ()  # (hazard, hubs): the verdict pairs the hazard with its leader
     forbidden: list[str] = field(default_factory=lambda: list(FORBIDDEN_EVERYWHERE))
     pinned: dict[str, Any] = field(default_factory=dict)  # figures in the matching tool result's data
     shows_table: bool = True  # whether the expected tool's table must be among the reply's tables
@@ -151,7 +152,7 @@ CASES = [
          required=[_city(_order("winter", "midwest"), 0)]),
     Case(2, [Q2], "Assignment question. Comparison across two hazards.", "answered",
          calls=[ExpectedCall("compare_hubs", {"hub_ids": SameSet(MIA_IAH), "hazards": Contains(("hurricane", "flood"))})],
-         required=["Miami", "Houston"]),
+         required=["Miami", "Houston"], leads=(("hurricane", MIA_IAH), ("flood", MIA_IAH))),
     Case(3, ["What percentage of days in Denver last year had snowfall?"],
          "Assignment question. 'Last year' resolved in code.", "answered",
          calls=[ExpectedCall("daily_weather_stats", {

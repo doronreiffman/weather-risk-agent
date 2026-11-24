@@ -280,3 +280,14 @@ def test_no_order_without_saying_so_or_a_wrong_order_still_fails(ctx, verdict, h
     answer = turns[-1].model_copy(update={"verdict": verdict, "hubs_ranked": hubs})
     checks = {c.name: c for c in grade(ctx, BY_ID[6], [turns[0], answer])}
     assert checks["hubs"].passed is False
+
+
+def test_the_comparison_checks_which_hub_leads_each_hazard(ctx):
+    # Review, 2026-11-25: with the hubs swapped every figure is still in the result, so only this catches it.
+    right = correct(ctx, 2)
+    swapped = right[0].model_copy(update={"verdict": "Houston has the higher hurricane exposure, at 1.52 against "
+                                          "Miami's 0.92. Miami has the higher flood exposure, at 0.47 against "
+                                          "Houston's 0.21."})  # fmt: skip
+    assert {c.name: c for c in grade(ctx, BY_ID[2], right)}["hubs"].passed is True
+    check = {c.name: c for c in grade(ctx, BY_ID[2], [swapped])}["hubs"]
+    assert check.passed is False and "hurricane" in check.detail

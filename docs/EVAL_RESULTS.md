@@ -21,7 +21,7 @@ All three models ran unchanged: the same prompt, tools and checks, at effort `me
 | Haiku 5.5 | `20261124T221217Z-claude` | 41 of 42 | 2 of 57 | 2 | met | 0.04 USD | 0.075 cents | |
 | Haiku 5.5, band check fixed | `20261124T223759Z-claude` | 41 of 42 | 0 of 57 | 2 | met | 0.04 USD | 0.074 cents | 4.5 s |
 
-The first three runs used the agent as of commit `4e4ae6a`; the last used `7197faa`. A refused answer is one the checks rejected twice: the analyst sees a plain error, never an unchecked answer. Costs are at list price, from the API's own token counts.
+The first three runs used the agent as of commit `4e4ae6a`; the last used `7197faa`. A refused answer is one that ended in a plain error instead of an answer: the checks rejected it twice, or the model used its six calls without answering. The analyst never sees an unchecked answer. Costs are at list price, from the API's own token counts.
 
 **The owner chose Haiku 5.5.** The plan's rule (section 9) was the cheapest model whose score equals the best; by that rule Opus wins by one case run. Haiku costs about one twenty-seventh as much per answer, refuses none, and its one miss is a right answer written in words (below). Every later evaluation also costs cents instead of about a dollar.
 
@@ -61,7 +61,8 @@ The plan asks for at most four short sentences. On Opus, 6 of 57 verdicts ran to
 ## Limits
 
 - **Fourteen cases is a regression gate, not a fine instrument.** At 42 case runs and a 90% pass rate, the usual 95% margin is about plus or minus 9 points, and repeats of the same question are not independent, so the real margin is wider.
-- **The number check reads figures in digits only.** A wrong small whole number can match a rank or count in a large result, and a claim in words goes unchecked. The Dallas answer below says winter drives its risk "mainly under winter storm, ice storm and blizzard warnings": no tool result splits winter by warning type, so that is the model's own claim. The tables beside each verdict always show the computed figures.
+- **The number check confirms that each figure is in a cited result, not which hub or hazard it belongs to.** A right figure for the wrong hub or hazard passes it: "Houston leads on hurricanes at 1.52" would pass, since 1.52 is in the result as Miami's figure (final review, run offline on a scripted model). A wrong small whole number can match a rank or a count, and a claim in words goes unchecked. No saved answer swapped figures, and the Miami and Houston case now checks which hub each hazard is paired with. The tables beside each verdict always show the computed figures.
+- **A claim in words can be false.** The Dallas answer below says winter drives its risk "mainly under winter storm, ice storm and blizzard warnings". That is wrong: Dallas had 6 Winter Storm Warnings, 1 Ice Storm Warning and no Blizzard Warning in 2016 to 2025. No tool result splits winter by warning type; the model took the list from the score's description, which names every type the score counts. The system prompt now tells the model to name warning types only when a result lists them for that hub (final review).
 - **Prose quality is not graded.** The four assignment answers follow in full for a person to read.
 
 ## The four assignment answers, as the shipped model gave them

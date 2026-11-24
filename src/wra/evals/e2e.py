@@ -37,14 +37,20 @@ QUESTIONS = (
 )
 
 
-def least_exposed_midwest_winter(ctx: ToolContext) -> str:
-    """The hub the follow-up must name: without the first question's region and hazard it would name another."""
-    rows = run_tool(ctx, "rank_hubs", {"hazard": "winter", "region": "midwest", "top_n": None,
-                                       "weight_changes": []}).data["rows"]  # fmt: skip
-    return rows[-1]["hub_id"]
+@dataclass(frozen=True)
+class FollowUp:
+    hub: str  # the least exposed hub of the Midwest winter ranking
+    table: str  # that ranking's table title
 
 
-def check(http: httpx.Client, least: str) -> tuple[list[str], bool]:
+def follow_up_expectation(ctx: ToolContext) -> FollowUp:
+    """What the follow-up must show to have kept the first question's context. The hub alone is not enough:
+    Columbus is last in the Midwest overall ranking too (review, 2026-11-25), so the winter table must be shown."""
+    result = run_tool(ctx, "rank_hubs", {"hazard": "winter", "region": "midwest", "top_n": None, "weight_changes": []})
+    return FollowUp(result.data["rows"][-1]["hub_id"], result.display.title)
+
+
+def check(http: httpx.Client, expected: FollowUp) -> tuple[list[str], bool]:
     """Asks the questions in order. Returns the lines to print and whether every reply passed."""
     lines, passed, session, cost = [], 0, None, 0.0
     for q in QUESTIONS:
@@ -62,8 +68,10 @@ def check(http: httpx.Client, least: str) -> tuple[list[str], bool]:
                 problems.append(f"status {reply.status}, expected {q.status}")
             if q.follows and reply.session_id != session:
                 problems.append("not sent in the first question's conversation")
-            if q.follows and least not in reply.hubs_ranked:
-                problems.append(f"does not name {least}, the least exposed hub of the first answer's ranking")
+            if q.follows and expected.hub not in reply.hubs_ranked:
+                problems.append(f"does not name {expected.hub}, the least exposed hub of the first answer's ranking")
+            if q.follows and expected.table not in [t.title for t in reply.tables]:
+                problems.append("does not show the Midwest winter table, so the hazard may have been dropped")
             session = reply.session_id
         passed += not problems
         lines.append(f"{'FAIL' if problems else 'PASS'}  {q.text}" + (f"  ({'; '.join(problems)})" if problems else ""))
@@ -93,7 +101,7 @@ def main(argv: list[str]) -> int:
         if not wait_for_server(http):
             print(f"error: no server answered {argv[0]}/healthz within {HEALTH_WAIT_SECONDS} seconds", file=sys.stderr)
             return 1
-        lines, ok = check(http, least_exposed_midwest_winter(load_context()))
+        lines, ok = check(http, follow_up_expectation(load_context()))
     print("\n".join(lines))
     return 0 if ok else 1
 

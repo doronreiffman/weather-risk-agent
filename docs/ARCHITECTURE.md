@@ -92,7 +92,7 @@ After the schema check, `check_answer` (`src/wra/agent/checks.py`) requires:
 
 On any failure the problems go back to Claude once; it may call tools, then answers again. A second failure ends the message as `invalid_twice`. Nothing unverified reaches the page.
 
-Grounding (`src/wra/agent/grounding.py`): every number written in digits in the verdict and caveats must equal, after rounding half up to the decimals written, a number in the cited results, their arguments, or the figures the system prompt states (period years, FEMA's record years, hub count). It does not read number words, so "roughly twice" goes unchecked. A small whole number nearly always matches something, such as a rank, so a wrong "3" can pass (`docs/ASSUMPTIONS.md`, milestone 2 section, point 12). Decimal figures are caught far more often, and the tables beside the verdict always show the true figures.
+Grounding (`src/wra/agent/grounding.py`): every number written in digits in the verdict and caveats must equal, after rounding half up to the decimals written, a number in the cited results, their arguments, or the figures the system prompt states (period years, FEMA's record years, hub count). It does not read number words, so "roughly twice" goes unchecked. It checks that a figure is in a cited result, not which hub or hazard it belongs to, so a right figure for the wrong hub passes. A small whole number nearly always matches something, such as a rank, so a wrong "3" can pass (`docs/ASSUMPTIONS.md`, milestone 2 section, point 12, and milestone 5 section). The tables beside the verdict always show the true figures.
 
 ## How confidence is computed
 
@@ -102,7 +102,7 @@ Every result carries a label (high, medium, low) and a one-line reason from `src
 - **Separation:** a gap between two hubs passes when it exceeds the combined standard error of their ten yearly figures. Hurricanes have no yearly series, so their gaps are "not testable".
 - **Stability,** overall rankings only: each of the four weights halved and doubled. Do the top hub and the top-three set hold?
 
-**Low:** coverage below 90%, more than half the tested gaps failing, or a new top hub in a variant. **High:** coverage of at least 98%, no failed or untestable gap, and a stable top three. **Medium:** anything else, so a hurricane gap caps a result at medium. Daily station figures use the missing share: high up to 2% of days, medium up to 10%. A footnote over several results takes the lowest label (`src/wra/agent/render.py`). Today's overall ranking is low: 10 of its 11 neighbour gaps fail separation (`uv run wra rank overall`).
+**Low:** coverage below 90%, more than half the tested gaps failing, or a new top hub in a variant. **High:** coverage of at least 98%, no failed or untestable gap, and a stable top three. **Medium:** anything else, so a hurricane gap caps a result at medium. Daily station figures use the missing share: high up to 2% of days, medium up to 10%. A footnote over several results takes the lowest label; when several results give it, each reason is led by its table's name, and a period they share is shown once (`src/wra/agent/render.py`). Today's overall ranking is low: 10 of its 11 neighbour gaps fail separation (`uv run wra rank overall`).
 
 ## The API and the chat page
 
@@ -138,7 +138,7 @@ The target: the four assignment questions pass in all three repetitions, and at 
 
 `scripts/e2e.sh` checks the last commit, not the working copy. It clones the repository into a temporary folder and points the clone at the original's `.env` through the `WRA_ENV_FILE` setting (`src/wra/paths.py`), so the key is never copied or printed. It runs `uv sync`, `uv run wra ingest` from the committed raw responses, and `uv run pytest -q` inside the clone. Those steps cost nothing and run by default.
 
-With `--paid` it goes on to spend API credit. It starts `wra serve` on port 8765 and, through the HTTP API only, asks the four assignment questions, one follow-up and one out-of-scope question (`src/wra/evals/e2e.py`). Each reply must parse as an `AgentReply` with the expected status, and the follow-up ("And which is the least exposed?" after the Midwest winter question) must name the last hub of the Midwest winter ranking, worked out from the scoring code. Last, it runs `uv run wra eval --reps 3 --require-target`, which fails the script when the target is missed, and copies the run record back into `evals/runs/`.
+With `--paid` it goes on to spend API credit. It starts `wra serve` on port 8765, with the date pinned to 2026-11-24 as in the evaluation, and, through the HTTP API only, asks the four assignment questions, one follow-up and one out-of-scope question (`src/wra/evals/e2e.py`). Each reply must parse as an `AgentReply` with the expected status, and the follow-up ("And which is the least exposed?" after the Midwest winter question) must name the last hub of the Midwest winter ranking, worked out from the scoring code, and show that ranking's table: Columbus is last in the Midwest overall ranking too. Without `--paid` the script's last line says only its free part passed. Last, it runs `uv run wra eval --reps 3 --require-target`, which fails the script when the target is missed, and copies the run record back into `evals/runs/`.
 
 ## Left out on purpose
 
