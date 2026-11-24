@@ -1,0 +1,17 @@
+# Secrets. Only the placeholder file is tracked.
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Built by `wra ingest` from the committed raw responses
+data/wra.sqlite
+
+# Local tooling
+.remember/
+.claude/settings.local.json
