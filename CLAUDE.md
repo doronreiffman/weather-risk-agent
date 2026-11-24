@@ -23,6 +23,7 @@ Python with `uv` and `pytest`.
 8. **Ask rather than guess, and push back** when there is a better approach.
 9. **Match the model to the task** and say which was picked and why: Fable for open design questions and the final whole-diff review, Opus for implementation and per-milestone review, Sonnet for small, fully specified tasks. The main session's model and effort level are the owner's to switch, so say when they should change.
 10. **Bonuses** (deployment, score-change alert, voice, in that order) start only after the final end-to-end check passes, and only after asking.
+11. **Measure before proposing.** Before proposing a number, check whether data already in hand can measure it. A number that confirms the expected answer gets checked hardest.
 
 ## Sessions are a deliverable
 
