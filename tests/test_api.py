@@ -1,6 +1,7 @@
 """The HTTP API through FastAPI's test client, on the scripted fake model: no network, no cost
 (plan section 13, milestone 4 check)."""
 
+import json
 import threading
 from datetime import date
 from typing import get_args
@@ -185,6 +186,25 @@ def test_the_page_is_one_file_with_no_outside_code_and_carries_femas_full_notice
     assert notice.count(". ") == 1 and notice in page  # both sentences, word for word as in the README
     assert "src=" not in page and "<link" not in page and "import " not in page  # no outside scripts or styles
     assert 'fetch("/api/chat"' in page
+    assert "rejected_answer" not in page  # the trace panel never shows an answer that failed its checks
+
+
+def test_the_pages_bold_renderer_turns_no_reply_text_into_markup(ctx):
+    import re
+    import shutil
+    import subprocess
+
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node.js is not installed; the renderer was checked by hand")
+    http, _ = served(ctx, Scripted())
+    renderer = re.search(r"^function boldOnly.*?^}", http.get("/").text, re.M | re.S).group(0)
+    cases = ["**MSP** at **2.71**", "<img src=x onerror=alert(1)> **<b>x</b>**", "Tom's \"a\" & b", "a ** b *c*"]
+    script = renderer + "\nfor (const c of " + json.dumps(cases) + ") console.log(boldOnly(c));"
+    out = subprocess.run([node, "-e", script], capture_output=True, text=True, check=True).stdout.splitlines()
+    assert out == ["<strong>MSP</strong> at <strong>2.71</strong>",
+                   "&lt;img src=x onerror=alert(1)&gt; <strong>&lt;b&gt;x&lt;/b&gt;</strong>",
+                   "Tom&#39;s &quot;a&quot; &amp; b", "a ** b *c*"]  # fmt: skip
 
 
 def test_a_bug_in_our_own_code_is_500_with_the_reply_as_its_body(ctx, monkeypatch):

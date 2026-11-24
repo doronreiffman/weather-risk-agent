@@ -171,11 +171,6 @@ function traceBlock(reply) {
     t.repair_problems.forEach((p) => problems.append(el("div", null, p)));
     item("First answer failed", problems);
   }
-  if (t.rejected_answer) {
-    const first = el("dd");
-    first.append(el("pre", null, t.rejected_answer));
-    item("First answer", first);
-  }
   item("Time", el("dd", null, t.latency_ms + " ms"));
   const usage = el("dd");
   Object.entries(t.usage).forEach(([key, value]) => usage.append(el("div", null, key + ": " + value)));
@@ -216,6 +211,10 @@ function showNotice(text) {
   notice.scrollIntoView({ behavior: "smooth", block: "end" });
 }
 
+function restore(message) {  // the question back in the box, unless the user has typed a new one meanwhile
+  if (!box.value.trim()) box.value = message;
+}
+
 function setWorking(on) {
   send.disabled = on;
   fresh.disabled = on;  // a new conversation mid-answer would be undone when the answer arrives
@@ -239,7 +238,7 @@ async function ask(message) {
   setWorking(false);
 
   if (!reply || !reply.trace) {  // not a reply from the agent: the server is down, or the request was refused
-    box.value = message;
+    restore(message);
     showNotice(response ? "The server could not answer (HTTP " + response.status + "). The question is back in the box."
                         : "The server could not be reached. The question is back in the box.");
     return;
@@ -249,11 +248,11 @@ async function ask(message) {
     sessionId = reply.session_id;
   } else if (reply.error_code === "unknown_conversation") {
     sessionId = null;  // the server restarted: the next question starts a new conversation
-    box.value = message;
+    restore(message);
     showNotice("New conversation. Your question is back in the box: send it again, reworded if it was a follow-up.");
   } else {
     sessionId = reply.session_id;  // the failed turn left the conversation as it was
-    box.value = message;
+    restore(message);
   }
   box.focus();
 }

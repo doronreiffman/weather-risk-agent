@@ -490,7 +490,7 @@ def test_a_failure_with_less_time_left_than_the_pause_is_the_time_limit(ctx, clo
     assert clock.slept == [] and len(client.requests) == 2
 
 
-def test_a_bug_in_our_own_code_is_an_error_that_leaves_the_conversation_as_it_was(ctx, monkeypatch):
+def test_a_bug_in_our_own_code_is_an_error_that_leaves_the_conversation_as_it_was(ctx, monkeypatch, capsys):
     import wra.agent.loop
 
     def broken(*args, **kwargs):
@@ -502,6 +502,8 @@ def test_a_bug_in_our_own_code_is_an_error_that_leaves_the_conversation_as_it_wa
     assert reply.status == "error" and reply.error_code == "internal_error" and "KeyError" in reply.error
     session = a.sessions[reply.session_id]
     assert session.messages == [] and session.results == {} and not session.busy.locked()
+    logged = capsys.readouterr().err  # the full traceback goes to the server's or the evaluation's log
+    assert "Traceback" in logged and "KeyError: 'a bug'" in logged and "broken" in logged
 
 
 def status_error(code, headers=None):

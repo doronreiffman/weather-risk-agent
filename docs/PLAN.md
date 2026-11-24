@@ -651,7 +651,7 @@ Changes forced by reality are appended here, newest last.
 
 **2026-11-24, milestone 4. What the API build changed.**
 
-- *The reply names its failure (section 8.5).* A reply with status `error` carries `error_code` (busy, unknown_conversation, model_call_failed, time_limit, declined, cut_off, invalid_twice, too_many_calls) beside its plain message, so the API can choose an HTTP status without reading the text.
+- *The reply names its failure (section 8.5).* A reply with status `error` carries `error_code` (busy, unknown_conversation, model_call_failed, time_limit, declined, cut_off, invalid_twice, too_many_calls, internal_error) beside its plain message, so the API can choose an HTTP status without reading the text.
 - *The API does not create a conversation for an id it does not hold (section 7.1, step 2: "finds or creates the session").* A null id starts a conversation; an unknown id is refused without a model call (owner). `docs/ASSUMPTIONS.md`, milestone 4 section, point 1.
 - *A time limit per message, and the retry moved from the SDK into the loop (section 8.4, "other limits").* 90 seconds per message, all calls included (owner). Decision log, same date.
 - *HTTP status (section 8.5 named none).* 200 for an answer, 409 busy, 404 unknown conversation, 502 a failure on the model's side (owner), 500 a bug in our own code (Claude, after the review); the body is the reply for each of these. A malformed request is 422 with FastAPI's validation message. Decision log, same date.

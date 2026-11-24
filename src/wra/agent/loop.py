@@ -22,6 +22,7 @@ evidence; the milestone 3 spike showed the model invents ids it cannot see.
 import json
 import threading
 import time
+import traceback
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Protocol
@@ -141,6 +142,7 @@ class ClaudeAgent:
         try:
             return self._answer(session, message)
         except Exception as error:  # a bug in our own code: the turn goes, as after any failure
+            traceback.print_exc()  # the whole traceback to the server's or the evaluation's log; the reply names the class
             _roll_back(session, *kept)
             return self._error_reply(session.id, f"Something went wrong in the agent's own code ({type(error).__name__}"
                                      "). The question was not answered; try again.", "internal_error")  # fmt: skip
