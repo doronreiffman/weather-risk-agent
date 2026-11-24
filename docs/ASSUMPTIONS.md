@@ -34,7 +34,7 @@ Decided:
 
 ## Measured 2026-11-24 in milestone 1: what the loaded data shows
 
-All figures are from `uv run wra data-report` on the data fetched that day (twelve hubs, 2016 to 2025), unless a source is named.
+Figures come from `uv run wra data-report` on the data fetched that day, or from SQL on the same database where a point needs more detail than the report prints (points 7, 9 and 12). Warning rows were requested by issue date from 25 December 2015 up to 2 January 2026 (point 11). The report's counts include the few rows issued in the last week of 2015; point 12 counts only warnings issued in 2016 to 2025.
 
 1. **Every hub resolved.** All twelve station ids exist at the station service, and FEMA's map and the Weather Service's map name the same county for every hub. Dallas Love Field is in Dallas County, as the plan expected.
 2. **Two hubs sit in a different county than their city's name suggests.** The O'Hare station's coordinates are in DuPage County and Atlanta's are in Clayton County, on both maps. The station service labels them Cook and Fulton. The hub's county is the one that contains its coordinates (decision log, 2026-11-24).
@@ -47,13 +47,13 @@ All figures are from `uv run wra data-report` on the data fetched that day (twel
 9. **750 source records were left out** because their expiry is not after their start: 560 watches, 84 advisories, 1 statement and 105 warnings. Three of the warnings are of a type the score counts, all Winter Storm Warnings. In each case the data holds a Blizzard or Ice Storm Warning for the same storm. At Chicago (2018) it began exactly when the skipped warning was due, and at Memphis (2022) it began 3 hours 44 minutes earlier and was still in force. At Minneapolis (2023) it began 2 hours after the skipped warning's due time.
 10. **The raw responses take 7.9 MB on disk** in 49 files. The whole repository is 2.15 MiB as git stores it (`git count-objects -vH`, end of milestone 1). That includes both fetches of the warning files, since git keeps the first one in its history.
 11. **The warning archive selects by issue date, and its end date is excluded.** Measured with narrow requests around two known Dallas warnings: a request ending on a warning's issue date does not return it, and a request starting the day after does not return a warning still in force then. The first fetch asked for 2016-01-01 to 2025-12-31, so it missed every warning issued on 31 December 2025, the evening of New Year's Eve 2025 at every hub, and warnings issued in late December 2015 that ran into 2016. The request now runs from 25 December 2015 to 2 January 2026 (end excluded), and scoring keeps only the hours inside the period. In this data the fix changed no counted warning: the 4 warnings running into 2016 are river flood warnings, which are not scored, and nothing counted was issued on 31 December 2025. Every row issued inside the old window is unchanged.
-12. **A drawn-area warning row keeps its first planned end.** If the warning was cancelled early or extended for the hub's county, only the county's zone row for the same event shows it. Every drawn-area row has a matching county row with the same start. The ends differ:
+12. **A drawn-area warning row keeps its first planned end.** If the warning was cancelled early or extended for the hub's county, only the county's zone row for the same event shows it. Measured by joining each drawn-area warning issued in 2016 to 2025 to the county row of the same event (same office, year, type and event number). Every drawn-area row has such a county row, with the same start. The ends differ:
 
 | Type | Drawn-area rows | County row ended first | Hours counted after the county row ended | County row extended | Longest extension |
 |---|---|---|---|---|---|
-| Severe Thunderstorm | 921 | 104 | 29.7 of 651.9 (4.6%) | 0 | - |
-| Tornado | 39 | 5 | 1.7 of 19.8 | 0 | - |
-| Flash Flood | 298 | 20 | 23.8 of 1,009.8 | 53 | 9.0 hours |
+| Severe Thunderstorm | 920 | 104 | 29.7 of 650.8 (4.6%) | 0 | - |
+| Tornado | 36 | 4 | 1.3 of 17.4 | 0 | - |
+| Flash Flood | 296 | 20 | 23.8 of 1,001.0 | 52 | 9.0 hours |
 
    Settled in milestone 2 as open point O12.
 
@@ -88,5 +88,5 @@ All figures are from `uv run wra data-report` on the data fetched that day (twel
 | O8 | Model prices in the plan come from a reference cached on 2026-11-03. Re-check against the live pricing page before they appear in the README. | M5 |
 | O9 | How far the `.env` deny rule in `.claude/settings.json` reaches. Tested 2026-11-24 on a placeholder file: the file-reading tool was refused, and so was `cat .env` in the shell. An indirect read, such as a script that opens the file, was not tested and is not claimed to be blocked. | Settled for direct reads |
 | O10 | How long Coastal Flood Warnings last. Measured: 24 and 46 hours, but only two in ten years, both at Houston (point 7). They cannot dominate. Whether they stay in the flood group is decided with the bands. | Measured in M1; decision at the M2 review |
-| O11 | What the score does where FEMA gives a county no hurricane figure (Minneapolis, Denver) or its floor of 0.01 a year (point 4). Proposed: no figure counts as zero and the answer says FEMA rates hurricanes as not applicable there; a figure of exactly 0.01 is used as given and the explanation names it as FEMA's default for land with no recorded storm. | M2 |
+| O11 | What the score does where FEMA gives a county no hurricane figure (Minneapolis, Denver) or its default of 0.01 a year (point 4). Proposed: no figure counts as zero and the answer says FEMA rates hurricanes as not applicable there; a figure of exactly 0.01 is used as given and the explanation names it as FEMA's default for land with no recorded storm. | M2 |
 | O12 | How to count a drawn-area warning whose county row ended earlier or later (point 12). Proposed: it ends at the earlier of its own end and the county row's last end, because once the county is cancelled the hub cannot still be under the warning. A county extension is not added, because the redrawn area may no longer have covered the hub. The effect is small: severe thunderstorm time falls about 5%. | M2 |

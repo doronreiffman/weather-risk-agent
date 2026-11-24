@@ -19,10 +19,10 @@ uv run pytest -q
 
 ## How the build sessions were run
 
-The full Claude Code sessions are in [docs/ai-session/](docs/ai-session/). Two of the owner's own tools carried context from one session to the next. Neither is part of this repository.
+The full Claude Code sessions are in [docs/ai-session/](docs/ai-session/). Two tools from the owner's Claude Code setup carried context from one session to the next. Neither is part of this repository.
 
-- **`handoff` skill:** closes a session. A fresh reviewer checks the session's changes, the work queue in `.claude/QUEUE.md` is re-sorted, and Claude writes a ready-to-paste prompt for the next session.
-- **`remember` plugin:** keeps running notes of each session in a local `.remember/` folder, which git ignores, and loads them into the next session when it starts.
+- **`handoff` skill (the owner's own):** closes a session. A fresh reviewer checks the session's changes, the work queue in `.claude/QUEUE.md` is re-sorted, and Claude writes a prompt for the next session. From session 02 on, the prompt is also saved in the `remember` plugin's handoff file, so the next session is shown it when it starts. The owner still opens that session with a short message, because the plugin presents the saved prompt as information, not as an instruction to act on.
+- **`remember` plugin (by Digital Process Tools, installed from the `claude-plugins-official` marketplace):** keeps running notes of each session in a local `.remember/` folder, which git ignores, and loads them into the next session when it starts.
 
 ## Data sources
 
