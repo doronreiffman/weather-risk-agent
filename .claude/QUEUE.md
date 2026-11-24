@@ -13,4 +13,5 @@ Most important first. Each line points to where the item's state lives; the stat
 
 ## Done / Dropped
 
+- [q1] Milestone 0: scaffold and rules. Done 2026-11-24. Proof: commits `db31520`, `14817f0`, `e427e7b`; the three checks' output is in session `01-plan.txt`.
 - [q7] Owner decision: how the score counts and weighs warnings. Done 2026-11-24. Proof: last entry of `docs/DECISIONS.md`. The band cut-offs it leaves open are part of q3.
