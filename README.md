@@ -2,7 +2,7 @@
 
 An agent that helps a logistics company's analysts decide which distribution hubs are most exposed to weather disruption.
 
-**Status: the data is in place (milestone 1 of 5).** Twelve hubs are loaded from three public sources into a local database. The risk score, the agent, the API and the chat page are not built yet. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed is in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md).
+**Status: the score and the evaluation set are built (milestone 2 of 5).** Twelve hubs are loaded from three public sources into a local database and ranked by expected disruption days a year, with code-computed confidence. Six tools return the figures, and fourteen evaluation cases with automatic graders are ready for the agent. The agent, the API and the chat page are not built yet. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed and what was decided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Run it
 
@@ -12,8 +12,13 @@ Needs [uv](https://docs.astral.sh/uv/). Run from the repository root.
 uv sync
 uv run wra ingest          # builds data/wra.sqlite from the stored responses, no network, about a second
 uv run wra data-report     # prints what the database holds, hub by hub
+uv run wra rank overall    # the ranking of all twelve hubs, with bands and confidence
+uv run wra rank winter --region midwest
+uv run wra eval --agent stub   # runs the fourteen evaluation cases; a stub agent scores 0 of 14
 uv run pytest -q
 ```
+
+`wra rank` takes `overall`, `winter`, `flood`, `severe_storm` or `hurricane`, an optional `--region` (`midwest`, `south`, `west`) and `--top N`. None of these commands uses the network. The scoring rules (weights, warning types, bands, confidence thresholds) are in `config/scoring.toml`.
 
 `uv run wra ingest --refresh` fetches everything again from the public services first (48 requests, about 90 seconds). It is not needed to run the project: the responses fetched on 2026-11-24 are stored under `data/raw/`.
 
