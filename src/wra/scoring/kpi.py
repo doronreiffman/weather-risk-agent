@@ -11,7 +11,7 @@ with changed weights and the official ones cannot be touched by accident.
 """
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from wra.ingest.iem import WarningEvent
 from wra.scoring.config import BAND_LABELS, HAZARDS, WARNING_HAZARDS, ScoringConfig
@@ -103,6 +103,14 @@ def _hurricane_rate(frequency: float | None, minimum: float) -> tuple[float, str
             "where no storm is on record. Used as given."
         )
     return frequency, None
+
+
+def reweigh(score: HubScore, weights: Mapping[str, float]) -> HubScore:
+    """The same hub under other weights. Rates and yearly days do not depend on weights, so nothing is recounted."""
+    return HubScore(
+        score.hub_id,
+        {h: replace(f, weight=weights[h], edd=f.rate * weights[h]) for h, f in score.hazards.items()},
+    )
 
 
 def rank(scores: Mapping[str, HubScore], hazard: str, hub_ids: Iterable[str] | None = None) -> list[RankedRow]:
