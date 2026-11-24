@@ -4,16 +4,16 @@ A case is one conversation. Earlier turns set it up; the checks grade the reply
 to the last turn, looking at tool calls from the whole conversation, because a
 follow-up may rightly reuse a result it already has.
 
-Expected hub orders and band words are never typed here: they come from the
-scoring code when the grader runs (`hubs`, callables in `required`). The one
-figure checked by hand against the source is pinned (`pinned`).
+Expected hub orders, hub names and band words are never typed here: they come
+from the scoring code when the grader runs (`hubs`, callables in `required`,
+`band_of`). The one figure checked by hand against the source is pinned (`pinned`).
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
 
-from wra.scoring.kpi import apply_weight_changes, band, rank
+from wra.scoring.kpi import DECIMALS, apply_weight_changes, band, rank
 from wra.tools.context import ToolContext
 
 REFERENCE_TOOLS = frozenset({"list_hubs", "get_methodology"})  # say what we cover; allowed when out of scope
@@ -96,7 +96,8 @@ class Case:
     allowed_tools: frozenset[str] | None = None  # None: any tool; otherwise only these, in the last turn
     hubs: HubsCheck | None = None
     is_what_if: bool | None = None
-    required: list[str | Callable[[ToolContext], str]] = field(default_factory=list)
+    required: list[str | Callable[[ToolContext], str]] = field(default_factory=list)  # whole words or numbers
+    band_of: str | None = None  # this hub's real band must be named, and no other band
     forbidden: list[str] = field(default_factory=lambda: list(FORBIDDEN_EVERYWHERE))
     pinned: dict[str, Any] = field(default_factory=dict)  # figures in the matching tool result's data
     shows_table: bool = True  # whether the expected tool's table must be among the reply's tables
@@ -118,11 +119,13 @@ def _pair_order(hub_ids: tuple[str, ...], hazard: str):
     return lambda ctx: [r.hub_id for r in rank(ctx.scores(), hazard, list(hub_ids))]
 
 
-def _band_of(hub_id: str):
-    def word(ctx: ToolContext) -> str:
-        return band(ctx.scores()[hub_id].edd, ctx.config.band_cutoffs)
+def expected_band(ctx: ToolContext, hub_id: str) -> str:
+    """Banded on the figure as the tools show it, rounded."""
+    return band(round(ctx.scores()[hub_id].edd, DECIMALS), ctx.config.band_cutoffs)
 
-    return word
+
+def _city(order, index: int):
+    return lambda ctx: ctx.data.hubs[order(ctx)[index]].city
 
 
 OFFICIAL = Weights()
@@ -138,7 +141,8 @@ MIA_IAH = ("MIA", "IAH")
 
 CASES = [
     Case(1, [Q1], "Assignment question. Ranking by one hazard and region.", "answered",
-         calls=[WINTER_MIDWEST], hubs=HubsCheck("prefix", _order("winter", "midwest")), required=["Minneapolis"]),
+         calls=[WINTER_MIDWEST], hubs=HubsCheck("prefix", _order("winter", "midwest")),
+         required=[_city(_order("winter", "midwest"), 0)]),
     Case(2, [Q2], "Assignment question. Comparison across two hazards.", "answered",
          calls=[ExpectedCall("compare_hubs", {"hub_ids": SameSet(MIA_IAH), "hazards": Contains(("hurricane", "flood"))})],
          required=["Miami", "Houston"]),
@@ -150,13 +154,14 @@ CASES = [
          required=["7.1"], pinned={"period": "2025", "days_meeting": 26, "days_observed": 364}),
     Case(4, ["Why is the Dallas hub's weather disruption risk high?"],
          "Assignment question. Explains drivers and states the real band.", "answered",
-         calls=[ExpectedCall("explain_hub", {"hub_id": "DAL"})], required=["Dallas", _band_of("DAL")]),
+         calls=[ExpectedCall("explain_hub", {"hub_id": "DAL"})], required=["Dallas"], band_of="DAL"),
     Case(5, [Q1, "And which is the least exposed?"], "Follow-up that keeps region and hazard.", "answered",
-         calls=[WINTER_MIDWEST], hubs=HubsCheck("last", _order("winter", "midwest")), required=["Columbus"]),
+         calls=[WINTER_MIDWEST], hubs=HubsCheck("last", _order("winter", "midwest")),
+         required=[_city(_order("winter", "midwest"), -1)]),
     Case(6, [Q2, "Which of the two is worse overall?"], "Follow-up that changes the hazard.", "answered",
          calls=[ExpectedCall("compare_hubs", {"hub_ids": SameSet(MIA_IAH), "hazards": Contains(("overall",))}),
                 ExpectedCall("rank_hubs", {"hazard": "overall", "weight_changes": OFFICIAL})],
-         hubs=HubsCheck("exact", _pair_order(MIA_IAH, "overall")), required=["Houston"]),
+         hubs=HubsCheck("exact", _pair_order(MIA_IAH, "overall")), required=[_city(_pair_order(MIA_IAH, "overall"), 0)]),
     Case(7, [OVERALL, WHAT_IF], "What-if, flagged as such.", "answered",
          calls=[ExpectedCall("rank_hubs", {"hazard": "overall", "region": "all", "weight_changes": HURRICANE_DOUBLE})],
          hubs=HubsCheck("prefix", _order("overall", weights=HURRICANE_DOUBLE)), is_what_if=True),

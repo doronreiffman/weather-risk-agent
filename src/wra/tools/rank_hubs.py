@@ -1,5 +1,7 @@
 """rank_hubs: hubs ranked by expected disruption days, for one hazard or overall, official or what-if."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from wra.scoring.config import HAZARDS
@@ -31,7 +33,7 @@ DESCRIPTION = (
 class WeightChange(BaseModel):
     model_config = ConfigDict(extra="forbid")
     hazard: Hazard
-    mode: str = Field(pattern="^(multiply|set)$")
+    mode: Literal["multiply", "set"]
     value: float = Field(ge=0)
 
 
@@ -53,13 +55,19 @@ def rank_hubs(ctx: ToolContext, args: RankHubsArgs) -> ToolResult:
     shown = ranked[: args.top_n] if args.top_n else ranked
     official_rank = {r.hub_id: r.rank for r in rank(ctx.scores(), args.hazard, hubs)}
 
-    gaps = [gap_test(scores[a.hub_id], scores[b.hub_id], args.hazard) for a, b in zip(shown, shown[1:])]
+    # The gaps the answer relies on (owner, 2026-11-24): those among the rows shown; for a single row,
+    # "the most exposed" is a claim against the 2nd, so that gap counts too. The last row shown also
+    # reports whether it stands clear of the next hub, as information that does not set the label.
+    pairs = list(zip(shown, ranked[1 : len(shown) + 1]))
+    counted = len(shown) - 1 if len(shown) > 1 else len(pairs)
+    tests = [gap_test(scores[a.hub_id], scores[b.hub_id], args.hazard) for a, b in pairs]
+    gaps = tests[:counted]
     stab = stability(scores, "overall", hubs, weights, cfg.confidence) if args.hazard == "overall" else None
     confidence = decide(ctx.coverage(hubs, [args.hazard]), gaps, cfg.confidence, ctx.cities(), stab)
 
     rows = []
     for i, r in enumerate(shown):
-        clear = gaps[i].passed if i < len(gaps) else None
+        clear = tests[i].passed if i < len(tests) else None
         row = {
             "rank": r.rank,
             "hub_id": r.hub_id,
@@ -155,7 +163,8 @@ def _display(ctx, args, rows, weights, stab, scores) -> Display:
     notes = []
     if winter_counts([args.hazard]):
         notes.append(cfg.winter_note)
-    if stab is not None and ("winter", 2.0) in [(h, f) for h, f, _ in stab.variants]:
+    # Only for the official ranking: in a what-if, the variants sit around the changed weights.
+    if stab is not None and not args.weight_changes and ("winter", 2.0) in [(h, f) for h, f, _ in stab.variants]:
         top = [ctx.data.hubs[h].city for h in stab.top_with("winter", 2.0)]
         notes.append(f"With winter counted double, the top {_count(len(top))} are {_join(top)}.")
     if args.hazard == "hurricane":

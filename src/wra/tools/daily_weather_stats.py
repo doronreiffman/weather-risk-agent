@@ -38,7 +38,8 @@ def daily_weather_stats(ctx: ToolContext, args: DailyStatsArgs) -> ToolResult:
     start = args.start_year if args.start_year is not None else last_full
     end = args.end_year if args.end_year is not None else last_full
     if start > end:
-        return failure("daily_weather_stats", "invalid_arguments", f"start_year {start} is after end_year {end}.")
+        start_text = f"start_year {start}" if args.start_year is not None else f"start_year null, meaning {start}"
+        return failure("daily_weather_stats", "invalid_arguments", f"{start_text} is after end_year {end}.")
     if start < cfg.first_year or end > cfg.last_year:
         return failure(
             "daily_weather_stats",

@@ -12,10 +12,12 @@ case passes when every check that applies passes.
 - mentions: required words are present and forbidden ones absent, in the verdict and caveats.
 """
 
+import re
 from dataclasses import dataclass
 
 from wra.agent.schemas import AgentReply
-from wra.evals.cases import Case
+from wra.evals.cases import Case, expected_band
+from wra.scoring.config import BAND_LABELS
 from wra.tools.context import ToolContext
 from wra.tools.registry import run_tool
 
@@ -106,12 +108,38 @@ def _numbers(ctx: ToolContext, case: Case, last: AgentReply, matching) -> Check:
 
 
 def _mentions(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
-    text = " ".join([last.verdict, *last.caveats]).lower()
+    text = " ".join([last.verdict, *last.caveats])
     required = [w(ctx) if callable(w) else w for w in case.required]
-    missing = [w for w in required if w.lower() not in text]
-    present = [w for w in case.forbidden if w.lower() in text]
+    missing = [w for w in required if not _has(text, w)]
+    present = [w for w in case.forbidden if w.lower() in text.lower()]
     problems = ([f"missing {missing}"] if missing else []) + ([f"forbidden {present}"] if present else [])
+    if case.band_of:
+        want = expected_band(ctx, case.band_of)
+        named = _bands_named(text)
+        required.append(want)
+        if want not in named:
+            problems.append(f"band {want!r} not named (bands named: {sorted(named) or 'none'})")
+        elif named - {want}:
+            problems.append(f"another band named as well: {sorted(named - {want})}")
     return Check("mentions", not problems, "; ".join(problems) or f"has {required or 'nothing required'}")
+
+
+def _has(text: str, word: str) -> bool:
+    """A whole word, or a whole number: "7.1" is not found in "17.1" or "7.15"."""
+    return re.search(rf"(?<![\w.]){re.escape(word)}(?!\w|\.\d)", text, flags=re.IGNORECASE) is not None
+
+
+def _bands_named(text: str) -> set[str]:
+    """Band labels written as the tools write them, capitalised. "High" inside "Very high" is not High;
+    "Low confidence" is the confidence label, not a band."""
+    named = set()
+    for label in BAND_LABELS:
+        pattern = rf"(?<![\w])(?<!Very ){re.escape(label)}(?![\w])"
+        if label == "Low":
+            pattern += r"(?! confidence)"
+        if re.search(pattern, text):
+            named.add(label)
+    return named
 
 
 def _in_order(got: list[str], expected: list[str]) -> bool:

@@ -156,6 +156,30 @@ def test_a_missing_band_fails_mentions(ctx):
     assert failing(ctx, 4, [answer]) == {"mentions"}
 
 
+@pytest.mark.parametrize(
+    "verdict",
+    [
+        "Dallas is rated Very high, at 2.02 days a year.",
+        "Dallas is not high: it is Moderate, at 2.02 days a year.",
+        "Dallas's risk is high.",  # lowercase: not the band as the tools write it
+    ],
+)
+def test_a_wrong_or_unnamed_band_fails_mentions(ctx, verdict):
+    answer = reply(ctx, "answered", verdict, [("explain_hub", {"hub_id": "DAL"})])
+    assert failing(ctx, 4, [answer]) == {"mentions"}
+
+
+def test_a_number_inside_another_number_is_not_a_mention(ctx):
+    answer = reply(ctx, "answered", "Denver had measurable snowfall on 17.1% of days.", [snow()])
+    assert failing(ctx, 3, [answer]) == {"mentions"}
+
+
+def test_low_confidence_is_not_a_band(ctx):
+    answer = reply(ctx, "answered", "Dallas is High, but only just. Low confidence: its neighbours are close.",
+                   [("explain_hub", {"hub_id": "DAL"})])  # fmt: skip
+    assert failing(ctx, 4, [answer]) == set()
+
+
 def test_a_dollar_figure_fails_mentions(ctx):
     answers = correct(ctx, 2)
     answers[-1] = answers[-1].model_copy(update={"caveats": ["Upgrading Miami would cost $5 million."]})

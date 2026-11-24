@@ -141,7 +141,22 @@ def test_a_top_three_tests_only_the_gaps_it_shows(ctx):
     result = run_tool(ctx, "rank_hubs", rank_args(top_n=3))
     assert [r["hub_id"] for r in result.data["rows"]] == OVERALL_ORDER[:3]
     assert result.data["gaps_tested"] == 2
-    assert result.data["rows"][-1]["clear_of_next"] is None
+    # Denver (2.21) against Kansas City (2.20), reported but not counted in the label.
+    assert result.data["rows"][-1]["clear_of_next"] is False
+
+
+def test_a_top_one_tests_the_first_against_the_second(ctx):
+    result = run_tool(ctx, "rank_hubs", rank_args(hazard="winter", region="south", top_n=1))
+    assert result.data["gaps_tested"] == 1
+    assert result.data["rows"][0]["clear_of_next"] is False  # Memphis is within year-to-year swings of Dallas
+    assert result.provenance.confidence != "high"
+
+
+def test_a_what_if_carries_no_winter_doubled_note(ctx):
+    change = [{"hazard": "winter", "mode": "multiply", "value": 2}]
+    result = run_tool(ctx, "rank_hubs", rank_args(weight_changes=change))
+    assert not any("counted double" in note for note in result.display.notes)
+    assert any("FHWA-HOP-16-044" in note for note in result.display.notes)
 
 
 def test_a_flood_ranking_carries_no_winter_note(ctx):

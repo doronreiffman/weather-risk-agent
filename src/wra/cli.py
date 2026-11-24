@@ -118,11 +118,12 @@ def _rank(hazard: str, region: str, top: int | None) -> int:
 
 def _eval(agent_name: str, reps: int) -> int:
     from wra.evals.cases import CASES
-    from wra.evals.run import StubAgent, report, run_eval
+    from wra.evals.run import StubAgent, pinned_context, report, run_eval
     from wra.tools.context import load_context
 
+    ctx = pinned_context(load_context())  # the agent's tools and the graders share the pinned date
     agent = StubAgent()
-    runs, out_dir = run_eval(agent, load_context(), reps=reps, out_root=paths.root() / "evals" / "runs")
+    runs, out_dir = run_eval(agent, ctx, reps=reps, out_root=paths.root() / "evals" / "runs")
     print(report(runs, len(CASES), reps))
     print(f"Saved every conversation and check to {out_dir}.")
     return 0
