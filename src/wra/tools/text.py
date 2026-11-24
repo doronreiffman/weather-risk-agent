@@ -1,12 +1,15 @@
 """A tool result as plain text, for the command line: the table, its notes and the footnote."""
 
-from wra.tools.envelope import SOURCE_NAMES, ToolResult
+from wra.tools.envelope import SOURCE_NAMES, Display, ToolResult
 
 
 def as_text(result: ToolResult) -> str:
     if not result.ok:
         return f"{result.tool}: {result.error.code}: {result.error.message}"
-    d, p = result.display, result.provenance
+    return "\n".join([display_text(result.display), "", footnote_text(result.provenance)])
+
+
+def display_text(d: Display) -> str:
     cells = [d.columns] + [["" if c is None else _cell(c) for c in row] for row in d.rows]
     widths = [max(len(row[i]) for row in cells) for i in range(len(d.columns))]
     lines = [d.title, ""]
@@ -16,12 +19,15 @@ def as_text(result: ToolResult) -> str:
             lines.append("  ".join("-" * width for width in widths))
     lines += ["", d.what_counts]
     lines += [f"Note: {note}" for note in d.notes]
-    lines += [
-        "",
+    return "\n".join(lines)
+
+
+def footnote_text(p) -> str:
+    """The data, period and confidence lines, for a tool's provenance or an answer's footnote."""
+    return "\n".join([
         f"Data: {'; '.join(SOURCE_NAMES[s] for s in p.sources)}. Period: {p.period}. Data as of {p.data_as_of}.",
         f"Confidence: {p.confidence}. {p.confidence_reason}",
-    ]
-    return "\n".join(lines)
+    ])  # fmt: skip
 
 
 def _cell(value) -> str:

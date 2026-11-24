@@ -1,7 +1,7 @@
 """Command-line entry point.
 
 Subcommands are added one milestone at a time (docs/PLAN.md, section 13).
-So far: ingest, data-report, rank, eval. To come: ask, serve.
+So far: ingest, data-report, rank, ask, eval. To come: serve.
 """
 
 import argparse
@@ -38,13 +38,22 @@ def main(argv: list[str] | None = None) -> int:
     rank.add_argument("--region", choices=["all", "midwest", "south", "west"], default="all")
     rank.add_argument("--top", type=int, default=None, metavar="N", help="show only the top N hubs")
 
+    ask = commands.add_parser(
+        "ask",
+        help="ask the agent one question (a paid API call)",
+        description="Send one question to the agent and print its validated answer, the tables and the "
+        "data, period and confidence lines. Needs ANTHROPIC_API_KEY in .env.",
+    )
+    ask.add_argument("question")
+
     evaluate = commands.add_parser(
         "eval",
         help="run the fourteen evaluation cases through an agent and print the score",
         description="Run every evaluation case, grade the answers in code, print a table and a score, and save "
         "every conversation under evals/runs/. The clock is pinned to 2026-11-24.",
     )
-    evaluate.add_argument("--agent", choices=["stub"], required=True, help="stub: answers nothing (milestone 2)")
+    evaluate.add_argument("--agent", choices=["claude", "stub"], default="claude",
+                          help="claude: the real agent, paid API calls (default); stub: answers nothing")
     evaluate.add_argument("--reps", type=int, default=1, metavar="N", help="repetitions per case (default 1)")
 
     args = parser.parse_args(argv)
@@ -55,6 +64,8 @@ def main(argv: list[str] | None = None) -> int:
             return _data_report()
         if args.command == "rank":
             return _rank(args.hazard, args.region, args.top)
+        if args.command == "ask":
+            return _ask(args.question)
         if args.command == "eval":
             return _eval(args.agent, args.reps)
     except (SourceError, NoDatabase) as error:
@@ -122,8 +133,44 @@ def _eval(agent_name: str, reps: int) -> int:
     from wra.tools.context import load_context
 
     ctx = pinned_context(load_context())  # the agent's tools and the graders share the pinned date
-    agent = StubAgent()
+    if agent_name == "stub":
+        agent = StubAgent()
+    else:
+        from wra.agent.loop import ClaudeAgent
+
+        agent = ClaudeAgent(ctx)
     runs, out_dir = run_eval(agent, ctx, reps=reps, out_root=paths.root() / "evals" / "runs")
     print(report(runs, len(CASES), reps))
     print(f"Saved every conversation and check to {out_dir}.")
     return 0
+
+
+def _ask(question: str) -> int:
+    from wra.agent.loop import ClaudeAgent
+    from wra.tools.context import load_context
+    from wra.tools.text import display_text, footnote_text
+
+    reply = ClaudeAgent(load_context()).answer(None, question)
+    t = reply.trace
+    if reply.status == "error":
+        print(f"error: {reply.error}", file=sys.stderr)
+    else:
+        print(f"[{reply.status}{', what-if' if reply.is_what_if else ''}] {reply.verdict}")
+        for caveat in reply.caveats:
+            print(f"  - {caveat}")
+        for table in reply.tables:
+            print("\n" + display_text(table))
+        if reply.footnote:
+            print("\n" + footnote_text(reply.footnote))
+    calls = ", ".join(f"{c.id} {c.name}" for c in t.tool_calls) or "none"
+    cost = t.usage.get("cost_usd")
+    print(f"\n(model {t.model}; tool calls: {calls}; repaired: {'yes' if t.repaired else 'no'}; "
+          f"{t.latency_ms / 1000:.1f} s; tokens {_input_tokens(t.usage)} in "
+          f"({t.usage.get('cache_read_input_tokens', 0)} from cache), {t.usage.get('output_tokens', 0)} out"
+          + (f"; cost ${cost:.4f} at list price" if cost is not None else "") + ")")
+    return 1 if reply.status == "error" else 0
+
+
+def _input_tokens(usage: dict) -> int:
+    """All input tokens: the API reports uncached, cache-read and cache-write input separately."""
+    return sum(usage.get(k, 0) or 0 for k in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))

@@ -636,6 +636,15 @@ Changes forced by reality are appended here, newest last.
 - *Hub ids are a plain string in the Pydantic argument models (section 8.1).* The enumeration of the twelve ids is applied where it matters, in the schema sent to the model (`src/wra/agent/tooldefs.py`, milestone 3), so the model cannot name a city with no hub; `run_tool` refuses an unknown id with an `unknown_hub` error.
 - *Four more modules under `tools/` (section 11).* Besides one module per tool and the registry: `envelope.py` (the result models), `context.py` (data, config, date and cached scores, loaded once), `common.py` (shared labels and argument types) and `text.py` (a result as plain text for the command line).
 
+**2026-11-24, milestone 3. What the agent build changed.**
+
+- *Evidence cites result ids that code assigns (sections 8.3 and 8.4).* Planned: `evidence` lists tool call ids. The spike showed the model inventing an id it could not see (`toolu_rank_hubs_winter_midwest` for the real `toolu_017v4rGMCT4oAfTHyotz4RnV`). Each tool result now carries a `result_id` (R1, R2, ...) in its content, and evidence cites those. Decision log, same date.
+- *Settings in a second config file (section 9).* `config/agent.toml` holds the model, effort, token limit, call limit, the refusal fallback and list prices for cost reports; `WRA_MODEL` and `WRA_EFFORT` override the first two.
+- *The refusal fallback is on (section 8.4).* The spike showed it combines cleanly with structured output, so every request sends the `server-side-fallback-2026-07-01` beta with `fallbacks: "default"`, which picks the substitute model by refusal category. A refusal the fallback cannot rescue is still a plain error.
+- *Prompt caching on.* The system prompt and tool definitions are the same on every request, and the request asks the API to cache them.
+- *Strict schemas are generated, not hand-written (section 8.1).* `src/wra/agent/tooldefs.py` builds them from the Pydantic argument models, removing what strict mode does not support (numeric bounds, length and array limits, patterns) and turning hub fields into the enumeration of twelve ids. Pydantic still enforces the removed limits in `run_tool`.
+- *More modules under `agent/` than section 11 listed.* `checks.py` (the checks of section 8.4), `settings.py` and `tooldefs.py` beside `schemas.py`, `prompt.py`, `loop.py`, `grounding.py` and `render.py`.
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks

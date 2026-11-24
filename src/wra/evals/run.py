@@ -112,14 +112,20 @@ def report(runs: list[CaseRun], n_cases: int, reps: int) -> str:
     replies = [reply for r in runs for reply in r.replies]
     repaired = sum(reply.trace.repaired for reply in replies)
     seconds = sum(r.seconds for r in runs) / len(runs) if runs else 0.0
-    tokens_in = sum(reply.trace.usage.get("input_tokens", 0) for reply in replies)
+    tokens_in = sum(
+        reply.trace.usage.get(k, 0) or 0
+        for reply in replies
+        for k in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
+    )  # the API reports uncached, cache-read and cache-write input separately
     tokens_out = sum(reply.trace.usage.get("output_tokens", 0) for reply in replies)
+    costs = [reply.trace.usage.get("cost_usd") for reply in replies if reply.trace.usage.get("cost_usd") is not None]
     lines += [
         "",
         f"Score: {passed} of {len(runs)} case runs passed ({n_cases} cases x {reps} repetition"
         f"{'s' if reps != 1 else ''}).",
         f"Errors (no answer): {errors} of {len(runs)}. Repaired answers: {repaired} of {len(replies)}.",
-        f"Time per case: {seconds:.2f} s. Tokens: {tokens_in} in, {tokens_out} out.",
+        f"Time per case: {seconds:.2f} s. Tokens: {tokens_in} in, {tokens_out} out."
+        + (f" Cost at list price: ${sum(costs):.2f}." if costs else ""),
     ]
     return "\n".join(lines)
 

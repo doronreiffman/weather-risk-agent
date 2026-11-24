@@ -15,6 +15,18 @@ from wra.tools.envelope import Display
 Status = Literal["answered", "out_of_scope", "no_data", "needs_clarification", "error"]
 
 
+class FinalAnswer(BaseModel):
+    """What the model returns when it is done (plan section 8.3), requested through structured output."""
+
+    model_config = ConfigDict(extra="forbid")
+    status: Literal["answered", "out_of_scope", "no_data", "needs_clarification"]
+    verdict: str  # one to four sentences of Markdown, no tables
+    evidence: list[str]  # result ids (R1, R2, ...) whose tables the page shows, in order
+    hubs_ranked: list[str]  # the order the verdict asserts, most exposed first; empty if none
+    is_what_if: bool
+    caveats: list[str]  # zero to three short sentences
+
+
 class ToolCallRecord(BaseModel):
     model_config = ConfigDict(extra="forbid")
     id: str

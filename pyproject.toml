@@ -4,8 +4,10 @@ version = "0.1.0"
 description = "Weather Risk Intelligence Agent: ranks distribution hubs by exposure to weather disruption and explains the ranking."
 requires-python = ">=3.13"
 dependencies = [
+    "anthropic>=2.13.0",
     "httpx>=0.28.1",
     "pydantic>=2.14.4",
+    "python-dotenv>=1.2.4",
 ]
 
 [project.scripts]

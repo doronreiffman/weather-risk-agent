@@ -1,0 +1,30 @@
+# How the agent calls Claude (docs/PLAN.md, section 9). Settings, not code:
+# WRA_MODEL and WRA_EFFORT in the environment override the two below.
+
+model = "claude-opus-5-5"   # build and tune here; milestone 5 measures Sonnet 5.5 and Haiku 5.5
+effort = "medium"           # Opus 5.5's own default, set explicitly; thinking cannot be switched off on it
+max_tokens = 16000          # per model call; non-streaming
+max_model_calls = 6         # per user message (plan section 8.4)
+
+# Server-side refusal fallback: when the model's safety system declines, the
+# API re-runs the request on a substitute model chosen by the refusal's category.
+fallback_beta = "server-side-fallback-2026-07-01"
+fallbacks = "default"
+
+# List prices in US dollars per million tokens, from the Claude API reference
+# bundled with Claude Code (cached 2026-11-03). Used only to report what an
+# evaluation run cost. Re-check against the live pricing page before quoting
+# them anywhere (open point O8). Cache writes are billed at 1.25 times input.
+[prices.claude-opus-5-5]
+input = 4.00
+output = 20.00
+cache_read = 0.20
+
+[prices.claude-sonnet-5-5]
+input = 2.00
+output = 10.00
+cache_read = 0.10
+
+[prices.claude-haiku-5-5]
+input = 0.10
+output = 0.50
