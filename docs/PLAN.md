@@ -627,6 +627,10 @@ Changes forced by reality are appended here, newest last.
 
 - *Coastal flood warnings are not scored (section 5.2).* Planned: flood counts flash flood warnings plus coastal flood warnings for the hub's zone. The only two coastal ones, at Houston in 2016, warned of flooding on Galveston Bay and the Gulf beaches, not at the airport. The owner removed them at the review; they stay a supporting figure. Decision log, same date.
 - *A module the layout did not list (section 11).* `src/wra/stored.py` reads the database into plain values once, so the scoring core and the tools never run SQL and can be tested on hand-built inputs.
+- *The result envelope gains `display.notes` (section 8.2).* Fixed caveats written by code go under the table: the winter note (decision log, "Weights stay equal"), FEMA's special hurricane cases, unscored coastal flood time. The model never writes them.
+- *Bands only on overall figures (section 8.1).* `rank_hubs` gives a band only in an overall ranking, and `compare_hubs` only for an overall row (decision log, band cut-offs).
+- *What the tools measure against (section 8.1).* `compare_hubs` measures each hub against the most exposed hub of the group (owner's choice). `rank_hubs` reports per row whether the hub stands clear of the next; in a top-N ranking only the gaps among the rows shown are tested.
+- *Four more modules under `tools/` (section 11).* Besides one module per tool and the registry: `envelope.py` (the result models), `context.py` (data, config, date and cached scores, loaded once), `common.py` (shared labels and argument types) and `text.py` (a result as plain text for the command line).
 
 ---
 

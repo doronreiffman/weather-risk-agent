@@ -1,7 +1,7 @@
 """Command-line entry point.
 
 Subcommands are added one milestone at a time (docs/PLAN.md, section 13).
-So far: ingest, data-report. To come: rank, ask, eval, serve.
+So far: ingest, data-report, rank, eval. To come: ask, serve.
 """
 
 import argparse
@@ -10,6 +10,7 @@ import sys
 from wra import __version__, paths
 from wra.hubs import load_hubs
 from wra.ingest.errors import SourceError
+from wra.stored import NoDatabase
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -28,13 +29,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     commands.add_parser("data-report", help="print what the database holds, hub by hub")
 
+    rank = commands.add_parser(
+        "rank",
+        help="rank the hubs by expected disruption days a year (no network)",
+        description="Print the official ranking for one hazard or overall, as the rank_hubs tool returns it.",
+    )
+    rank.add_argument("hazard", choices=["overall", "winter", "flood", "severe_storm", "hurricane"])
+    rank.add_argument("--region", choices=["all", "midwest", "south", "west"], default="all")
+    rank.add_argument("--top", type=int, default=None, metavar="N", help="show only the top N hubs")
+
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
             return _ingest(args.refresh)
         if args.command == "data-report":
             return _data_report()
-    except SourceError as error:
+        if args.command == "rank":
+            return _rank(args.hazard, args.region, args.top)
+    except (SourceError, NoDatabase) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
     parser.print_help()
@@ -80,3 +92,14 @@ def _data_report() -> int:
     text, ok = data_report(paths.database(), paths.raw_dir())
     print(text)
     return 0 if ok else 1
+
+
+def _rank(hazard: str, region: str, top: int | None) -> int:
+    from wra.tools.context import load_context
+    from wra.tools.registry import run_tool
+    from wra.tools.text import as_text
+
+    args = {"hazard": hazard, "region": region, "top_n": top, "weight_changes": []}
+    result = run_tool(load_context(), "rank_hubs", args)
+    print(as_text(result))
+    return 0 if result.ok else 1

@@ -25,6 +25,7 @@ class HubRecord:
     lon: float
     county_fips: str
     county_name: str
+    county_check: str  # 'agree' when FEMA and the warning archive name one county
 
 
 @dataclass(frozen=True)
@@ -66,8 +67,8 @@ def _load(db: sqlite3.Connection) -> StoredData:
     hubs = {
         r[0]: HubRecord(*r)
         for r in db.execute(
-            "SELECT hub_id, city, state, region, tz, station_id, station_name, lat, lon, county_fips, county_name "
-            "FROM hubs ORDER BY rowid"
+            "SELECT hub_id, city, state, region, tz, station_id, station_name, lat, lon, county_fips, county_name, "
+            "county_check FROM hubs ORDER BY rowid"
         )
     }
     warnings: dict[str, list[WarningEvent]] = {hub: [] for hub in hubs}

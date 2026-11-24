@@ -1,0 +1,31 @@
+"""A tool result as plain text, for the command line: the table, its notes and the footnote."""
+
+from wra.tools.envelope import SOURCE_NAMES, ToolResult
+
+
+def as_text(result: ToolResult) -> str:
+    if not result.ok:
+        return f"{result.tool}: {result.error.code}: {result.error.message}"
+    d, p = result.display, result.provenance
+    cells = [d.columns] + [["" if c is None else _cell(c) for c in row] for row in d.rows]
+    widths = [max(len(row[i]) for row in cells) for i in range(len(d.columns))]
+    lines = [d.title, ""]
+    for n, row in enumerate(cells):
+        lines.append("  ".join(value.ljust(width) for value, width in zip(row, widths)).rstrip())
+        if n == 0:
+            lines.append("  ".join("-" * width for width in widths))
+    lines += ["", d.what_counts]
+    lines += [f"Note: {note}" for note in d.notes]
+    lines += [
+        "",
+        f"Data: {'; '.join(SOURCE_NAMES[s] for s in p.sources)}. Period: {p.period}. Data as of {p.data_as_of}.",
+        f"Confidence: {p.confidence}. {p.confidence_reason}",
+    ]
+    return "\n".join(lines)
+
+
+def _cell(value) -> str:
+    """Figures as the tool gives them, padded to two decimals: 2.9 shows as 2.90, FEMA's 0.0115 stays 0.0115."""
+    if isinstance(value, float):
+        return f"{value:.2f}" if round(value, 2) == value else str(value)
+    return str(value)

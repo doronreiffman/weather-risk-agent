@@ -16,6 +16,10 @@ def hubs_config() -> Path:
     return root() / "config" / "hubs.toml"
 
 
+def scoring_config() -> Path:
+    return root() / "config" / "scoring.toml"
+
+
 def raw_dir() -> Path:
     return root() / "data" / "raw"
 

@@ -74,3 +74,41 @@ def test_ingest_without_raw_files_fails_with_a_plain_message(tmp_path, monkeypat
 
     assert main(["ingest"]) == 1
     assert "run `wra ingest --refresh`" in capsys.readouterr().err
+
+
+@pytest.fixture
+def scored_project(tmp_path, monkeypatch, real_db):
+    """A project folder holding the real config and the database built from the committed raw responses."""
+    import shutil
+
+    from conftest import REPO
+
+    (tmp_path / "config").mkdir()
+    for name in ("hubs.toml", "scoring.toml"):
+        shutil.copy(REPO / "config" / name, tmp_path / "config" / name)
+    (tmp_path / "data").mkdir()
+    shutil.copy(real_db, tmp_path / "data" / "wra.sqlite")
+    monkeypatch.setenv("WRA_ROOT", str(tmp_path))
+    return tmp_path
+
+
+def test_rank_overall_prints_the_table_bands_and_confidence(scored_project, capsys):
+    assert main(["rank", "overall"]) == 0
+    out = capsys.readouterr().out
+    lines = out.splitlines()
+    assert lines[0] == "Overall exposure, all hubs: expected disruption days a year"
+    assert re.search(r"^1\s+Minneapolis \(MSP\)\s+2\.90\s+High", lines[4])
+    assert "Confidence: low." in out and "FHWA-HOP-16-044" in out
+
+
+def test_rank_winter_for_one_region(scored_project, capsys):
+    assert main(["rank", "winter", "--region", "midwest"]) == 0
+    out = capsys.readouterr().out
+    hubs = re.findall(r"^\d\s+\w[\w ]*\((\w{3})\)", out, flags=re.M)
+    assert hubs == ["MSP", "MCI", "ORD", "IND", "CMH"]
+
+
+def test_rank_without_a_database_says_how_to_build_one(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("WRA_ROOT", str(tmp_path))
+    assert main(["rank", "overall"]) == 1
+    assert "uv run wra ingest" in capsys.readouterr().err
