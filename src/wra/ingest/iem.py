@@ -9,8 +9,9 @@ Two services, both used (docs/PLAN.md, section 5.2):
               Each row is the warning as first drawn, with its first planned
               end. If the warning was later cancelled early or extended for the
               hub's county, that shows only in the county's zone row for the same
-              event (measured 2026-11-24: 104 of 920 severe thunderstorm rows end
-              later here than in the county row). The scoring code reconciles them.
+              event (measured 2026-11-24: of the 920 severe thunderstorm rows
+              issued in 2016 to 2025, 104 end later here than in the county row).
+              The scoring code reconciles them.
 
 All rows are kept, whatever their type. Which types count toward the score is
 decided by the scoring config, not here.

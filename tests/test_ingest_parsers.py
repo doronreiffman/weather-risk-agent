@@ -144,6 +144,22 @@ def test_an_area_code_that_is_neither_county_nor_zone_is_an_error():
         iem.area_codes(odd)
 
 
+def test_a_time_that_is_not_utc_is_an_error():
+    payload = load("iem_zone_DAL.json")
+    payload["events"][0]["issue"] = "2016-01-01T09:36:00-06:00"
+
+    with pytest.raises(SourceError, match="expected a UTC time"):
+        iem.parse_zone_response(payload)
+
+
+def test_a_record_without_its_event_year_is_an_error():
+    payload = load("iem_zone_DAL.json")
+    payload["events"][0]["url"] = "/vtec/?wfo=KFWD&phenomena=FL&significance=W&eventid=0320"
+
+    with pytest.raises(SourceError, match="no event year"):
+        iem.parse_zone_response(payload)
+
+
 def test_zone_response_without_its_events_list_is_an_error():
     with pytest.raises(SourceError):
         iem.parse_zone_response({"generated_at": "2026-11-24T10:03:00Z"})

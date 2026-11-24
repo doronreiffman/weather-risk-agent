@@ -59,8 +59,8 @@ def _report(db: sqlite3.Connection, raw_dir: Path) -> tuple[str, bool]:
     relabelled = [h[0] for h in hubs if h[7] != h[6]]
     if relabelled:
         out += [
-            f"Note: the station service labels {', '.join(relabelled)} with a neighbouring county. Its label is "
-            "typed, not looked up on the map, so the hub's county is the one FEMA and the warning archive give."
+            f"Note: the station service labels {', '.join(relabelled)} with a different county than both maps give "
+            "for the station's coordinates. The hub's county is the one the maps give."
         ]
 
     out += ["", "2. Rows per hub, and how complete the station record is", ""]

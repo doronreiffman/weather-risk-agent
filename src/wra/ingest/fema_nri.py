@@ -8,8 +8,9 @@ What the hurricane frequency is, from FEMA's technical documentation (December
 2025, sections 13 and 13.5): storms per year whose modelled wind area reaches
 the 49 km grid cell around a place, counted over 1851 to 2024, tropical storms
 included. The county figure is an area-weighted average over the county. A
-place FEMA considers reachable but with no recorded storm gets a floor of 0.01
-a year.
+place FEMA considers reachable but with no recorded storm gets a default of
+0.01 a year. It is not a minimum: a place with one storm on record gets about
+0.006, so a county's average can be lower than 0.01.
 
 The service answers a bad query with HTTP 200 and an error in the body, so the
 body is checked before anything is read from it.

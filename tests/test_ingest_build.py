@@ -136,7 +136,7 @@ def test_a_county_disagreement_between_the_map_based_sources_is_recorded_not_hid
     assert rows(db, "SELECT county_check FROM hubs") == [("differ",)]
 
 
-def test_the_station_service_s_typed_county_label_does_not_decide_the_check(tmp_path):
+def test_the_station_service_s_county_label_does_not_decide_the_check(tmp_path):
     # Real case: the station service labels O'Hare as Cook County, while its
     # coordinates sit in DuPage on both FEMA's map and the Weather Service's.
     def relabel(payload):
@@ -172,6 +172,16 @@ def test_a_raw_file_fetched_for_another_period_is_refused(tmp_path):
     raw = make_raw(tmp_path / "raw", urls={"iem_polygon": old})
 
     with pytest.raises(SourceError, match="different request"):
+        build_database([DAL], raw, tmp_path / "wra.sqlite")
+
+
+def test_a_station_in_another_state_is_refused(tmp_path):
+    def move_to_oklahoma(payload):
+        payload["meta"]["state"] = "OK"
+
+    raw = make_raw(tmp_path / "raw", changes={"acis": move_to_oklahoma})
+
+    with pytest.raises(SourceError, match="station is in OK"):
         build_database([DAL], raw, tmp_path / "wra.sqlite")
 
 
@@ -261,15 +271,23 @@ class FakeService:
     polygon service echoes it back, as the real services would.
     """
 
-    def __init__(self, fail_on: str | None = None, station_at: tuple[float, float] | None = None):
+    def __init__(
+        self,
+        fail_on: str | None = None,
+        station_at: tuple[float, float] | None = None,
+        answers: dict[str, str] | None = None,
+    ):
         self.asked: list[tuple[str, dict]] = []
         self.fail_on = fail_on
         self.station_at = station_at
+        self.answers = answers or {}  # service address -> fixture to answer with instead
 
     def __call__(self, url: str, params: dict[str, str]) -> tuple[str, bytes]:
         self.asked.append((url, params))
         if url == self.fail_on:
             raise ConnectionError("service is down")
+        if url in self.answers:
+            return full_url(url, params), fixture_bytes(self.answers[url])
         fixture = next(name for base, _, name in REQUESTS.values() if base == url)
         return full_url(url, params), fixture_bytes(fixture, self._move if self.station_at else None)
 
@@ -321,6 +339,21 @@ def test_a_failed_refresh_keeps_the_previous_raw_files(tmp_path):
             [DAL], raw, get=FakeService(fail_on=iem.POLYGON_URL), pause=lambda s: None, now=lambda: "2027-01-01T00:00:00Z"
         )
 
+    after = {p.relative_to(raw): p.read_bytes() for p in sorted(raw.rglob("*")) if p.is_file()}
+    assert after == before
+    assert not (tmp_path / "raw.new").exists()
+
+
+def test_an_error_answer_stops_the_refresh_and_keeps_the_previous_raw_files(tmp_path):
+    # FEMA answers a bad query with HTTP 200 and an error body; that must not be stored as data.
+    raw = make_raw(tmp_path / "raw")
+    before = {p.relative_to(raw): p.read_bytes() for p in sorted(raw.rglob("*")) if p.is_file()}
+    service = FakeService(answers={fema_nri.QUERY_URL: "fema_error.json"})
+
+    with pytest.raises(SourceError, match="FEMA service error"):
+        refresh([DAL], raw, get=service, pause=lambda s: None, now=lambda: "2027-01-01T00:00:00Z")
+
+    assert [url for url, _ in service.asked] == [acis.DATA_URL, fema_nri.QUERY_URL]
     after = {p.relative_to(raw): p.read_bytes() for p in sorted(raw.rglob("*")) if p.is_file()}
     assert after == before
     assert not (tmp_path / "raw.new").exists()

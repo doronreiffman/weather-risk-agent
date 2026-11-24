@@ -11,7 +11,7 @@ stored response: is this really the data for this hub?
 - Recorded, not stopped: FEMA and the warning archive naming different counties
   for the hub. Both answer from the map, so they should agree; if they do not, a
   person needs to look, and the data report says so. The station service's own
-  county label is stored too, but it is a typed label and not a map lookup: for
+  county label is stored too, but it disagrees with both maps for two hubs: for
   O'Hare and Atlanta it names the neighbouring county.
 """
 
