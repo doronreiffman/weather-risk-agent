@@ -36,11 +36,11 @@ Decided:
 
 | # | Assumption | Standing |
 |---|---|---|
-| A1 | Twelve fictional hubs, each at its city's main airport, grouped by US Census region (plan section 6). | Approved with the plan. |
+| A1 | Twelve fictional hubs, each at its city's main airport, grouped by US Census region (plan section 6). Dallas is the exception: Love Field, on the expectation that it keeps the hub in Dallas County, to be confirmed by the county lookup. | Approved with the plan; Dallas's county confirmed in M1. |
 | A2 | Time under an official warning stands in for disruption. A warning is a forecast, not a closure record. Aftermath after the warning ends is not scored. | Approved (interview answer 5, refined 2026-11-24). |
 | A3 | Which warning types count for each hazard, and what is left out: advisories, watches, cold and wind-chill warnings, high-wind warnings, river and area flood warnings (plan section 5.2). | Approved with the plan. |
 | A4 | How warnings are counted: hours in force divided by 24, overlapping warnings of one hazard merged first, each hour assigned to its calendar year in the hub's time zone. | Decided 2026-11-24. |
-| A5 | The weights: 1.0 for winter, flood and severe storms (neutral), 5.0 days per hurricane event (supported by two hubs' records, still a judgment). | Decided 2026-11-24. |
+| A5 | The weights: 1.0 for winter, flood and severe storms (neutral), 5.0 days per hurricane event (supported by two hubs' records, still a judgment). The supporting warning time includes tropical storms and storm surge, so the weight makes FEMA's frequency reproduce time under any tropical warning; how to read the 5.0 depends on O3. | Decided 2026-11-24. |
 | A6 | The band cut-offs. Not yet set: round numbers of days per year, to be fixed from the twelve real figures. | Open until the milestone 2 review. |
 | A7 | An hour with warnings for two hazards counts once in each. A hurricane's flash flood warnings also count under flood. | Approved with the plan. |
 | A8 | Measurable snowfall means 0.1 inch or more. Trace days are reported separately. Missing days are left out of the percentage. | Approved with the plan. |
@@ -55,7 +55,7 @@ Decided:
 |---|---|---|
 | O1 | The NOAA station service (ACIS) publishes no usage terms on the two documentation pages read on 2026-11-24. The owner accepted committing its raw responses to this repository on 2026-11-24. The terms themselves remain unconfirmed. | Accepted by owner; terms still open |
 | O2 | A checker reported FEMA's FAQ as saying "This data may be used for commercial purposes." That document was not re-read. Confirmed directly: FEMA requires the notice "This product uses the Federal Emergency Management Agency's National Risk Index dataset API or downloadable datasets but is not endorsed by FEMA." It goes in the README and the page footer. | M5 |
-| O3 | Whether FEMA's hurricane event count includes weaker tropical storms. | M1 |
+| O3 | Whether FEMA's hurricane event count includes weaker tropical storms. It decides whether the 5.0 weight reads as days per hurricane or per tropical system (see A5). | M1 |
 | O4 | Whether tool calls and a structured final answer combine in one request the way the Claude API reference describes. | M3 spike |
 | O5 | The size of the committed raw responses. If unreasonable for a repository, store only the fields used. | M1 |
 | O6 | Station ids for the eleven hubs other than Denver, and whether each has near-complete snowfall records. | M1 |

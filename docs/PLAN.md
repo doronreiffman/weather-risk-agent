@@ -85,7 +85,7 @@ Each source was tested with live requests by a subagent, and I re-ran one reques
 
 | Source | Role | Why this one |
 |---|---|---|
-| IEM warning archive | The score's main input for winter, flood and severe storms. | It measures official "this is dangerous here" days, set locally by forecasters. It captures ice storms, which snowfall data misses. Commercial use is explicitly allowed. |
+| IEM warning archive | The score's main input for winter, flood and severe storms. | It measures how long an official "this is dangerous here" warning was in force, set locally by forecasters. It captures ice storms, which snowfall data misses. Commercial use is explicitly allowed. |
 | FEMA NRI | Hurricane frequency. Also a cross-check figure for the other hazards. | Hurricanes are too rare for 10 years of data. FEMA's hurricane record runs from 1851 to 2024 (173.86 years, counted as distinct events, per its technical documentation). |
 | NOAA station observations (ACIS) | Daily snowfall and rainfall questions, such as the Denver one. | It is measured, and it is the figure the Weather Service itself would quote. |
 
@@ -141,7 +141,7 @@ The weight converts one counted unit into disruption days. The weights live in `
 | Winter | 1.0 | disruption days per day under warning | Neutral: the hub counts as disrupted for exactly as long as the warning is in force. |
 | Flood | 1.0 | disruption days per day under warning | Same. |
 | Severe storms | 1.0 | disruption days per day under warning | Same. |
-| Hurricane | 5.0 | disruption days per event | Matches the recent record: time under Hurricane, Tropical Storm or Storm Surge Warnings in 2008 to 2025, divided by the events FEMA's frequency predicts for those years, is 4.4 days per event for Miami and 5.3 for Houston. |
+| Hurricane | 5.0 | disruption days per event | Matches the recent record: time under Hurricane, Tropical Storm or Storm Surge Warnings in 2008 to 2025, divided by the events FEMA's frequency predicts for those years, is 4.4 days per event for Miami and 5.3 for Houston. Because that warning time includes tropical storms and storm surge, the weight makes FEMA's frequency reproduce time under any tropical warning. Whether FEMA's own count includes tropical storms is open point O3; it changes how to read the 5.0, per hurricane or per tropical system. |
 
 The three warning weights are equal on purpose. They add no judgment about which hazard is worse: the measured length of the warnings already carries that. A winter storm warning lasts about 18 to 30 hours, a flash flood warning about 3, a severe thunderstorm warning under 1.
 
@@ -182,7 +182,7 @@ For daily station statistics: high if at most 2% of days are missing, medium up 
 - A warning is a forecast that conditions will be dangerous. It is not a record that the hub closed.
 - EDD is in "day equivalents under our stated weights". It is not a prediction of closure days.
 - It counts the time a warning was in force and nothing after it. Aftermath is not in the score.
-- Ten years is a short record. In Minneapolis the number of calendar days touched by a winter warning ranged from 0 to 14 in single years.
+- Ten years is a short record. Minneapolis's time under winter warnings ranged from none to 6.3 days in single years, around an average of 2.7 (city-centre test point, UTC years).
 - Flood exposure at a real site depends on the exact parcel. This score sees only the hub's coordinates and county.
 
 ## 6. The hubs
@@ -196,6 +196,7 @@ The company is fictional, so the hub list is an assumption. Twelve hubs, each pl
 | West | Denver (DEN), Phoenix (PHX) |
 
 - Regions follow the US Census Bureau's regions. There is no hub in the Northeast.
+- Dallas is the one exception to "main airport". It uses Love Field (DAL) instead of the larger Dallas/Fort Worth airport, on the expectation that Love Field keeps the hub, its station and its county inside Dallas itself. Milestone 1's county lookup confirms or corrects this.
 - Phoenix is included on purpose as a quiet hub, so the ranking has a low end to sanity-check against.
 - Coordinates, county and warning zone for each hub are **read from the data sources during milestone 1**, not typed from memory: coordinates from the station's own metadata, the county from a point query against FEMA's county layer, the zones from the warning archive's response. The point query against FEMA's layer is untested; if it does not work, the county comes from the county code in the warning data. Only Denver's station has been confirmed so far ("DENVER INTL AP").
 
@@ -412,10 +413,12 @@ All checks are code. No LLM judges another LLM. Each is reported separately, the
 | `status` | The answer's status is the expected one. |
 | `tool` | The required tool was called with the key arguments, and no tool was called where none should be. It does not require an exact sequence. |
 | `hubs` | `hubs_ranked` matches what the scoring code returns when the grader calls it directly on the same data. |
-| `numbers` | The figures in the response tables equal the grader's own call to the tool, and every digit in the verdict passes the grounding check. |
+| `numbers` | The tables shown equal what the tool returns when the grader calls it with the arguments the case expects. That catches an answer about the wrong hub, year or hazard. Where a figure has been checked by hand against the source, the case pins that value, so a bug in our own tool is caught too. First pinned value: Denver International, 2025, 26 days of measurable snowfall out of 364 observed. |
 | `mentions` | Required words are present (for example both hub names, or the band), and forbidden ones are absent (for example any dollar figure). |
 
 A case passes when all its checks pass.
+
+The evaluation does not re-test the grounding check from section 8.4. Any answer that reaches a grader has already passed it, so a grader reusing the same code would prove nothing. The grounding check has its own unit tests with planted wrong numbers (milestone 3), and the evaluation reports how often it forced a repair or an error.
 
 ### 10.3 Running and reporting
 
@@ -448,7 +451,7 @@ weather-risk-agent/
   src/wra/
     cli.py                   wra ingest | data-report | rank | ask | eval | serve
     ingest/                  iem.py, fema_nri.py, acis.py, store.py
-    scoring/                 days.py, kpi.py, confidence.py      (pure functions)
+    scoring/                 warning_time.py, kpi.py, confidence.py   (pure functions)
     tools/                   one module per tool, plus the registry
     agent/                   schemas.py, prompt.py, loop.py, grounding.py, render.py
     api/                     app.py, sessions.py, static/index.html
@@ -479,7 +482,7 @@ Python 3.13, pinned for the project through `uv` (this machine's default is 3.14
 | `station_daily` | One row per hub per day: snowfall, precipitation, and the flags for trace and missing. |
 | `fetch_log` | What was fetched, from which URL, when, with a checksum. |
 
-- Raw warning events are stored, and the day counts are computed from them by the scoring code. That keeps the counting rule in one tested place, and anyone can audit a figure back to individual warnings.
+- Raw warning events are stored, and the time under warning is computed from them by the scoring code. That keeps the counting rule in one tested place, and anyone can audit a figure back to individual warnings.
 - The raw API responses are kept under `data/raw/` and committed. A fresh clone then builds the database in seconds without the network, the demo does not depend on a university server, and the evaluation's expected answers stay fixed. `wra ingest --refresh` fetches again.
 - The ingest refuses to send a request with an empty coordinate and records which areas each response was for. Today's check showed why: a request with empty coordinates returned 926 records and no error.
 
@@ -495,8 +498,8 @@ Check: `uv run pytest -q` passes one placeholder test. `git check-ignore -v .env
 **M1. Data.** Hub config, three ingest adapters, raw cache, SQLite.
 Check: `uv run wra ingest --refresh` prints rows per source and hub. `uv run pytest tests/test_ingest_parsers.py -q` passes on recorded responses, including the empty-coordinate guard and a warning whose expiry is before its issue time (seen in today's data). `uv run wra data-report` prints, per hub, the station name, county, zones, row counts and share of missing station days, and confirms the county from FEMA agrees with the county code in the warning data.
 
-**M2. Scoring core and the evaluation set. No LLM.** Day counting, rates, EDD, bands, ranking, what-if, confidence. The six tools as plain functions. The fourteen cases, the graders and the runner.
-Check: `uv run pytest -q` passes, including hand-built warning lists with known answers (overlaps, a midnight crossing, duplicates). `uv run wra rank overall` and `uv run wra rank winter --region midwest` print tables with no network. `uv run wra eval --agent stub` runs end to end and reports 0 of 14, while the grader tests show a correct answer passing and a wrong one failing.
+**M2. Scoring core and the evaluation set. No LLM.** Merging warnings into spells and summing their time, rates, EDD, bands, ranking, what-if, confidence. The six tools as plain functions. The fourteen cases, the graders and the runner.
+Check: `uv run pytest -q` passes, including hand-built warning lists with known answers (overlaps, duplicates, a warning that crosses New Year in the hub's time zone, an expiry before the issue time). `uv run wra rank overall` and `uv run wra rank winter --region midwest` print tables with no network. `uv run wra eval --agent stub` runs end to end and reports 0 of 14, while the grader tests show a correct answer passing and a wrong one failing.
 Review point: I show the first real ranking of the twelve hubs. The owner fixes the band cut-offs, and they go in the decision log.
 
 **M3. The agent.** Prompt, loop, schemas, validation, repair, grounding, a command-line chat.
@@ -510,12 +513,12 @@ Check: `uv run pytest tests/test_api.py -q` passes. With the server running, `cu
 
 **Final end-to-end check.** `scripts/e2e.sh` does the following and prints each result:
 
-1. Clones the repository into a temporary folder.
+1. Clones the repository into a temporary folder. The clone has no `.env`, so the script points the cloned app at the original repository's `.env` through an environment variable (`WRA_ENV_FILE`). The key is never copied or printed.
 2. `uv sync`, then `uv run wra ingest` from the committed raw responses, with no network.
 3. `uv run pytest -q`.
 4. Starts the server and, through the HTTP API only, asks the four assignment questions, one follow-up and one out-of-scope question.
 5. Checks each response against the schema and its expected status, and checks the follow-up used the earlier context.
-6. Runs `uv run wra eval` and checks the score meets the target.
+6. Runs `uv run wra eval --reps 3` and checks the score meets the target, which is defined over 3 repetitions.
 
 **If time runs short, cut in this order:** the model comparison, the supporting-evidence figures (time under tropical warnings, FEMA cross-checks), page styling. The four assignment questions, the grounding check and the evaluation are never cut.
 

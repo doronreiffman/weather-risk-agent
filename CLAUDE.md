@@ -14,9 +14,9 @@ Python with `uv` and `pytest`.
 ## Rules for the build
 
 1. **Numbers come from code.** The risk score is deterministic and unit-tested with no LLM, with its weights in a config file. The LLM understands the question, calls our tools and explains the results. Every number in an answer comes from a tool result.
-2. **LLM output is validated in code** against a JSON schema (Pydantic). Invalid output gets one repair attempt, then a clear error.
+2. **LLM output is validated in code** against a JSON schema (Pydantic). Invalid output gets one repair attempt, then a clear error, never a guess.
 3. **Evidence, not claims.** A milestone is done when its check passes: paste the command and its output.
-4. **The evaluation set exists before the agent does:** 10 to 15 questions with automatic checks, one command that runs them and prints a score.
+4. **The evaluation set exists before the agent does:** 10 to 15 questions: the four from the assignment, a couple of follow-ups, and a couple the agent should flag as out of scope (for example, a city with no hub). Each has automatic checks: the right hubs at the top, the right tool called, numbers that match the tool output. One command runs it and prints a score.
 5. **Say what we don't know.** The agent's answers state the data period, the sources and the confidence.
 6. **Small commits with clear messages.** A commit message claims only what was actually run.
 7. **Secrets live only in the git-ignored `.env`.** Work from `.env.example`. `.env` itself stays unread and unprinted; `.claude/settings.json` denies it.
