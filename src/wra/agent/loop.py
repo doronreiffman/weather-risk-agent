@@ -62,7 +62,7 @@ class AnthropicClient:
 
         from wra import paths
 
-        load_dotenv(paths.root() / ".env")
+        load_dotenv(paths.env_file())
         self._client = anthropic.Anthropic(timeout=settings.timeout_seconds, max_retries=0)
 
     def create(self, **request: Any) -> Any:

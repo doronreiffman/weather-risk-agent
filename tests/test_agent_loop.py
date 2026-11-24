@@ -349,6 +349,32 @@ def test_the_real_client_uses_the_configured_timeout_and_leaves_retries_to_the_l
     assert made == {"timeout": 60.0, "max_retries": 0}  # the loop makes the one retry, within the message's time
 
 
+def _env_file_read(monkeypatch) -> list:
+    import anthropic
+    import dotenv
+
+    from wra.agent.loop import AnthropicClient
+
+    read = []
+    monkeypatch.setattr(dotenv, "load_dotenv", lambda path, *a, **k: read.append(path))  # records, reads nothing
+    monkeypatch.setattr(anthropic, "Anthropic", lambda **kwargs: None)
+    AnthropicClient(load_settings(REPO / "config" / "agent.toml"))
+    return read
+
+
+def test_the_key_file_is_the_projects_dot_env_by_default(monkeypatch, tmp_path):
+    monkeypatch.delenv("WRA_ENV_FILE", raising=False)
+    monkeypatch.setenv("WRA_ROOT", str(tmp_path))
+    assert _env_file_read(monkeypatch) == [tmp_path / ".env"]
+
+
+def test_wra_env_file_points_a_fresh_clone_at_another_key_file(monkeypatch, tmp_path):
+    # The end-to-end script's clone has no .env; it names the original's instead of copying it (plan section 13).
+    monkeypatch.setenv("WRA_ROOT", str(tmp_path / "clone"))
+    monkeypatch.setenv("WRA_ENV_FILE", str(tmp_path / "original" / ".env"))
+    assert _env_file_read(monkeypatch) == [tmp_path / "original" / ".env"]
+
+
 def test_a_second_message_while_the_first_is_answered_is_refused(ctx):
     import threading
 

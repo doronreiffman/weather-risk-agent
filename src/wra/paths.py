@@ -12,6 +12,12 @@ def root() -> Path:
     return Path(os.environ.get("WRA_ROOT") or Path.cwd())
 
 
+def env_file() -> Path:
+    """The file holding ANTHROPIC_API_KEY. WRA_ENV_FILE names another one, so the end-to-end script's fresh
+    clone can use the original repository's .env without copying it (plan section 13, final check)."""
+    return Path(os.environ.get("WRA_ENV_FILE") or root() / ".env")
+
+
 def hubs_config() -> Path:
     return root() / "config" / "hubs.toml"
 
