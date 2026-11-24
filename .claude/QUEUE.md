@@ -6,7 +6,6 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q3] Milestone 2: scoring core and evaluation set, no LLM. The tools behind the four assignment questions are built first. Settles open points O7, O10, O11 and O12. → `docs/PLAN.md` section 13, `docs/ASSUMPTIONS.md`
 - [q4] Milestone 3: the agent. → `docs/PLAN.md` section 13
 - [q5] Milestone 4: API and chat page. → `docs/PLAN.md` section 13
 - [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. → `docs/PLAN.md` section 13
@@ -15,6 +14,7 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Done / Dropped
 
+- [q3] Milestone 2: scoring core and evaluation set. Done 2026-11-24. Proof: commits `e618353` to `b31c2a5`; the checks, run on `b31c2a5` in a clean checkout with the network blocked, are in this session's transcript (203 tests passed, `wra eval --agent stub` 0 of 14).
 - [q11] Session 02 transcript committed. Done 2026-11-24. Proof: commit `9d551f5`.
 - [q2] Milestone 1: data. Done 2026-11-24. Proof: commits `5e67c19` to `d127f5b`; the checks' output is in session `02-data.txt`.
 - [q9] Session 01 transcript committed. Done 2026-11-24. Proof: commit `4adbf00`.
