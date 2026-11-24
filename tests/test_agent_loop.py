@@ -237,6 +237,31 @@ def test_band_words_are_paired_with_the_hub_just_before_them(ctx, verdict):
     assert reply.status == "answered" and not reply.trace.repaired, reply.trace.repair_problems
 
 
+OFFICIAL_OVERALL = {"hazard": "overall", "region": "all", "top_n": None, "weight_changes": []}
+WHAT_IF_OVERALL = {**OFFICIAL_OVERALL, "weight_changes": [{"hazard": "hurricane", "mode": "multiply", "value": 2}]}
+
+
+def test_a_what_if_answer_that_also_cites_the_official_ranking_may_name_the_what_if_band(ctx):
+    # Haiku, milestone 5 comparison: it cited the what-if (Miami Very high) and the official ranking (Miami
+    # Moderate), and the check compared its band with the last one cited only, refusing a right answer.
+    right = final(verdict="In this what-if Miami moves to first at 3.37 days a year, in the Very high band.",
+                  evidence=("R2", "R1"), hubs=("MIA",), what_if=True)  # fmt: skip
+    a, _ = agent(ctx, tool("rank_hubs", OFFICIAL_OVERALL), tool("rank_hubs", WHAT_IF_OVERALL, "toolu_2"), right)
+    reply = a.answer(None, "Which hubs are most exposed overall, and what if a hurricane counted double?")
+    assert reply.status == "answered" and not reply.trace.repaired, reply.trace.repair_problems
+
+
+def test_a_band_that_no_cited_ranking_gives_is_still_repaired(ctx):
+    wrong = final(verdict="In this what-if Miami moves to first, in the High band.", evidence=("R2", "R1"),
+                  hubs=("MIA",), what_if=True)  # fmt: skip
+    right = final(verdict="In this what-if Miami moves to first, in the Very high band.", evidence=("R2", "R1"),
+                  hubs=("MIA",), what_if=True)  # fmt: skip
+    a, _ = agent(ctx, tool("rank_hubs", OFFICIAL_OVERALL), tool("rank_hubs", WHAT_IF_OVERALL, "toolu_2"), wrong, right)
+    reply = a.answer(None, "What if a hurricane counted double?")
+    assert reply.status == "answered" and reply.trace.repaired
+    assert "calls Miami 'High'" in reply.trace.repair_problems[0]
+
+
 def test_the_prompts_own_facts_need_no_citation(ctx):
     answer = final(status="out_of_scope", evidence=[], hubs=[],
                    verdict="We have no Seattle hub; our data covers 2016 to 2025 at our 12 hubs.")  # fmt: skip

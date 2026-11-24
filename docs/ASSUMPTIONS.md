@@ -82,6 +82,16 @@ Figures come from `uv run wra data-report` on the data fetched that day, or from
 4. **The page shows bold and no other Markdown (owner).** In the same two evaluation runs (point 2), bold was the only Markdown the model wrote (13 and 15 of 19 verdicts; no lists, links, italics or line breaks; six verdicts read by hand agreed). The page escapes all text and then turns `**...**` into bold, in the verdict and the caveats; anything else shows as typed, and the system prompt says so. Rejected: HTML built by a Python Markdown package and a cleaner on the server (two dependencies and a second verdict field); plain text with the asterisks stripped.
 5. **Choices Claude made in milestone 4, reported to the owner and open to change.** `wra serve` listens on 127.0.0.1, port 8000, so only this machine can spend the API credit; `--host` and `--port` change it. A message is 1 to 2,000 characters after trimming. The API sends table cells as text by the command line's rule (2.9 as 2.90, FEMA's 0.0115 as given) and sources by name, because the page cannot tell 26 from 26.0 once the JSON is parsed; the page then formats no figure. "New conversation" clears the page; reloading it also starts a new conversation. FastAPI's generated API reference stays at `/docs`. The page's "how this was computed" panel lists what a repaired first answer failed, but not that answer's text, which only the API's trace keeps. After the milestone 4 review: a bug in the agent's own code ends the turn like any failure (the turn is removed) and is HTTP 500, since the owner's 502 covers failures on the model's side; a conversation id is 1 to 64 characters, so an empty or oversized id is a 422.
 
+## Settled 2026-11-25 in milestone 5: three check fixes from the model comparison
+
+The three-repetition runs on Opus, Sonnet and Haiku (`evals/runs/20261124T220322Z-claude`, `20261124T220803Z-claude`, `20261124T221217Z-claude`) showed three right answers failed by our own checks. **The owner chose to fix all three.**
+
+1. **The band check accepts any band a cited result gives the hub (replaces point 14's "that hub's cited band").** It kept one band per hub, so the last result cited won. Haiku's what-if answers cited the what-if (Miami Very high) and the official ranking (Miami Moderate), named Very high, and were refused twice: the 2 errors of its run. A band no cited result gives is still refused.
+2. **A required word may carry a final s.** Sonnet's case 13 answer said "earthquakes" and failed the whole-word match for "earthquake".
+3. **Case 6's follow-up passes with no hub order when the verdict says the two cannot be told apart** (neither, tied, too close, not settled, cannot be told apart). Houston 1.96 against Miami 1.85 is within the year-to-year swings, and the prompt asks for no order when the verdict asserts none. A wrong order, or no order without saying so, still fails.
+
+Re-grading the saved answers with fixes 2 and 3 changed exactly two case runs, both Sonnet's: 36 to 38 of 42. Opus stays 42 of 42. Fix 1 acts inside the agent, so Haiku's run shows its effect only when run again.
+
 ## Assumptions
 
 | # | Assumption | Standing |

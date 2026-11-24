@@ -249,3 +249,34 @@ def test_the_target_needs_90_percent_of_all_case_runs():
 
     assert target_met(_runs({(c, 0) for c in (10, 11, 12, 13)}))[0]  # 38 of 42, 90.5%
     assert not target_met(_runs({(c, 0) for c in (9, 10, 11, 12, 13)}))[0]  # 37 of 42, 88.1%
+
+
+# --- found by the milestone 5 model comparison (owner's fixes, 2026-11-25) -------------------
+
+
+def test_a_required_word_may_be_plural():
+    from wra.evals.graders import _has
+
+    assert _has("We don't score earthquakes.", "earthquake")  # Sonnet's right answer to case 13
+    assert not _has("an earthquakeproof site", "earthquake")
+
+
+def test_neither_hub_clearly_worse_passes_the_overall_follow_up(ctx):
+    # Case 6's follow-up: Houston 1.96, Miami 1.85, a gap within the year-to-year swings. Saying neither is
+    # clearly worse, with no order asserted, is a right answer (Sonnet, milestone 5 comparison).
+    turns = correct(ctx, 6)
+    neither = turns[-1].model_copy(update={"verdict": "Neither hub is clearly worse overall: Houston scores 1.96 "
+                                   "and Miami 1.85, a gap within the year-to-year swings.", "hubs_ranked": []})  # fmt: skip
+    checks = {c.name: c for c in grade(ctx, BY_ID[6], [turns[0], neither])}
+    assert checks["hubs"].passed is True, checks["hubs"].detail
+
+
+@pytest.mark.parametrize(
+    "verdict, hubs",
+    [("Houston is worse overall, 1.96 against 1.85.", []), ("Neither is clearly worse; Miami is worse.", ["MIA", "IAH"])],
+)
+def test_no_order_without_saying_so_or_a_wrong_order_still_fails(ctx, verdict, hubs):
+    turns = correct(ctx, 6)
+    answer = turns[-1].model_copy(update={"verdict": verdict, "hubs_ranked": hubs})
+    checks = {c.name: c for c in grade(ctx, BY_ID[6], [turns[0], answer])}
+    assert checks["hubs"].passed is False

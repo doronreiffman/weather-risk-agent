@@ -107,8 +107,9 @@ def _band_problems(verdict: str, cited: list[CitedResult], hub_names: Mapping[st
             if hub not in bands:
                 problems.append(f"the verdict calls {hub_names[hub]} {named!r}, but no cited result gives its band; "
                                 "cite one that does")  # fmt: skip
-            elif bands[hub] != named:
-                problems.append(f"the verdict calls {hub_names[hub]} {named!r}, but the cited band is {bands[hub]!r}")
+            elif named not in bands[hub]:
+                cited = " or ".join(repr(b) for b in bands[hub])
+                problems.append(f"the verdict calls {hub_names[hub]} {named!r}, but the cited band is {cited}")
     return problems
 
 
@@ -126,18 +127,28 @@ def _hub_mentions(text: str, hub_names: Mapping[str, str]) -> list[tuple[int, st
     return merged
 
 
-def _cited_bands(cited: list[CitedResult]) -> dict[str, str]:
-    bands = {}
+def _cited_bands(cited: list[CitedResult]) -> dict[str, list[str]]:
+    """Every band the cited results give each hub. An answer citing a what-if and the official ranking has
+    two for a hub that moves; either may be named (owner, 2026-11-25, after Haiku's right what-if answers
+    were refused when the last result cited overwrote the first)."""
+    bands: dict[str, list[str]] = {}
+
+    def add(hub: str, band: str | None) -> None:
+        if band and band not in bands.setdefault(hub, []):
+            bands[hub].append(band)
+
     for r in cited:
         if not r.result.ok:
             continue
         data = r.result.data
-        if r.call.name == "explain_hub" and data.get("band"):
-            bands[data["hub_id"]] = data["band"]
+        if r.call.name == "explain_hub":
+            add(data["hub_id"], data.get("band"))
         elif r.call.name == "rank_hubs" and data["hazard"] == "overall":  # a what-if's bands too
-            bands.update({row["hub_id"]: row["band"] for row in data["rows"] if row.get("band")})
+            for row in data["rows"]:
+                add(row["hub_id"], row.get("band"))
         elif r.call.name == "compare_hubs":
-            bands.update({row["hub_id"]: row["band"] for row in data["results"].get("overall", []) if row.get("band")})
+            for row in data["results"].get("overall", []):
+                add(row["hub_id"], row.get("band"))
     return bands
 
 

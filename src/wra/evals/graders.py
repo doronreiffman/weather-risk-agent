@@ -77,6 +77,9 @@ def _hubs(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
     if case.hubs is None:
         return Check("hubs", None, "no order asserted by this case")
     expected, got = case.hubs.order(ctx), list(last.hubs_ranked)
+    if not got and case.hubs.no_order_ok and _says_no_order(last.verdict):
+        return Check("hubs", True, f"no order asserted, and the verdict says the hubs cannot be told apart; "
+                                   f"scoring code gives {expected}")  # fmt: skip
     if case.hubs.mode == "exact":
         ok = got == expected
     elif case.hubs.mode == "prefix":
@@ -137,8 +140,18 @@ def _has(text: str, word: str) -> bool:
     try:
         value = float(word)
     except ValueError:
-        return re.search(rf"(?<![\w.]){re.escape(word)}(?!\w)", text, flags=re.IGNORECASE) is not None
+        # a final s is allowed: "earthquakes" has "earthquake" (owner, 2026-11-25)
+        return re.search(rf"(?<![\w.]){re.escape(word)}s?(?!\w)", text, flags=re.IGNORECASE) is not None
     return any(math.isclose(n, value) for _, n, _ in numbers_in_text(text))
+
+
+_NO_ORDER = re.compile(r"\b(neither|tied|too close|not settled|cannot be told apart|can't be told apart)\b", re.IGNORECASE)
+
+
+def _says_no_order(verdict: str) -> bool:
+    """The verdict states that the hubs cannot be put in order (owner, 2026-11-25: Sonnet's "neither hub is
+    clearly worse" in case 6 is a right answer)."""
+    return _NO_ORDER.search(verdict) is not None
 
 
 def _in_order(got: list[str], expected: list[str]) -> bool:

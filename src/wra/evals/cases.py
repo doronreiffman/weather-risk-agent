@@ -84,6 +84,7 @@ class ExpectedCall:
 class HubsCheck:
     mode: str  # "prefix": a non-empty start of the order; "exact": the whole list; "last": ends with its last hub
     order: Callable[[ToolContext], list[str]]
+    no_order_ok: bool = False  # an empty order passes when the verdict says the hubs cannot be told apart
 
 
 @dataclass(frozen=True)
@@ -166,7 +167,8 @@ CASES = [
     Case(6, [Q2, "Which of the two is worse overall?"], "Follow-up that changes the hazard.", "answered",
          calls=[ExpectedCall("compare_hubs", {"hub_ids": SameSet(MIA_IAH), "hazards": Contains(("overall",))}),
                 ExpectedCall("rank_hubs", {"hazard": "overall", "weight_changes": OFFICIAL})],
-         hubs=HubsCheck("exact", _pair_order(MIA_IAH, "overall")), required=[_city(_pair_order(MIA_IAH, "overall"), 0)]),
+         hubs=HubsCheck("exact", _pair_order(MIA_IAH, "overall"), no_order_ok=True),
+         required=[_city(_pair_order(MIA_IAH, "overall"), 0)]),
     Case(7, [OVERALL, WHAT_IF], "What-if, flagged as such.", "answered",
          calls=[ExpectedCall("rank_hubs", {"hazard": "overall", "region": "all", "weight_changes": HURRICANE_DOUBLE})],
          hubs=HubsCheck("prefix", _order("overall", weights=HURRICANE_DOUBLE)), is_what_if=True),
