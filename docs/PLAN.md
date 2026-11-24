@@ -611,6 +611,16 @@ Changes forced by reality are appended here, newest last.
   3. Deployment gets its own line in the work queue, ahead of the alert and voice. The assignment calls a public URL "preferred" and the other two "bonus". It still starts only after the final check and only after asking. Until then the build stays easy to deploy: settings come from environment variables and the database is built from committed files.
 - *Not changed:* the cut order in section 13.
 
+**2026-11-24, milestone 1. What the data build changed.**
+
+- *Where a hub's location is kept (section 6).* Planned: coordinates, county and zones read from the sources. Built that way, with one detail the plan left open: they are stored in the database's `hubs` table at ingest and shown by `wra data-report`. `config/hubs.toml` holds identity only and is never written by code.
+- *The county check (sections 6 and 13).* Planned: FEMA's county against the county code in the warning data. Both agree for all twelve hubs. The station service also names a county, and for O'Hare and Atlanta it names a neighbour (Cook, Fulton) while the coordinates sit in DuPage and Clayton on both maps. The hub's county is the one containing its coordinates. Section 4.1's Chicago figure (0.0093, Cook County) is therefore not the hub's figure: the hub's is DuPage's, 0.0100.
+- *More, smaller ingest modules than section 11 listed.* Besides `iem.py`, `fema_nri.py`, `acis.py` and `store.py` there are `fetch.py` (network), `build.py` (offline checks and assembly), `raw.py` (the raw cache and its manifest), `report.py`, `points.py` (the coordinate guard) and `errors.py`. `hubs.py` and `paths.py` sit beside `cli.py`. The split keeps all network code in one file.
+- *Two more tables than section 12 listed.* `skipped_records` holds each source record left out, with the reason. `meta` holds the period. The fetch log is also kept beside the raw files as `data/raw/manifest.json`, because the database is rebuilt from those files and must be able to restore it.
+- *All warning rows are stored, not only the scored types.* Watches, advisories and unscored warning types are kept in `warning_events`; the scoring config picks from them in milestone 2. The supporting figures in section 5.2 (tropical warnings) then need no second fetch.
+- *One field fetched and then dropped.* I added FEMA's hurricane event count on my own, labelled as the count behind the frequency. The data report showed it could not be (Miami-Dade: 124 events against 0.305 a year), and FEMA's documentation confirmed the frequency is an area-weighted figure from a grid. The plan never asked for the field, so it is gone.
+- *Lesson:* the data report earned its place. Two of the items above, the O'Hare and Atlanta counties and the event count, surfaced only because every hub's resolved location and figures were printed and read before any score was built on them.
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks
