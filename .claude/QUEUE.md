@@ -6,8 +6,12 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q17] Session 05 transcript: commit `docs/ai-session/05-results.txt` once the owner has exported it. → `docs/ai-session/README.md`
-- [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. → `docs/PLAN.md` section 13
+- [q18] Re-run `scripts/e2e.sh --paid` on `d63c0ba` or later: the answer schema gained `hazard_orders` after the last passing run (`1b455ab`). Paid, about 0.05 USD on Haiku; the owner approves it (the auto-mode permission check refused it unasked). Then update `docs/EVAL_RESULTS.md` "The final end-to-end run", the README status line, and q6's proof, and commit the run record with `git add -f`. → `docs/EVAL_RESULTS.md`
+- [q17] Session 05 transcript: commit `docs/ai-session/05-results.txt` once the owner has exported it (its index line is written). → `docs/ai-session/README.md`
+- [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. A public URL spends the owner's API credit on every message, so it needs an access guard. → `docs/PLAN.md` section 13
+- [q21] Run the README's page check by hand before a demo (owner; one paid question, under a cent on Haiku). → `.claude/OPEN_ISSUES.md`, "The page's own logic has no automated test"
+- [q19] Owner decision: the queue guard also refuses a line under Done / Dropped without "Done <date>" or "dropped" (an open item was filed under Done in session 05 and the guard let it through). → `.claude/hooks/queue-guard.py`
+- [q20] Owner decision on two global `~/.claude/CLAUDE.md` lines from session 05: (a) a subagent cannot write .md files, so it returns the text and the main session saves it; (b) before a commit, every file the message names is staged (a README change was left out of a commit whose message claimed it, amended before push). Edit only on the owner's word. → `~/.claude/CLAUDE.md`
 - [q8] Bonuses, ask first: score-change alert, voice. → `docs/PLAN.md` section 13
 
 ## Done / Dropped
