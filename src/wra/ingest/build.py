@@ -5,7 +5,9 @@ stored response: is this really the data for this hub?
 
 - Hard stops (SourceError): the file changed after it was fetched; it answers
   a different request than the one we would send today (another point, another
-  period); a station, county or warning area lies in another state.
+  period); a station, county or warning area lies in another state; the
+  station's time-zone offset does not match the hub's configured time zone;
+  station days repeat or fall outside the period.
 - Recorded, not stopped: FEMA and the warning archive naming different counties
   for the hub. Both answer from the map, so they should agree; if they do not, a
   person needs to look, and the data report says so. The station service's own
@@ -14,11 +16,13 @@ stored response: is this really the data for this hub?
 """
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import parse_qsl, urlsplit
+from zoneinfo import ZoneInfo
 
 from wra.hubs import Hub
-from wra.ingest import PERIOD_END, PERIOD_START, acis, fema_nri, iem
+from wra.ingest import PERIOD_END, PERIOD_START, WARNINGS_ISSUED_BEFORE, WARNINGS_ISSUED_FROM, acis, fema_nri, iem
 from wra.ingest.errors import SourceError
 from wra.ingest.raw import SOURCES, FetchRecord, RawStore
 from wra.ingest.store import write_database
@@ -48,7 +52,16 @@ def build_database(hubs: list[Hub], raw_dir: Path, db_path: Path) -> list[HubDat
     """Rebuild the database from the raw cache. Returns what was loaded, for reporting."""
     store = RawStore(raw_dir)
     loaded = [load_hub(hub, store) for hub in hubs]
-    write_database(db_path, loaded, PERIOD_START, PERIOD_END)
+    write_database(
+        db_path,
+        loaded,
+        {
+            "period_start": PERIOD_START.isoformat(),
+            "period_end": PERIOD_END.isoformat(),
+            "warnings_issued_from": WARNINGS_ISSUED_FROM.isoformat(),
+            "warnings_issued_before": WARNINGS_ISSUED_BEFORE.isoformat(),
+        },
+    )
     return loaded
 
 
@@ -59,13 +72,15 @@ def load_hub(hub: Hub, store: RawStore) -> HubData:
     _same_request(record, acis.request_params(hub.station, PERIOD_START, PERIOD_END))
     station, days = acis.parse_station(payload, hub.station)
     _same_state(hub, "station", station.state)
+    _same_time_zone(hub, station)
+    _days_inside_period(hub, days)
 
     payload, record = payloads["fema_nri"]
     _same_request(record, fema_nri.request_params(station.lat, station.lon))
     county = fema_nri.parse_county(payload)
     _same_state(hub, "FEMA county", county.state)
 
-    point = iem.request_params(station.lat, station.lon, PERIOD_START, PERIOD_END)
+    point = iem.request_params(station.lat, station.lon, WARNINGS_ISSUED_FROM, WARNINGS_ISSUED_BEFORE)
     payload, record = payloads["iem_zone"]
     _same_request(record, point)
     zone = iem.parse_zone_response(payload)
@@ -104,3 +119,26 @@ def _same_request(record: FetchRecord, expected: dict[str, str]) -> None:
 def _same_state(hub: Hub, what: str, state: str) -> None:
     if state != hub.state:
         raise SourceError(f"{hub.id}: {what} is in {state}, but the hub is configured in {hub.state}")
+
+
+def _same_time_zone(hub: Hub, station: acis.Station) -> None:
+    """The typed time zone decides which year each warning hour falls in, so check it.
+
+    The station service gives the standard-time offset, so compare in January.
+    """
+    offset = ZoneInfo(hub.tz).utcoffset(datetime(PERIOD_END.year, 1, 15, 12))
+    hours = offset.total_seconds() / 3600 if offset is not None else None
+    if hours != station.utc_offset_hours:
+        raise SourceError(
+            f"{hub.id}: time zone {hub.tz} is UTC{hours:+g} in winter, "
+            f"but the station reports UTC{station.utc_offset_hours:+g}"
+        )
+
+
+def _days_inside_period(hub: Hub, days: list[acis.DailyObs]) -> None:
+    seen = [d.day for d in days]
+    if len(seen) != len(set(seen)):
+        raise SourceError(f"{hub.id}: the station response lists a day more than once")
+    outside = [d for d in seen if not PERIOD_START <= d <= PERIOD_END]
+    if outside:
+        raise SourceError(f"{hub.id}: station days outside {PERIOD_START} to {PERIOD_END}, first {outside[0]}")

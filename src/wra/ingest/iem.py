@@ -6,9 +6,17 @@ Two services, both used (docs/PLAN.md, section 5.2):
               contains the point. Winter and coastal warnings are issued this way.
 - by polygon: every warning whose drawn area covered the point itself. Flash
               flood, severe thunderstorm and tornado warnings are drawn this way.
+              Each row is the warning as first drawn, with its first planned
+              end. If the warning was later cancelled early or extended for the
+              hub's county, that shows only in the county's zone row for the same
+              event (measured 2026-11-24: 104 of 920 severe thunderstorm rows end
+              later here than in the county row). The scoring code reconciles them.
 
 All rows are kept, whatever their type. Which types count toward the score is
 decided by the scoring config, not here.
+
+Both services select by issue date: `sdate` inclusive, `edate` exclusive, UTC.
+See WARNINGS_ISSUED_FROM in this package for the range we ask for and why.
 """
 
 import re
@@ -53,7 +61,10 @@ class ParsedEvents:
 
 
 def request_params(lat: float, lon: float, start: date, end: date) -> dict[str, str]:
-    """Query parameters for either service. Refuses a missing or implausible point."""
+    """Query parameters for either service. Refuses a missing or implausible point.
+
+    Returns warnings issued on or after `start` and before `end` (UTC dates).
+    """
     lat, lon = checked_point(lat, lon)
     return {
         "lat": repr(lat),

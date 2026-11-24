@@ -5,6 +5,7 @@ unchanged. Only the number of rows was cut.
 """
 
 import json
+from dataclasses import replace
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -98,16 +99,16 @@ def test_zone_response_gives_one_event_per_row_with_utc_times():
     )
 
 
-def test_record_with_expiry_before_issue_is_skipped_and_reported():
-    # Real record: a Fire Weather Watch due to start 15:00 was withdrawn at 10:28.
+def test_records_with_expiry_before_issue_are_skipped_and_reported():
+    # Two real records: a Fire Weather Watch due to start at 15:00 and withdrawn
+    # at 10:28, and a Flood Warning due at 18:00 and ended at 01:13 the same day.
     parsed = iem.parse_zone_response(load("iem_zone_DAL.json"))
 
     assert len(parsed.events) == 8
-    assert len(parsed.skipped) == 1
-    skipped = parsed.skipped[0]
-    assert skipped.reason == "expiry_not_after_issue"
-    assert skipped.record["issue"] == "2016-02-08T15:00:00Z"
-    assert skipped.record["expire"] == "2016-02-08T10:28:00Z"
+    assert [(s.reason, s.record["name"], s.record["issue"], s.record["expire"]) for s in parsed.skipped] == [
+        ("expiry_not_after_issue", "Fire Weather Watch", "2016-02-08T15:00:00Z", "2016-02-08T10:28:00Z"),
+        ("expiry_not_after_issue", "Flood Warning", "2016-03-16T18:00:00Z", "2016-03-16T01:13:00Z"),
+    ]
     assert all(e.expire_utc > e.issue_utc for e in parsed.events)
 
 
@@ -133,6 +134,14 @@ def test_area_codes_are_split_into_county_and_zone():
     parsed = iem.parse_zone_response(load("iem_zone_DAL.json"))
 
     assert iem.area_codes(parsed.events) == (["TXC113"], ["TXZ119"])
+
+
+def test_an_area_code_that_is_neither_county_nor_zone_is_an_error():
+    parsed = iem.parse_zone_response(load("iem_zone_DAL.json"))
+    odd = [replace(parsed.events[0], ugc="TXX113")]
+
+    with pytest.raises(SourceError, match="TXX113"):
+        iem.area_codes(odd)
 
 
 def test_zone_response_without_its_events_list_is_an_error():

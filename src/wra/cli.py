@@ -52,7 +52,7 @@ def _ingest(refresh_first: bool) -> int:
         refresh(hubs, paths.raw_dir())
     loaded = build_database(hubs, paths.raw_dir(), paths.database())
 
-    header = ["hub", "station days", "FEMA figures", "zone warnings", "polygon warnings", "skipped"]
+    header = ["hub", "station days", "FEMA figures", "zone rows", "polygon rows", "skipped"]
     rows = [
         [
             data.hub.id,
@@ -69,7 +69,8 @@ def _ingest(refresh_first: bool) -> int:
     for row in [header] + rows:
         print("  ".join(str(value).ljust(width) for value, width in zip(row, widths)).rstrip())
     source = "fetched just now" if refresh_first else "stored raw responses, no network used"
-    print(f"\nBuilt {paths.database()} from {source}.")
+    print("\nRows are warnings, watches and advisories of every type; scoring picks the ones it counts.")
+    print(f"Built {paths.database()} from {source}.")
     return 0
 
 

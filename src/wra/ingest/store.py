@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -100,22 +100,23 @@ CREATE TABLE meta (
 """
 
 
-def write_database(db_path: Path, loaded: list[HubData], period_start: date, period_end: date) -> None:
+def write_database(db_path: Path, loaded: list[HubData], meta: dict[str, str]) -> None:
     db_path.parent.mkdir(parents=True, exist_ok=True)
     staging = db_path.with_name(db_path.name + ".new")
     staging.unlink(missing_ok=True)
-    connection = sqlite3.connect(staging)
     try:
-        with connection:
-            connection.executescript(SCHEMA)
-            connection.executemany(
-                "INSERT INTO meta VALUES (?, ?)",
-                [("period_start", period_start.isoformat()), ("period_end", period_end.isoformat())],
-            )
-            for data in loaded:
-                _write_hub(connection, data)
-    finally:
-        connection.close()
+        connection = sqlite3.connect(staging)
+        try:
+            with connection:
+                connection.executescript(SCHEMA)
+                connection.executemany("INSERT INTO meta VALUES (?, ?)", sorted(meta.items()))
+                for data in loaded:
+                    _write_hub(connection, data)
+        finally:
+            connection.close()
+    except BaseException:
+        staging.unlink(missing_ok=True)
+        raise
     os.replace(staging, db_path)
 
 

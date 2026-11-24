@@ -17,7 +17,7 @@ from pathlib import Path
 import httpx
 
 from wra.hubs import Hub
-from wra.ingest import PERIOD_END, PERIOD_START, acis, fema_nri, iem
+from wra.ingest import PERIOD_END, PERIOD_START, WARNINGS_ISSUED_BEFORE, WARNINGS_ISSUED_FROM, acis, fema_nri, iem
 from wra.ingest.raw import RawStore
 
 USER_AGENT = "weather-risk-agent/0.1"
@@ -68,7 +68,7 @@ def _fetch_all(hubs: list[Hub], store: RawStore, get: Get, pause: Callable[[floa
         store.save("fema_nri", hub.id, url, body, fetched_at)
         pause(PAUSE_SECONDS)
 
-        point = iem.request_params(station.lat, station.lon, PERIOD_START, PERIOD_END)
+        point = iem.request_params(station.lat, station.lon, WARNINGS_ISSUED_FROM, WARNINGS_ISSUED_BEFORE)
         url, body = get(iem.ZONE_URL, point)
         iem.parse_zone_response(json.loads(body))
         store.save("iem_zone", hub.id, url, body, fetched_at)

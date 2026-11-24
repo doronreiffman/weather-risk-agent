@@ -28,7 +28,13 @@ def _report(db: sqlite3.Connection, raw_dir: Path) -> tuple[str, bool]:
     days_expected = (end - start).days + 1
     fetched = db.execute("SELECT min(fetched_at), max(fetched_at) FROM fetch_log").fetchone()
     when = fetched[0] if fetched[0] == fetched[1] else f"{fetched[0]} to {fetched[1]}"
-    out = [f"DATA REPORT   period {start} to {end}   fetched {when}", ""]
+    out = [
+        f"DATA REPORT   period {start} to {end}   fetched {when}",
+        f"   Warnings requested by issue date {meta['warnings_issued_from']} up to (not including) "
+        f"{meta['warnings_issued_before']}, UTC, so warnings that cross the period's edges are complete.",
+        "   Scoring keeps only the hours inside the period, in each hub's time zone.",
+        "",
+    ]
 
     out += ["1. Where each hub is, and whether the sources agree on its county", ""]
     hubs = db.execute(
@@ -101,7 +107,8 @@ def _report(db: sqlite3.Connection, raw_dir: Path) -> tuple[str, bool]:
     out += [
         "",
         f"   FEMA release: {', '.join(r[0] for r in release)}. A dash means FEMA gives the county no hurricane figure.",
-        "   0.01 a year is FEMA's floor for a place it considers reachable with no recorded storm.",
+        "   FEMA assigns 0.01 a year to land it considers reachable where no storm was recorded. Land with one",
+        "   storm on record in 174 years gets about 0.006, so a county's average can fall below 0.01.",
     ]
 
     out += ["", "4. Warning types present (warnings only), and how long one row lasts", ""]

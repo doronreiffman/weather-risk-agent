@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 from wra import __version__
@@ -46,6 +48,8 @@ def test_data_report_shows_where_the_hub_is_and_that_the_sources_agree(project, 
     assert "NEEDS A LOOK" not in out
     assert "expiry_not_after_issue" in out
     assert "Winter Storm Warning" in out
+    # Hurricane table: FEMA's Dallas County figure, and the one-in-N-years reading of it.
+    assert re.search(r"DAL\s+Dallas\s+0\.0115\s+87 years", out)
 
 
 def test_data_report_fails_when_the_sources_disagree_on_a_county(project, capsys):
