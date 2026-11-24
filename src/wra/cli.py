@@ -38,6 +38,15 @@ def main(argv: list[str] | None = None) -> int:
     rank.add_argument("--region", choices=["all", "midwest", "south", "west"], default="all")
     rank.add_argument("--top", type=int, default=None, metavar="N", help="show only the top N hubs")
 
+    evaluate = commands.add_parser(
+        "eval",
+        help="run the fourteen evaluation cases through an agent and print the score",
+        description="Run every evaluation case, grade the answers in code, print a table and a score, and save "
+        "every conversation under evals/runs/. The clock is pinned to 2026-11-24.",
+    )
+    evaluate.add_argument("--agent", choices=["stub"], required=True, help="stub: answers nothing (milestone 2)")
+    evaluate.add_argument("--reps", type=int, default=1, metavar="N", help="repetitions per case (default 1)")
+
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
@@ -46,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
             return _data_report()
         if args.command == "rank":
             return _rank(args.hazard, args.region, args.top)
+        if args.command == "eval":
+            return _eval(args.agent, args.reps)
     except (SourceError, NoDatabase) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
@@ -103,3 +114,15 @@ def _rank(hazard: str, region: str, top: int | None) -> int:
     result = run_tool(load_context(), "rank_hubs", args)
     print(as_text(result))
     return 0 if result.ok else 1
+
+
+def _eval(agent_name: str, reps: int) -> int:
+    from wra.evals.cases import CASES
+    from wra.evals.run import StubAgent, report, run_eval
+    from wra.tools.context import load_context
+
+    agent = StubAgent()
+    runs, out_dir = run_eval(agent, load_context(), reps=reps, out_root=paths.root() / "evals" / "runs")
+    print(report(runs, len(CASES), reps))
+    print(f"Saved every conversation and check to {out_dir}.")
+    return 0

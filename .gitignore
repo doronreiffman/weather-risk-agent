@@ -15,3 +15,7 @@ data/wra.sqlite
 # Local tooling
 .remember/
 .claude/settings.local.json
+
+# Evaluation run records. A run a results document cites is added on purpose
+# (git add -f), so reviewers can audit it (owner, 2026-11-24).
+evals/runs/

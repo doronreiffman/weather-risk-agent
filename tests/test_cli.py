@@ -112,3 +112,17 @@ def test_rank_without_a_database_says_how_to_build_one(tmp_path, monkeypatch, ca
     monkeypatch.setenv("WRA_ROOT", str(tmp_path))
     assert main(["rank", "overall"]) == 1
     assert "uv run wra ingest" in capsys.readouterr().err
+
+
+def test_eval_with_the_stub_runs_every_case_and_scores_zero(scored_project, capsys):
+    import json
+
+    assert main(["eval", "--agent", "stub"]) == 0
+    out = capsys.readouterr().out
+    assert "Score: 0 of 14 case runs passed" in out
+    assert "Errors (no answer): 14 of 14" in out
+    runs = list((scored_project / "evals" / "runs").iterdir())
+    assert len(runs) == 1 and runs[0].name.endswith("-stub")
+    record = json.loads((runs[0] / "run.json").read_text())
+    assert record["today"] == "2026-11-24" and len(record["runs"]) == 14
+    assert record["runs"][0]["replies"][0]["status"] == "error"
