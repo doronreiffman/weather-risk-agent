@@ -105,7 +105,8 @@ def test_a_second_message_on_a_busy_conversation_is_409(ctx):
 
 
 HTTP_STATUS = {"busy": 409, "unknown_conversation": 404, "model_call_failed": 502, "time_limit": 502,
-               "declined": 502, "cut_off": 502, "invalid_twice": 502, "too_many_calls": 502}  # owner, milestone 4
+               "declined": 502, "cut_off": 502, "invalid_twice": 502, "too_many_calls": 502,  # owner, milestone 4
+               "internal_error": 500}  # a bug in our own code, not the model side (Claude, after the review)
 
 
 class Fixed:
@@ -140,7 +141,8 @@ def test_every_answer_that_is_not_an_error_is_200(ctx, status):
 
 @pytest.mark.parametrize("body", [{"session_id": None}, {"session_id": None, "message": "   "},
                                   {"session_id": None, "message": "x" * 2001},
-                                  {"session_id": None, "message": "Hi", "extra": 1}])  # fmt: skip
+                                  {"session_id": None, "message": "Hi", "extra": 1},
+                                  {"session_id": "", "message": "Hi"}, {"session_id": "x" * 65, "message": "Hi"}])  # fmt: skip
 def test_a_malformed_request_is_422_and_reaches_no_model(ctx, body):
     model = Scripted(final())
     http, _ = served(ctx, model)
@@ -183,3 +185,16 @@ def test_the_page_is_one_file_with_no_outside_code_and_carries_femas_full_notice
     assert notice.count(". ") == 1 and notice in page  # both sentences, word for word as in the README
     assert "src=" not in page and "<link" not in page and "import " not in page  # no outside scripts or styles
     assert 'fetch("/api/chat"' in page
+
+
+def test_a_bug_in_our_own_code_is_500_with_the_reply_as_its_body(ctx, monkeypatch):
+    import wra.agent.loop
+
+    def broken(*args, **kwargs):
+        raise KeyError("a bug")
+
+    http, agent = served(ctx, Scripted(tool("rank_hubs", WINTER_MIDWEST), final()))
+    monkeypatch.setattr(wra.agent.loop, "check_answer", broken)
+    r = ask(http, QUESTION)
+    assert r.status_code == 500 and r.json()["error_code"] == "internal_error"
+    assert agent.sessions[r.json()["session_id"]].messages == []

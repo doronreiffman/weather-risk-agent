@@ -13,10 +13,11 @@ from pydantic import BaseModel, ConfigDict
 from wra.tools.envelope import Display
 
 Status = Literal["answered", "out_of_scope", "no_data", "needs_clarification", "error"]
-# Why a reply is an error. The API sends busy as 409, unknown_conversation as 404 and the rest as 502
-# (owner, milestone 4); the message in `error` is for people, the code for programs.
+# Why a reply is an error. The API sends busy as 409, unknown_conversation as 404 and the model-side
+# failures as 502 (owner, milestone 4), and internal_error, a bug in our own code, as 500. The message in
+# `error` is for people, the code for programs.
 ErrorCode = Literal["busy", "unknown_conversation", "model_call_failed", "time_limit", "declined", "cut_off",
-                    "invalid_twice", "too_many_calls"]  # fmt: skip
+                    "invalid_twice", "too_many_calls", "internal_error"]  # fmt: skip
 
 
 class FinalAnswer(BaseModel):

@@ -5,8 +5,9 @@ final-answer schema; run the tools it calls and send the results back; when it a
 answer in code (checks.py). One repair attempt if anything fails, then a clear error. At most
 `max_model_calls` model calls per message, and all of them within `message_time_limit_seconds`: each
 call waits at most its own timeout or the time left, and the loop, not the SDK, makes the one retry,
-so a wait the API asks for cannot run past the limit. A refused or cut-off reply becomes an error.
-Nothing unverified is shown.
+so a wait the API asks for cannot run past the limit. The HTTP library applies a timeout to each stage
+of a call (connect, send, each read), so the limit is close to a ceiling, not an exact one. A refused
+or cut-off reply becomes an error. Nothing unverified is shown.
 
 The conversation is kept append-only, which Opus 5.5's thinking blocks require, with two exceptions
 set by the API or by us:
@@ -51,8 +52,8 @@ class ModelClient(Protocol):
 
 class AnthropicClient:
     """The real client. The key comes from the environment, which `.env` fills via python-dotenv.
-    The SDK's own retries are off: SDK 2.13.0 waits as long as a `retry-after` header asks, with no upper
-    bound (anthropic/_base_client.py, _calculate_retry_timeout), so the loop retries instead (_call)."""
+    The SDK's own retries are off: SDK 2.13.0 waits as long as a `retry-after` header asks, capped only at
+    4,294,967 seconds (anthropic/_base_client.py, _calculate_retry_timeout), so the loop retries instead."""
 
     def __init__(self, settings: AgentSettings) -> None:
         import anthropic
@@ -74,7 +75,8 @@ FIRST_RETRY_PAUSE = 0.5  # seconds, the SDK's first back-off (anthropic/_constan
 
 
 class _Stop(Exception):
-    """A model call ended the message without an error from the model's API itself."""
+    """A model call ends the message for a reason of the loop's own: the time limit, or a wait the API asks
+    for that does not fit in the time left. `text` is the plain message, `code` the reply's error code."""
 
     def __init__(self, text: str, code: str) -> None:
         super().__init__(text)
@@ -129,18 +131,23 @@ class ClaudeAgent:
             if session_id:
                 session = self.sessions.get(session_id)
                 if session is None:
-                    return self._refused(session_id, UNKNOWN, "unknown_conversation")
+                    return self._error_reply(session_id, UNKNOWN, "unknown_conversation")
             else:
                 session = Session(id=uuid.uuid4().hex)
                 self.sessions[session.id] = session
         if not session.busy.acquire(blocking=False):
-            return self._refused(session.id, BUSY, "busy")
+            return self._error_reply(session.id, BUSY, "busy")
+        kept = len(session.messages), set(session.results)
         try:
             return self._answer(session, message)
+        except Exception as error:  # a bug in our own code: the turn goes, as after any failure
+            _roll_back(session, *kept)
+            return self._error_reply(session.id, f"Something went wrong in the agent's own code ({type(error).__name__}"
+                                     "). The question was not answered; try again.", "internal_error")  # fmt: skip
         finally:
             session.busy.release()
 
-    def _refused(self, session_id: str, text: str, code: str) -> AgentReply:
+    def _error_reply(self, session_id: str, text: str, code: str) -> AgentReply:
         return AgentReply(session_id=session_id, status="error", verdict="", error=text, error_code=code,
                           trace=Trace(model=self.settings.model))  # fmt: skip
 
@@ -163,9 +170,7 @@ class ClaudeAgent:
                          usage={**usage, "cost_usd": None if cost is None else round(cost, 6)})  # fmt: skip
 
         def fail(text: str, code: str) -> AgentReply:
-            del session.messages[kept_messages:]  # the failed turn leaves no trace in the conversation
-            for result_id in [r for r in session.results if r not in kept_results]:
-                del session.results[result_id]
+            _roll_back(session, kept_messages, kept_results)  # the failed turn leaves no trace
             return AgentReply(session_id=session.id, status="error", verdict="", error=text, error_code=code,
                               trace=trace())  # fmt: skip
 
@@ -208,20 +213,30 @@ class ClaudeAgent:
     def _call(self, request: dict[str, Any], deadline: float) -> Any:
         """One model call. Each attempt waits at most the per-call timeout or the time left in the message,
         whichever is shorter. A failure the SDK would retry is retried `max_retries` times, after the wait
-        the API asks for when it fits in the time left; a longer wait ends the message at once."""
+        the API asks for when it fits in the time left; a longer wait ends the message at once. When the
+        time runs out, during an attempt or before the pause, the reply says so (time_limit)."""
         s = self.settings
+        out_of_time = _Stop(f"No answer within the {s.message_time_limit_seconds:g}-second limit for one question. "
+                            "Try again in a moment.", "time_limit")  # fmt: skip
         for attempt in range(s.max_retries + 1):
             left = deadline - time.monotonic()
             if left <= 0:
-                raise _Stop(f"No answer within the {s.message_time_limit_seconds:g}-second limit for one question. "
-                            "Try again in a moment.", "time_limit")  # fmt: skip
+                raise out_of_time
             try:
                 return self.client.create(timeout=min(s.timeout_seconds, left), **request)
             except Exception as error:
-                wait = _retry_wait(error)
-                if wait is None or attempt == s.max_retries:
+                retry = _retry_wait(error)
+                if retry is None:
                     raise
-                if wait >= deadline - time.monotonic():
+                left = deadline - time.monotonic()
+                if left <= 0:  # the attempt failed because the limit cut its wait short
+                    raise out_of_time from error
+                if attempt == s.max_retries:
+                    raise
+                wait, asked_by_api = retry
+                if wait >= left:
+                    if not asked_by_api:
+                        raise out_of_time from error
                     raise _Stop(f"The model could not be reached in time: its API asked to wait {wait:g} seconds "
                                 "before a retry, longer than this question has left. Try again shortly.",
                                 "model_call_failed") from error  # fmt: skip
@@ -249,16 +264,18 @@ class ClaudeAgent:
         return answer, check_answer(answer, session.results, self.facts, self.hub_names)
 
 
-def _retry_wait(error: Exception) -> float | None:
-    """Seconds to wait before retrying a failed call, or None when it is not retried. The SDK's own rule
-    (anthropic/_base_client.py, _should_retry and _calculate_retry_timeout): connection errors and timeouts,
-    and HTTP 408, 409, 429 and 5xx unless the `x-should-retry` header says otherwise; the wait the API asks
-    for in `retry-after-ms` or `retry-after` (seconds) is kept. A `retry-after` given as a date, which the
-    SDK also reads, gets the first back-off instead."""
+def _retry_wait(error: Exception) -> tuple[float, bool] | None:
+    """How long to wait before retrying a failed call, and whether the API asked for that wait; None when it
+    is not retried. The SDK's own rule (anthropic/_base_client.py, _should_retry and
+    _calculate_retry_timeout): connection errors and timeouts, and HTTP 408, 409, 429 and 5xx unless the
+    `x-should-retry` header says otherwise. The first of `retry-after-ms` and `retry-after` (seconds) that
+    reads as a number is kept when above zero; otherwise the first back-off. A `retry-after` given as a
+    date, which the SDK also reads, gets the back-off instead."""
     import anthropic
 
+    pause = (FIRST_RETRY_PAUSE, False)
     if isinstance(error, anthropic.APIConnectionError):  # includes APITimeoutError
-        return FIRST_RETRY_PAUSE
+        return pause
     if not isinstance(error, anthropic.APIStatusError):
         return None
     headers = error.response.headers
@@ -270,9 +287,15 @@ def _retry_wait(error: Exception) -> float | None:
             seconds = float(headers.get(name)) / per_second
         except (TypeError, ValueError):
             continue
-        if seconds > 0:
-            return seconds
-    return FIRST_RETRY_PAUSE
+        return (seconds, True) if seconds > 0 else pause
+    return pause
+
+
+def _roll_back(session: Session, kept_messages: int, kept_results: set[str]) -> None:
+    """Remove a failed turn: its messages and the results it added."""
+    del session.messages[kept_messages:]
+    for result_id in [r for r in session.results if r not in kept_results]:
+        del session.results[result_id]
 
 
 def _last_fallback(content: list) -> int:

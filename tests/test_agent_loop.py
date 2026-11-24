@@ -335,7 +335,7 @@ def test_an_explanations_order_must_include_the_explained_hub(ctx):
 # --- milestone 4 readiness: timeouts and two messages at once --------------------------------
 
 
-def test_the_real_client_uses_the_configured_timeout_and_retries(monkeypatch):
+def test_the_real_client_uses_the_configured_timeout_and_leaves_retries_to_the_loop(monkeypatch):
     import anthropic
     import dotenv
 
@@ -410,14 +410,20 @@ def clock(monkeypatch):
 
 
 class Timed(Scripted):
-    """Each call takes the given number of seconds on the fake clock."""
+    """Each call takes the given number of seconds on the fake clock. Like a real client it gives up at its
+    timeout: a call scripted to take longer raises a timeout then, and its response stays for the retry."""
 
     def __init__(self, clock, seconds, *responses):
         super().__init__(*responses)
         self.clock, self.seconds = clock, list(seconds)
 
     def create(self, **request):
-        self.clock.now += self.seconds.pop(0)
+        seconds = self.seconds.pop(0)
+        if seconds > request["timeout"]:
+            self.clock.now += request["timeout"]
+            self.requests.append({**request, "messages": list(request["messages"])})
+            raise timeout_error()
+        self.clock.now += seconds
         return super().create(**request)
 
 
@@ -452,14 +458,76 @@ def test_each_call_waits_at_most_the_time_left_in_the_message(ctx, clock):
     assert [r["timeout"] for r in client.requests] == [60, 40]  # 60 s per call, but only 40 s of the 90 were left
 
 
-def test_no_model_call_starts_after_the_message_time_limit(ctx, clock):
-    a, client = timed(ctx, clock, [50, 45, 1], tool("list_hubs", {"region": "all"}, "toolu_1"),
-                      tool("list_hubs", {"region": "all"}, "toolu_2"), final())  # fmt: skip
-    reply = a.answer(None, "Which hubs are there?")
+def assert_time_limit(a, reply):
     assert reply.status == "error" and reply.error_code == "time_limit" and "90-second limit" in reply.error
-    assert len(client.requests) == 2
+    assert "asked to wait" not in reply.error
     session = a.sessions[reply.session_id]
     assert session.messages == [] and session.results == {} and not session.busy.locked()
+
+
+def test_a_call_cut_off_by_the_time_limit_ends_the_message_as_the_time_limit(ctx, clock):
+    a, client = timed(ctx, clock, [50, 45], tool("rank_hubs", WINTER_MIDWEST), final())
+    reply = a.answer(None, "Which hubs in the Midwest are most exposed?")  # the second call times out at 90 s
+    assert_time_limit(a, reply)
+    assert [r["timeout"] for r in client.requests] == [60, 40] and clock.now == 90
+
+
+def test_no_model_call_starts_after_the_message_time_limit(ctx, clock):
+    a, client = timed(ctx, clock, [50, 40], tool("list_hubs", {"region": "all"}, "toolu_1"),
+                      tool("list_hubs", {"region": "all"}, "toolu_2"), final())  # fmt: skip
+    reply = a.answer(None, "Which hubs are there?")  # the second call answers just as the 90 s run out
+    assert_time_limit(a, reply)
+    assert len(client.requests) == 2
+
+
+def test_a_failure_with_less_time_left_than_the_pause_is_the_time_limit(ctx, clock):
+    import anthropic
+
+    a, client = timed(ctx, clock, [60, 29.8], tool("rank_hubs", WINTER_MIDWEST),
+                      anthropic.APIConnectionError(request=_request()), final())  # fmt: skip
+    reply = a.answer(None, "Which hubs are most exposed?")  # fails with 0.2 s left: no room for the 0.5 s pause
+    assert_time_limit(a, reply)
+    assert clock.slept == [] and len(client.requests) == 2
+
+
+def test_a_bug_in_our_own_code_is_an_error_that_leaves_the_conversation_as_it_was(ctx, monkeypatch):
+    import wra.agent.loop
+
+    def broken(*args, **kwargs):
+        raise KeyError("a bug")
+
+    a, client = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final())
+    monkeypatch.setattr(wra.agent.loop, "check_answer", broken)
+    reply = a.answer(None, "Which hubs in the Midwest are most exposed?")
+    assert reply.status == "error" and reply.error_code == "internal_error" and "KeyError" in reply.error
+    session = a.sessions[reply.session_id]
+    assert session.messages == [] and session.results == {} and not session.busy.locked()
+
+
+def status_error(code, headers=None):
+    import anthropic
+    import httpx2
+
+    reply = httpx2.Response(code, headers=headers or {}, request=_request())
+    return anthropic.APIStatusError("failed", response=reply, body=None)
+
+
+@pytest.mark.parametrize("error, wait", [
+    (status_error(400), None), (status_error(401), None), (status_error(404), None),
+    (status_error(408), (0.5, False)), (status_error(409), (0.5, False)), (status_error(429), (0.5, False)),
+    (status_error(500), (0.5, False)), (status_error(529), (0.5, False)),
+    (status_error(400, {"x-should-retry": "true"}), (0.5, False)),
+    (status_error(500, {"x-should-retry": "false"}), None),
+    (status_error(429, {"retry-after": "2"}), (2.0, True)),
+    (status_error(429, {"retry-after-ms": "1500", "retry-after": "30"}), (1.5, True)),
+    (status_error(429, {"retry-after-ms": "0", "retry-after": "30"}), (0.5, False)),  # the SDK's rule
+    (status_error(429, {"retry-after": "Wed, 21 Oct 2026 07:28:00 GMT"}), (0.5, False)),
+    (timeout_error(), (0.5, False)), (ConnectionError("not an SDK error"), None), (KeyError("a bug"), None),
+])  # fmt: skip
+def test_which_failures_are_retried_and_after_what_wait(error, wait):
+    from wra.agent.loop import _retry_wait
+
+    assert _retry_wait(error) == wait
 
 
 def test_a_timed_out_call_is_retried_once_within_the_time_left(ctx, clock):

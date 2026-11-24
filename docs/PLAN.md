@@ -654,10 +654,10 @@ Changes forced by reality are appended here, newest last.
 - *The reply names its failure (section 8.5).* A reply with status `error` carries `error_code` (busy, unknown_conversation, model_call_failed, time_limit, declined, cut_off, invalid_twice, too_many_calls) beside its plain message, so the API can choose an HTTP status without reading the text.
 - *The API does not create a conversation for an id it does not hold (section 7.1, step 2: "finds or creates the session").* A null id starts a conversation; an unknown id is refused without a model call (owner). `docs/ASSUMPTIONS.md`, milestone 4 section, point 1.
 - *A time limit per message, and the retry moved from the SDK into the loop (section 8.4, "other limits").* 90 seconds per message, all calls included (owner). Decision log, same date.
-- *HTTP status (section 8.5 named none).* 200 for an answer, 409 busy, 404 unknown conversation, 502 any other failure, 422 a malformed request; the body is the reply in every case (owner). Decision log, same date.
+- *HTTP status (section 8.5 named none).* 200 for an answer, 409 busy, 404 unknown conversation, 502 a failure on the model's side (owner), 500 a bug in our own code (Claude, after the review); the body is the reply for each of these. A malformed request is 422 with FastAPI's validation message. Decision log, same date.
 - *The page's figures are formatted by the server (section 8.5).* The API sends table cells as text by the command line's rule and sources by name, so the page formats nothing; the reply the agent returns to the command line and the evaluation keeps its numbers. The plan's example already showed cells as text.
 - *Bold is the only Markdown the page shows (section 8.3 said "Markdown").* The system prompt now says so. `docs/ASSUMPTIONS.md`, milestone 4 section, point 4.
-- *No `api/sessions.py` (section 11).* The conversations already live in the agent (milestone 3), so `src/wra/api/` holds `app.py` and `static/index.html` only.
+- *No `api/sessions.py` (section 11).* The conversations already live in the agent (milestone 3), so `src/wra/api/` holds `__init__.py`, `app.py` and `static/index.html` only.
 
 ---
 

@@ -89,14 +89,15 @@
 
 <script>
 "use strict";
-// The page shows only what the API's reply holds. It computes no figure: tables, footnotes and trace
-// values are written exactly as the server sends them.
+// The page shows only what the API's reply holds. It computes no figure: tables and footnotes are written
+// exactly as the server sends them; tool inputs in the trace are re-printed as JSON, so 2.0 shows as 2.
 
 const log = document.getElementById("log");
 const form = document.getElementById("ask");
 const box = document.getElementById("message");
 const send = document.getElementById("send");
 const working = document.getElementById("working");
+const fresh = document.getElementById("new");
 let sessionId = null;
 
 const LABELS = { out_of_scope: "Out of scope", no_data: "No data for that period",
@@ -217,6 +218,7 @@ function showNotice(text) {
 
 function setWorking(on) {
   send.disabled = on;
+  fresh.disabled = on;  // a new conversation mid-answer would be undone when the answer arrives
   working.hidden = !on;
 }
 
@@ -238,7 +240,7 @@ async function ask(message) {
 
   if (!reply || !reply.trace) {  // not a reply from the agent: the server is down, or the request was refused
     box.value = message;
-    showNotice(response ? "The server did not accept the question (HTTP " + response.status + "). It is back in the box."
+    showNotice(response ? "The server could not answer (HTTP " + response.status + "). The question is back in the box."
                         : "The server could not be reached. The question is back in the box.");
     return;
   }
@@ -271,7 +273,7 @@ box.addEventListener("keydown", (event) => {
   }
 });
 
-document.getElementById("new").addEventListener("click", () => {
+fresh.addEventListener("click", () => {
   sessionId = null;
   log.replaceChildren();
   box.focus();

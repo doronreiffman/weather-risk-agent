@@ -6,8 +6,9 @@ in memory. The endpoints are plain functions, so FastAPI runs each request in it
 lock per conversation keeps two messages on one conversation apart.
 
 HTTP status (owner, milestone 4): every reply the agent gives is sent with the same body, as 200 unless it
-is an error; busy is 409, a conversation the server does not hold is 404, and every other failure is on the
-model's side, 502. A malformed request is FastAPI's 422 and reaches no model.
+is an error; busy is 409, a conversation the server does not hold is 404, and the failures on the model's
+side are 502. A bug in our own code is 500, with the same body (Claude, after the milestone 4 review). A
+malformed request gets FastAPI's 422 and its validation message, not a reply, and reaches no model.
 """
 
 from pathlib import Path
@@ -25,12 +26,13 @@ from wra.tools.text import cell_text
 
 PAGE = Path(__file__).parent / "static" / "index.html"
 MAX_MESSAGE = 2000  # characters; a question to this agent runs to a few hundred
-ERROR_STATUS = {"busy": 409, "unknown_conversation": 404}  # any other error code: 502
+ERROR_STATUS = {"busy": 409, "unknown_conversation": 404, "internal_error": 500}  # any other error code: 502
 
 
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    session_id: str | None = None  # null starts a new conversation
+    # null starts a new conversation; the ids the agent gives are 32 characters
+    session_id: Annotated[str, StringConstraints(min_length=1, max_length=64)] | None = None
     message: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_MESSAGE)]
 
 
@@ -55,6 +57,7 @@ def create_app(agent: Agent, ctx: ToolContext) -> FastAPI:
         (404, "The conversation is no longer on the server; nothing was sent to the model."),
         (409, "The conversation's last question is still being answered."),
         (502, "The model could not give a validated answer: unreachable, too slow, declined, or invalid twice."),
+        (500, "A bug in the agent's own code; the question was not answered and the conversation is unchanged."),
     ]}  # fmt: skip
 
     @app.post("/api/chat", response_model=AgentReply, responses=errors)
