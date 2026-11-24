@@ -2,7 +2,7 @@
 
 An agent that helps a logistics company's analysts decide which distribution hubs are most exposed to weather disruption.
 
-**Status: the score and the evaluation set are built (milestone 2 of 5).** Twelve hubs are loaded from three public sources into a local database and ranked by expected disruption days a year, with code-computed confidence. Six tools return the figures, and fourteen evaluation cases with automatic graders are ready for the agent. The agent, the API and the chat page are not built yet. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed and what was decided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).
+**Status: the agent answers questions from the command line (milestone 3 of 5).** Twelve hubs are loaded from three public sources into a local database and ranked by expected disruption days a year, with code-computed confidence. An agent on Claude Opus 5.5 answers questions by calling six tools; code validates every answer, checks each number against the tool results and builds the tables. The first evaluation run passed 12 of 14 cases; two checks that failed right answers were then corrected (see [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)). The API and the chat page are not built yet. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed and what was decided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Run it
 
@@ -17,6 +17,15 @@ uv run wra rank winter --region midwest
 uv run wra eval --agent stub   # runs the fourteen evaluation cases; a stub agent scores 0 of 14
 uv run pytest -q
 ```
+
+The agent needs an Anthropic API key. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`; `.env` is git-ignored. These two commands make paid API calls:
+
+```
+uv run wra ask "Which hubs in the Midwest are most exposed to winter disruption?"
+uv run wra eval            # all fourteen cases through the real agent; about 0.53 USD at list price on 2026-11-24
+```
+
+The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_EFFORT` override them.
 
 `wra rank` takes `overall`, `winter`, `flood`, `severe_storm` or `hurricane`, an optional `--region` (`midwest`, `south`, `west`) and `--top N`. None of these commands uses the network. The scoring rules (weights, warning types, bands, confidence thresholds) are in `config/scoring.toml`.
 
