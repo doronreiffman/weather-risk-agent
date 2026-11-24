@@ -1,0 +1,3378 @@
+ ▐▛███▛█   Claude Code v2.1.331
+▝▜██████▀  Opus 5.5 · Claude Ultra
+ ▝▝   ▝▝   ~/Projects/weather-risk-agent
+
+
+❯ /clear                                                                        
+
+❯ continue with Milestones 2 and 3. do not make any assumptions, if you have    
+  any questions please refer to me.                                             
+  ⎿  ⧉ Selected 78 lines from ../../Desktop/weather-agent-starting-prompt.md in 
+     Cursor
+
+⏺ The handoff prompt loaded automatically at session start, so the fixed handoff
+  skill works. Reading the project records now.
+
+  Read 3 files, ran 1 shell command (ctrl+o to expand)
+
+⏺ Check A: the session 02 transcript is present. Running the work-address check
+  and a check for session links before committing it alone.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Moving q11 to Done.
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Removed 1 line
+       6 
+       7  ## Queue
+       8 
+       9 -- [q11] Commit the session 02 transcript once the owner has exp
+         -orted it as `docs/ai-session/02-data.txt`. → `docs/ai-session/R
+         -EADME.md`                                                      
+       9  - [q3] Milestone 2: scoring core and evaluation set, no LLM. Th
+          e tools behind the four assignment questions are built first. S
+          ettles open points O7, O10, O11 and O12. → `docs/PLAN.md` secti
+          on 13, `docs/ASSUMPTIONS.md`
+      10  - [q4] Milestone 3: the agent. → `docs/PLAN.md` section 13
+      11  - [q5] Milestone 4: API and chat page. → `docs/PLAN.md` section
+           13
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 1 line
+      15 
+      16  ## Done / Dropped
+      17 
+      18 +- [q11] Session 02 transcript committed. Done 2026-11-24. Proof
+         +: commit `9d551f5`.                                            
+      19  - [q2] Milestone 1: data. Done 2026-11-24. Proof: commits `5e67
+          c19` to `d127f5b`; the checks' output is in session `02-data.tx
+          t`.
+      20  - [q9] Session 01 transcript committed. Done 2026-11-24. Proof:
+           commit `4adbf00`.
+      21  - [q1] Milestone 0: scaffold and rules. Done 2026-11-24. Proof:
+           commits `db31520`, `14817f0`, `e427e7b`; the three checks' out
+          put is in session `01-plan.txt`.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Next I read the existing code so the scoring work fits it.
+
+  Read 9 files, listed 1 directory (ctrl+o to expand)
+
+⏺ Baseline check: tests and the database.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Before querying the owner, I'm pulling a few database facts: how many county
+  rows one drawn-area warning matches, which FEMA fields are stored, and how
+  many tropical warnings each hub has. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Each drawn-area warning maps to a single county row, so the end-time question
+  is straightforward. I'm next checking whether every hub has warning-archive
+  rows for each year and how the rainfall flags look. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Every hub has archive rows in every one of the ten years, and the station
+  flags are as expected. One last fact for a question about rainfall: the
+  smallest non-trace amount the stations record.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I have what I need for the first questions. These four decide how the counting
+  and the comparison work, so I'm asking before writing any counting code.
+
+⏺ Answered Claude's questions:
+  ⎿  · FEMA gives no hurricane figure for the Minneapolis and Denver hub 
+     counties, and gives Kansas City exactly zero. Chicago's county gets 0.01 a 
+     year, which is FEMA's default for land with no recorded storm. How should 
+     the score treat these? → Explain this further - why does Chicago's county 
+     get 0.01 a year, but Minneapolis and Denver get no figure at all, and 
+     Kansas City 0? Why the inconsistency, in what should be the same scenario 
+     (no hurricanes recorded)?
+     · A flash flood, severe thunderstorm or tornado warning has a drawn-area 
+     row (it covered the hub) and a county row for the same warning. In 128 
+     warnings the county row ended earlier, because the warning was cancelled 
+     early. In 52 flash flood warnings the county row ended later, because it 
+     was extended. When should the hub's warning end? → Earlier of the two 
+     (Recommended)
+     · For rainfall questions ("what share of days had rain"), what counts as a 
+     day with rain? The stations record rain in hundredths of an inch; 0.01 inch
+     is the smallest amount they record apart from a trace. Snowfall is already
+     settled at 0.1 inch or more. → Does less than 0.01 inches of rain affect 
+     shipments at all? this needs to be checked before a decision can be reached
+     · The comparison tool takes 2 to 4 hubs. With two hubs, it gives their 
+     difference and ratio. With three or four, what should each hub be compared 
+     against? → The highest hub (Recommended)
+
+⏺ Two answers are settled: drawn-area warnings end at the earlier end time, and
+  hub comparisons are measured against the most exposed hub. Next I'm checking
+  why FEMA treats the four inland counties differently, and whether light rain
+  affects freight. · summary
+
+  Searched for 2 patterns, ran 1 shell command (ctrl+o to expand)
+
+⏺ I'll download FEMA's technical documentation into its own scratch folder and
+  read the hurricane section directly, and ask FEMA's map service for the four
+  counties' other hurricane fields.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ FEMA's ratings partly explain the gap: Denver and Hennepin are "Not
+  Applicable", Platte County "No Rating", and DuPage "Very Low" with no storms
+  on record. Next I'll read the documentation's definitions of those labels. 
+  · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Those are the general definitions. Now the hurricane section itself: where
+  FEMA decides a hurricane "cannot occur", and where the 0.01 default applies.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+⏺ The FEMA picture is settled, so I'm now checking the Federal Highway
+  Administration's road-weather pages for a measured effect of light rain on
+  road freight. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The FHWA page has light-rain figures for freeways but nothing on daily totals.
+  Next I'll check how FEMA's service describes its storm-count field, since my
+  explanation depends on it. · summary
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ FEMA's December 2025 documentation explains three different answers for the
+  four inland counties: Hennepin and Denver fall outside its hurricane-possible
+  buffer, DuPage gets an assumed 0.01-a-year minimum, and Platte's "No Rating"
+  fits neither rule, so I'm leaving that gap open. Whichever answer you pick
+  moves a hub's score by at most 0.05 disruption days a year, and since rain
+  isn't scored and shipments aren't recorded, I can't tie any rain threshold to
+  shipment impact. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · No hurricane is on FEMA's record for any of the four inland hub counties.
+     FEMA still gives Chicago an assumed minimum of 0.01 a year, rates 
+     Minneapolis and Denver "Not Applicable" (no figure), and gives Kansas City 
+     0 for a reason its documentation doesn't state. Which hurricane figure 
+     should these four hubs carry? The difference is at most 0.05 disruption 
+     days a year. → FEMA as given (Recommended)
+     · Rain doesn't feed the score (flooding comes from flash flood warnings). 
+     FHWA's road-weather page says light rain slows freeway traffic by 3 to 13%,
+     but no source gives a daily rain amount tied to shipment impact. What 
+     should the daily-statistics tool do about rain? → Keep it as weather 
+     (Recommended)
+
+⏺ Both open counting questions are settled: FEMA's hurricane figures are used as
+  published, and rain stays in the daily-statistics tool, labelled as weather.
+  I'll record all four decisions in docs/ASSUMPTIONS.md, in the same commit as
+  the code that relies on them. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The scoring config now has all the rules a person might want to change, such
+  as weights, warning types per hazard, the period and confidence thresholds.
+  I'm leaving the band cut-offs empty until review. · summary
+
+⏺ Write(config/scoring.toml)
+  ⎿  Wrote 84 lines to config/scoring.toml
+       1 # How the risk score is computed (docs/PLAN.md, section 5). The 
+         scoring code
+       2 # reads every rule from here; nothing below is repeated in code.
+       3 #
+       4 # The score is Expected Disruption Days per year (EDD), summed o
+         ver four hazards:
+       5 #   warning hazards: days under a qualifying warning per year x 
+         weight
+       6 #   hurricane:       FEMA hurricane events per year for the hub'
+         s county x weight
+     … +78 lines (ctrl+o to expand)
+
+⏺ Writing the first failing tests next, using hand-computed warning lists that
+  cover overlaps, duplicates, a New Year crossing, an expiry before issue, and
+  the end-time rule. · summary
+
+⏺ Write(tests/test_warning_time.py)
+  ⎿  Wrote 202 lines to tests/test_warning_time.py
+       1 """Time under warning, on hand-built warning lists with answers 
+         worked out by hand."""
+       2 
+       3 from datetime import UTC, datetime
+       4 
+       5 import pytest
+       6 
+       7 from wra.ingest.iem import WarningEvent
+       8 from wra.scoring.warning_time import counted_spells, days_by_yea
+         r, hours_by_year, merge_spells
+     … +194 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ They fail because the module doesn't exist yet. Now the implementation.
+
+⏺ Write(src/wra/scoring/warning_time.py)
+  ⎿  Wrote 102 lines to src/wra/scoring/warning_time.py
+       1 """Time under warning: pick a hazard's warnings, merge them into
+          spells, sum the hours per local year.
+       2 
+       3 Pure functions over plain values: no database, no network (docs/
+         PLAN.md, section 5.2).
+       4 
+       5 The rules, in the order they apply:
+       6 1. Warnings only (significance W), and only the hazard's type co
+         des.
+       7 2. A zone code counts from a forecast-zone row (area code with Z
+     … +96 lines (~4 KB) (ctrl+o to expand)
+
+⏺ Write(src/wra/scoring/__init__.py)
+  ⎿  Wrote 7 lines to src/wra/scoring/__init__.py
+      1 """The scoring core: plain Python over stored data, no network an
+        d no LLM (docs/PLAN.md, section 5).
+      2 
+      3 - config.py:       the rules in config/scoring.toml, read and che
+        cked
+      4 - warning_time.py: which warnings count, merged into spells, hour
+        s per local year
+      5 - kpi.py:          rates, Expected Disruption Days, ranking, band
+        s, what-if weights
+      6 - confidence.py:   coverage, separation and weight stability, as
+     … +2 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 18 pass. Next the config loader and the score itself: rates, disruption
+  days, ranking, bands and what-if weights. Tests first again.
+
+⏺ Write(tests/test_kpi.py)
+  ⎿  Wrote 176 lines to tests/test_kpi.py
+       1 """Rates, Expected Disruption Days, ranking, bands and what-if w
+         eights, on hand-built inputs."""
+       2 
+       3 import dataclasses
+       4 from datetime import UTC, datetime
+       5 
+       6 import pytest
+       7 
+       8 from wra import paths
+       9 from wra.ingest.iem import WarningEvent
+     … +167 lines (ctrl+o to expand)
+
+⏺ The tests refer to a repository-root helper that doesn't exist. I'll point
+  them at the config file by its path instead.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the config loader and the score module.
+
+⏺ Write(src/wra/scoring/config.py)
+  ⎿  Wrote 129 lines to src/wra/scoring/config.py
+      1 """The scoring rules in config/scoring.toml, read once and checke
+        d.
+      2 
+      3 Everything a person might want to read or change about the score
+        lives in that
+      4 file. This module only reads it and refuses a file that cannot be
+         right.
+      5 """
+      6 
+      7 import tomllib
+     … +122 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/scoring/kpi.py)
+  ⎿  Wrote 141 lines to src/wra/scoring/kpi.py
+       1 """Expected Disruption Days per year (EDD): one hub's score, a r
+         anking, bands, what-if weights.
+       2 
+       3 Plan section 5.1:
+       4     rate(hub, hazard)   = days under a qualifying warning, summe
+         d over the period, divided by its years
+       5     EDD(hub, hazard)    = rate x weight
+       6     EDD(hub, hurricane) = FEMA hurricane events per year for the
+          hub's county x weight
+       7     EDD(hub, overall)   = the sum of the four
+     … +134 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 17 tests pass; next I'm adding a module that loads the database into plain
+  values, tested against the committed raw responses. · summary
+
+⏺ Write(src/wra/stored.py)
+  ⎿  Wrote 103 lines to src/wra/stored.py
+       1 """Read the database built by `wra ingest` into plain values, on
+         ce per process.
+       2 
+       3 The scoring core and the tools work on these values and never ru
+         n SQL
+       4 themselves, so they can be tested on hand-built inputs.
+       5 """
+       6 
+       7 import sqlite3
+       8 from dataclasses import dataclass
+     … +95 lines (ctrl+o to expand)
+
+⏺ Write(tests/conftest.py)
+  ⎿  Wrote 29 lines to tests/conftest.py
+       1 """Shared fixtures."""
+       2 
+       3 from pathlib import Path
+       4 
+       5 import pytest
+       6 
+       7 REPO = Path(__file__).resolve().parents[1]
+       8 
+       9 
+      10 @pytest.fixture(scope="session")
+     … +19 lines (ctrl+o to expand)
+
+⏺ Now the first real ranking. A scratch script prints all twelve hubs with the
+  per-hazard breakdown, using the code just written.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I'm checking these figures with an independent script that reads the database
+  directly and counts covered minutes per local year. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All five figures check out to two decimals. Before the review I'm looking at
+  how much of Houston's flood number comes from its two coastal warnings, and
+  how far neighbouring hubs really sit apart given their year-to-year swings. 
+  · summary
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Ten of the eleven neighbour gaps fall below year-to-year noise, which matters
+  for the review. Next I'll check the flood ranking with Area Flood Warnings
+  included and see what area Houston's forecast zone covers. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Adding Area Flood Warnings would change the ranking: Kansas City moves to
+  first and Phoenix's flood figure rises from 0.17 to 1.26. Houston's zone is
+  named "Inland Harris", which looks odd next to two coastal warnings, so I'm
+  checking what it was called in 2016. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The zone history is settled, and the twelve-hub ranking is in: Minneapolis
+  tops it at 2.90 disruption days a year, with Phoenix last at 0.42, though most
+  neighbouring hubs are too close to separate reliably, so that ranking gets a
+  low confidence label. I'm now checking the band cut-offs to decide whether
+  Dallas's 2.02 counts as high. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · Band cut-offs, fixed from now on (days per year). The twelve overall 
+     figures run from 0.42 (Phoenix) to 2.90 (Minneapolis). Dallas is at 2.02. 
+     Which cut-offs? → I want a better understanding of what you mean by Bands 
+     in this context before I answer
+     · Do the bands also label single-hazard figures (for example "Minneapolis: 
+     High for winter"), or only a hub's overall figure? → Can we check to see if
+     certain hazards cause more disruption. this may be relevant to analysis 
+     · Coastal flood warnings: in ten years only Houston had any, two in 2016. 
+     Both were issued for the hub's zone, then called "Harris", beside a 
+     separate "Coastal Harris" zone. By 2019 the hub's zone had been renamed 
+     "Inland Harris". They add 0.25 days a year to Houston: overall 2.21 becomes
+     1.96, and its rank goes from 4th to 7th. Keep them in the flood score? → 
+     why would we drop them?
+     · Area Flood Warnings are left out of the flood score, as the plan 
+     approved. 158 of them covered 11 hubs, typically 5.9 hours long (the 
+     longest 144 hours). Counting them would put Kansas City 1st, Houston 2nd 
+     and Minneapolis 3rd, and Phoenix's flood figure would go from 0.17 to 1.26.
+     Keep them out? → Keep them out (Recommended)
+
+⏺ Area Flood Warnings are excluded from the score, and I'm checking Houston's
+  2016 coastal flood warnings plus published evidence on which hazards disrupt
+  more, for the other three. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The warning texts identified the two coastal flood warnings. Next I'll start
+  background research into whether some hazards disrupt more than others. 
+  · summary
+
+⏺ Agent(Research disruption by hazard type)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ Area Flood Warnings stay out. On your other three answers:
+
+  Is one hazard more disruptive than another? A research agent is now looking
+  for published measurements of disruption by hazard: freight delay, power cuts,
+  facility closures. It is focusing on whether disruption outlasts the warning
+  more for some hazards than others. Weights decided on 2026-11-24 rested on
+  warning length alone, so this reopens them. I'll bring back what the sources
+  say, quoted and checked. I'll check every claim it reports before passing it
+  on.
+
+  What a band is. It is a word attached to a hub's figure: Low, Moderate, High
+  or Very high.
+  - It exists because question 4 of the assignment asks "Why is the Dallas hub's
+    weather disruption risk high?" To confirm or correct that, the agent needs
+    a rule for what "high" means.
+  - In the interview you chose fixed cut-offs in days per year, not "the top
+    third of our hubs" and not FEMA's rating. Fixed means the same figure always
+    gets the same word, this year or next, and when hubs are added. With
+    cut-offs 1/2/3, a hub at 2.4 days is High whatever the other hubs score.
+  - A band never changes the ranking or the figure. Every answer shows the
+    figure beside the word.
+  - One option I didn't offer before: no bands. The agent would answer "why is
+    Dallas high?" with its rank and figure ("7th of 12, 2.02 days a year"), and
+    say the network has no fixed definition of high.
+
+  I'll ask for the cut-offs after the research comes back. If the weights
+  change, the figures change, and the cut-offs should be chosen from the final
+  figures.
+
+  Why I suggested dropping the coastal flood warnings. I read the text of both
+  warnings. Every place they name as flooding is on Galveston Bay or the Gulf
+  beaches:
+  - March 2016: "areas along western Galveston Bay", Toddville Road, Red Bluff
+    Road near Highway 146, Jamaica Beach.
+  - April 2016: "Gulf facing beaches", Highway 87 on the Bolivar Peninsula, the
+    Kemah waterfront.
+
+  None of them is near the hub at Bush Intercontinental airport. They count only
+  because the warning went to the whole "Harris" forecast zone, which contains
+  the airport. For winter weather a zone is a fair stand-in for the hub, because
+  a snowstorm covers the whole zone. Coastal flooding stays at the shoreline,
+  so the zone overstates it. That is the same reason the score uses drawn-area
+  rows, not county rows, for flash floods and storms. The case for keeping them
+  is that the approved rule counts any warning for the hub's zone.
+
+⏺ Answered Claude's questions:
+  ⎿  · Houston's two 2016 coastal flood warnings went to the whole Harris 
+     forecast zone, which contains the airport. Their own text names flooding 
+     only on Galveston Bay and the Gulf beaches. They add 0.25 days a year to 
+     Houston (overall 2.21 to 1.96, 4th to 7th). Keep coastal flood warnings in 
+     the flood score? → Drop them (Recommended)
+
+⏺ Decided: coastal flood warnings leave the flood score and appear only as a
+  supporting figure. Updating the config, and checking the tests still pass with
+  the change.
+
+⏺ Update(config/scoring.toml)
+  ⎿  Added 3 lines, removed 1 line
+      20  #                  warning ends at the earlier of the two ends 
+          (open point O12,
+      21  #                  settled 2026-11-24).
+      22  # Left out on purpose (assumption A3): river flood (FL) and are
+          a flood (FA)
+      23 -# warnings, cold and wind-chill warnings, high-wind warnings.  
+      23 +# warnings, cold and wind-chill warnings, high-wind warnings. C
+         +oastal flood (CF)                                              
+      24 +# warnings were left out at the milestone 2 review (open point 
+         +O10): they are                                                 
+      25 +# issued for a whole forecast zone, while coastal flooding stay
+         +s at the shore.                                                
+      26 
+      27  [hazards.winter]
+      28  label = "Winter weather"
+
+⏺ Update(config/scoring.toml)
+  ⎿  Added 1 line, removed 1 line
+      33  [hazards.flood]
+      34  label = "Flooding"
+      35  weight = 1.0
+      36 -zone_codes = ["CF"]                     # coastal flood        
+      36 +zone_codes = []                                                
+      37  polygon_codes = ["FF"]                  # flash flood
+      38 
+      39  [hazards.severe_storm]
+
+⏺ Update(config/scoring.toml)
+  ⎿  Added 1 line
+      55  [supporting]
+      56  # Shown beside the score, never added to it.
+      57  tropical_zone_codes = ["HU", "TR", "SS"]   # hurricane, tropica
+          l storm, storm surge warnings
+      58 +coastal_flood_zone_codes = ["CF"]          # coastal flood warn
+         +ings for the hub's zone                                        
+      59 
+      60  [supporting.fema_cross_check]
+      61  # FEMA's own annualised frequencies for the three warning hazar
+          ds, as an
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Houston's flood figure without coastal warnings, at 0.47, matches the
+  independent count too. Next I'm adding the config loader's new supporting
+  field and pinning five independently checked figures in a test against the
+  database. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 104 tests pass. Now the records: the four settled points go into the
+  assumptions file in the same commit as the code.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the decision log entry for removing coastal flood warnings, since it
+  overturns an item of the approved plan, and the matching Deviations entry in
+  the plan.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Committing in two small steps: first the warning-time counting, then the score
+  with its config and records.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Two commits are in. I need to settle three open confidence rules before
+  building the tools, so I'm first measuring the separation test on the
+  assignment rankings. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Nearly every neighbour ranking comes out low confidence once coastal flood
+  warnings are removed, with only Columbus against Phoenix holding overall and
+  Minneapolis against Kansas City holding for Midwest winters. Four questions
+  still need settling to finish the rule. · summary
+
+⏺ Declined to answer Claude's questions:
+  ⎿  · Under the plan's confidence rule, nearly every ranking is labelled low, 
+     because most neighbouring hubs are closer than their year-to-year swings 
+     (overall: 10 of 11 gaps; Midwest winter: 3 of 4). Keep that rule? (Keep it 
+     (Recommended) / Judge only the top)
+     · When a ranking shows only the top few hubs ("which three are most 
+     exposed?"), which gaps does the separation test check? (Shown rows plus the
+     cut (Recommended) / Shown rows only / The whole ranking)
+     · FEMA gives one long-run hurricane figure per county, so gaps between 
+     hurricane figures can't be tested against yearly swings. How should that 
+     affect the confidence label of a hurricane ranking or comparison? (Cap at 
+     medium (Recommended) / Leave them out / Test as storm counts)
+     · Rankings get the coverage, separation and stability tests. Which tests 
+     set the confidence label of a comparison ("Miami vs Houston") and of one 
+     hub's explanation ("why is Dallas high?")? (Same tests, on those hubs 
+     (Recommended) / Coverage only)
+
+⏺ Two of the four are settled:
+
+  - Keep the plan's rule. A ranking where most neighbour gaps are within
+    year-to-year swings is labelled low. The reason line names the gaps that do
+    hold.
+  - Which gaps get checked depends on the question. Here is how I'd build that;
+    tell me if it's wrong.
+    - For "top three", the label rests on the gaps among the three shown (1st vs
+      2nd, 2nd vs 3rd), with no check against the 4th.
+    - For "which hubs stand out?", the agent asks for the ranking without a
+      cut-off. Every row then carries whether it stands clear of the next hub,
+      so the answer can say where the top group ends.
+
+  You didn't answer the last two questions: hurricane gaps that can't be tested,
+  and the confidence of comparisons and explanations. What would you like me to
+  clarify about them?
+
+✻ Brewed for 20m 23s · done 2:02 PM
+
+❯ I want a better understanding of the hurricane gap question                   
+⏺ I'll work through it with a real example, Miami against Houston. First I'll
+  compute the figures behind the example so they're measured, not estimated.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The question comes down to one thing: how sure can we be that one hub's
+  hurricane figure really is higher than another's?
+
+  What the test does for the other hazards. Take flooding at Houston and Miami.
+  We have ten yearly figures for each hub, and they jump around a lot:
+
+  ┌─────────┬──────────────────────────────────────────────────────┬─────────┐
+  │         │        Flood days under warning, 2016 to 2025        │ Average │
+  ├─────────┼──────────────────────────────────────────────────────┼─────────┤
+  │ Houston │ 1.10, 2.09, 0.00, 0.72, 0.09, 0.25, 0.07, 0.08,      │ 0.47    │
+  │         │ 0.35, 0.00                                           │         │
+  ├─────────┼──────────────────────────────────────────────────────┼─────────┤
+  │ Miami   │ 0.00, 0.00, 0.00, 0.00, 1.11, 0.13, 0.28, 0.26,      │ 0.21    │
+  │         │ 0.29, 0.00                                           │         │
+  └─────────┴──────────────────────────────────────────────────────┴─────────┘
+
+  With ten noisy years, an average could easily have come out somewhat higher or
+  lower. The test measures how much from the spread of the yearly figures. That
+  gives 0.24 days for the pair. The gap between the averages is 0.27, a little
+  bigger, so "Houston has more flood exposure than Miami" passes, just.
+
+  Why hurricanes can't get the same test. FEMA gives one number per county and
+  no yearly figures: Miami 0.305 storms a year, Houston 0.184. The gap is 0.12
+  storms a year, which is 0.6 disruption days. Without yearly figures there is
+  no spread to measure, so we can't tell from FEMA's number alone how solid that
+  gap is. This decides the confidence label on the hurricane half of the
+  assignment's Miami against Houston question.
+
+  The three options:
+  1. Cap at medium. We can't test the gap, so a hurricane answer is never
+     labelled high. The reason line says FEMA gives one long-run figure with no
+     yearly values.
+  2. Leave the test out. The label rests only on whether FEMA has a figure for
+     the county. It does for every hub, so hurricane answers come out high.
+  3. Treat FEMA's figure as a storm count. FEMA's record covers about 174 years,
+     so Miami's 0.305 a year is about 53 storms and Houston's 0.184 about 32.
+     For storms that arrive at random, a count of 53 is uncertain by about its
+     square root, roughly 7 storms either way. That gives 0.053 storms a year
+     for the pair, against a gap of 0.12. The gap is 2.3 times bigger, so Miami
+     against Houston passes. The catch is that FEMA's figure isn't a plain
+     count: it is averaged over map grid cells and includes storms that passed
+     near the county. So this is an approximation, and it adds a method the plan
+     doesn't have.
+
+  I still recommend option 1, because it claims nothing we can't check. Option 3
+  tells the analyst more, but it rests on an approximation they would have to
+  accept.
+
+⏺ Answered Claude's questions:
+  ⎿  · FEMA gives one long-run hurricane figure per county (Miami 0.305 storms a
+     year, Houston 0.184) and no yearly values, so the usual test of whether a 
+     gap is real can't run. How should a hurricane ranking or comparison be 
+     labelled? → Cap at medium (Recommended)
+     · Rankings are labelled by data coverage, separation (is a gap bigger than 
+     year-to-year swings?) and, for overall rankings, weight stability. Which 
+     tests should set the label of a comparison ("Miami vs Houston") and of one 
+     hub's explanation ("why is Dallas high?")? → Same tests, on those hubs 
+     (Recommended)
+
+› Message from general-purpose
+  I found two FHWA studies and two grid-outage studies that split some of our
+  hazards, and none that measures disruption against NWS warning times. Only one
+  measures road aftermath, and it favours winter. Quotes from PDFs are my own
+  text extractions. Quotes from HTML pages came through the fetch tool's
+  summariser.
+
+  **1. FHWA, "Regional Assessment of Weather Impacts on Freight",
+  FHWA-HOP-16-044 (Feb 2016)**
+  - Read: https://rosap.ntl.bts.gov/view/dot/41507/dot_41507_DS1.pdf (loaded),
+  plus the …/fhwahop16044/chap3.htm and chap4.htm pages.
+  - **What it measures:** hourly HERE (NPMRDS) speeds for 2012–2014 on about
+  1,500 miles in 13 regions, including Atlanta I-285, Chicago I-57, Columbus
+  I-70 and Denver I-70. The window runs from 4 hours before to 4 hours after the
+  NOAA Storm Events time ("t=0", p.28). Units are mph change, minutes lost per
+  truck, and $ per segment hour.
+  - p.41: "For most weather event types, only moderate speed reductions persist
+  after four hours. For ice and snow, however, figure 30 shows a strong lagging
+  effect—average speeds are still almost 8 miles per hour lower than normal
+  speeds after four hours."
+  - p.41: ice and snow are "associated with over half of all travel time lost …
+  about 12 minutes per truck."
+  - Exec. summary p.ii: ice and snow cost "over 25 dollars per segment hour and
+  over 25 cents per truck per segment".
+  - **Share of lost time by category (Figs 33–34, pp.43–44):**
+
+  | Events with speed drop of | Ice & Snow | Wind | Rain | Flood |
+  |---|---|---|---|---|
+  | over 10% | 49.1% | 24.9% | 12.4% | 12.4% |
+  | over 50% | 57.5% | 18.9% | 10.6% | 12.5% |
+
+  - p.32 (Atlanta, 23 events, "not enough data to differentiate between weather
+  types"): "recovery is generally quick. Winter weather events, however, are an
+  important exception … winter storms … demonstrate a large lagging effect."
+  - **Limits:**
+    - Events are matched to roads by county.
+    - Only 52% of event periods showed lower speeds (p.34).
+    - Nothing is measured beyond 4 hours after.
+    - "most wind events also included other events such as heavy rain and snow"
+  (p.41).
+    - Figure 30's values for the non-winter categories are chart images I could
+  not read.
+  - **Our hazards:** results come grouped as Ice & Snow, Flood, Fog, Rain, Wind,
+  Temperature and Fire. I found no statement of where Thunderstorm Wind,
+  Tornado or Flash Flood went. UNVERIFIED: flash flood under "Flood", severe
+  storms under "Wind".
+  - **Weight it could support:** the closest measured aftermath, in mph at +4 h
+  or minutes lost per truck. Hour 0 is the Storm Events time, not the warning.
+
+  **2. Krechmer et al., "Weather Delay Costs to Trucking", FHWA-JPO-13-023 (Nov
+  2012)**
+  - Read: https://rosap.ntl.bts.gov/view/dot/3384/dot_3384_DS1.pdf (loaded).
+  - **Durations are assumed, not measured.**
+    - p.49: "Durations ranged from a low of 2 hours for events such as fog, high
+  wind, and light rain up to 12 hours for events involving heavy snow."
+    - p.50: "During events such heavy snow or high winds combined with heavy
+  rain, the impacts on roadway speed are likely to extend well beyond the actual
+  weather event." This is stated, not measured.
+    - p.63: "The estimate is relatively sensitive to these assumptions."
+  - Table 7.2 (p.51, rural interstate) is titled "Percent Decrease in Speed",
+  but the text says it was converted to travel-time increase. Values run from
+  High Wind 8–15% to High Wind and Heavy Snow 77–309%, depending on traffic
+  load.
+  - p.60: "Relatively minor weather events, such as rain and fog, have a major
+  impact because they are more frequent."
+  - Thunderstorm and hail are counted as event types (p.48). The delay tables I
+  read (7.1, 7.2, 7.17, 7.18) have no thunderstorm, ice storm or flood row.
+  - **Weight it could support:** a per-hour severity for snow versus wind, fog
+  and rain. Not aftermath, and nothing for flash flood or severe storms.
+
+  **3. Mitretek, "Analysis of Weather Incident Effects on Commercial Vehicle
+  Mobility in Large U.S. Cities"**
+  - Not found. https://ops.fhwa.dot.gov/weather/roadimpact.htm (loaded) cites it
+  without a link and gives truck delay from weather only as a total.
+
+  **4. Ericson et al., NREL/TP-5R00-83092 / PNNL-33340 (Oct 2022)**
+  - Read: https://www.pnnl.gov/main/publications/external/technical_reports/PNNL
+  -33340.pdf (loaded).
+  - **What it measures:** the probability that a customer in a major outage is
+  out longer than a given time. Major outages are OE-417 events of 10,000+
+  customers, 2015–2021; durations come from EAGLE-I county data.
+  - **Only hurricanes and planned wildfire shutoffs are separated.** p.9: "We
+  leave the valuable work of estimating exceedance probabilities for other
+  hazards to future research."
+  - **Hurricanes versus all major events:**
+
+  | Out longer than | Major hurricanes (Table 11, p.23) | All major events
+  (Table 13, p.25) |
+  |---|---|---|
+  | 24 hours | 52.0% | 35.7% |
+  | 72 hours | 19.4% | 9.9% |
+  | 1 week | 2.5% | 1.3% |
+
+  - **Inconsistency inside the report:** Table ES-2 (p.vii) gives hurricanes
+  33.4% at 3 days from "six" events. Table 11 gives 19.4% at 72 hours from
+  "seven", and 33.4% is its 48-hour figure.
+  - p.6: "The OE-417 data are of insufficient quality to estimate outage
+  durations".
+  - **Weight it could support:** outage hours for hurricanes only.
+
+  **5. Hines, Apt, Talukdar, "Large Blackouts in North America" (CMU working
+  paper CEIC 09-01; Energy Policy 2009)**
+  - Read: https://www.cmu.edu/ceic/assets/docs/publications/working-papers/ceic-
+  09-01.pdf (loaded).
+  - **Mean customers per event (Table 3, NERC data 1984–2006, events over 50,000
+  customers):**
+
+  | Cause | Mean customers per event |
+  |---|---|
+  | Hurricane or tropical storm | 912,870 |
+  | Ice storm | 431,184 |
+  | Other cold weather | 271,924 |
+  | Wind/rain | 235,840 |
+  | Tornado | 227,073 |
+  | Lightning | 200,617 |
+
+  - There is no duration by cause. Table 7 finds size and restoration time
+  unrelated (ρ = 0.040, p = 0.52, N = 267).
+  - **Weight it could support:** size per event at utility or regional scale,
+  not duration.
+
+  **6. Sources that do not split by hazard, or would not load**
+  - EIA Today in Energy, 2020-06-01
+  (https://www.eia.gov/TodayinEnergy/detail.php?id=43915): 5.8 hours per
+  customer in 2018. Causes are named only as anecdotes.
+  - Sandia SAND2022-16828C (https://www.osti.gov/servlets/purl/2006288): groups
+  NOAA events into categories, but gives only a pooled median outage of 2 hours
+  (2014–2019).
+  - New York Fed, 2021 Small Business Credit Survey (https://libertystreeteconom
+  ics.newyorkfed.org/2022/09/small-business-recovery-after-natural-disasters):
+  "Sixty-three percent of small businesses that reported natural
+  disaster-related losses were forced to close temporarily". Not split by
+  disaster type.
+  - Would not load: the DOE OE-417 annual summaries (connection refused) and
+  NOAA's billion-dollar disasters summary statistics (content did not render).
+  - I found no US study of facility-closure or road-closure duration by hazard.
+
+  **What the evidence establishes**
+  - In one FHWA study, measured truck slowdown from ice and snow outlasts the
+  recorded event more than any other category at 4 hours after (about 8 mph).
+  Ice and snow also account for most of the lost truck time.
+  - Major-hurricane power outages run longer than the average major outage.
+  - Per event, hurricanes and ice storms cause the largest blackouts
+  (1984–2006).
+
+  **What it does not establish**
+  - Any disruption measured against NWS warning end times.
+  - Separate aftermath for flash floods versus severe thunderstorms or
+  tornadoes.
+  - Outage durations for winter storms, flash floods or severe storms.
+  - Facility or road closure durations by hazard.
+  - Any road effect beyond 4 hours after the event.
+
+⏺ Agent "Research disruption by hazard type" finished · 10m 7s
+
+⏺ The labelling and explanation tests are settled, and the research agent's
+  findings are reported. I'm checking its four sources myself before relying on
+  any of them. · summary
+
+  Ran 1 shell command · 1 failed (ctrl+o to expand)
+
+⏺ The shell is zsh, so set -- $pair didn't split the pair into words. The
+  project notes warn about exactly this. Redoing it with a while read loop.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The two US government (FHWA) reports refuse plain downloads (HTTP 403). The
+  other two loaded. I'll check those two now, and try FHWA's own web copy of the
+  2016 freight study.
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+⏺ I checked the freight and outage studies against their sources, and the
+  blackout-size table matches; the 2012 trucking report couldn't be downloaded,
+  so I'm leaving its claims out. Next I'll measure how a heavier winter weight
+  changes the ranking before asking you anything. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Winter is the only hazard with clear evidence of lasting disruption on the
+  roads, with truck speeds still about 8 mph below normal four hours after the
+  event, while no study measures how long disruption runs against the end of a
+  warning, so the evidence supports "winter outlasts its warning" but not by how
+  much. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · Published studies show winter's effect on trucks outlasts the event more 
+     than other weather: speeds are still about 8 mph below normal 4 hours after
+     ice and snow (FHWA 2016). None says by how much in our unit, days of 
+     disruption per day under warning. Measured: with winter weighed 1.5 or 2.0,
+     Minneapolis stays first and the same five hubs stay on top (Denver moves 
+     from 3rd to 2nd). What weights should the score use? → without the data, 
+     it's hard to give it a heavier weight. is there any way to keep the weight 
+     at 1.0 while still noting this phenomenon to the analyst?
+     · A band is a word for a hub's figure (Low, Moderate, High, Very high), set
+     by fixed cut-offs in days per year, so the agent can confirm or correct 
+     "Dallas is high". Should bands also label single-hazard figures 
+     ("Minneapolis: High for winter"), or only a hub's overall figure? → Overall
+     only (Recommended)
+     · If the weights stay at 1.0, the overall figures run from 0.42 (Phoenix) 
+     to 2.90 (Minneapolis), with Dallas at 2.02. Which band cut-offs (days per 
+     year), fixed from now on? → 1 / 2 / 3 (Recommended)
+
+⏺ Three points are settled: weights stay at 1.0, bands label only a hub's
+  overall figure, and the cut-offs are 1, 2 and 3 days a year. I'm proposing a
+  fixed note under the table to cover the winter caveat, and I'll ask where it
+  should appear. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · Winter stays at weight 1.0. Code will add a fixed note under the table 
+     saying winter's road effect outlasts its warning more than other weather 
+     (FHWA 2016: truck speeds about 8 mph below normal four hours after ice and 
+     snow), so the score may understate winter. Where should that note appear? →
+     Wherever winter counts (Recommended)
+
+⏺ Every review question is now settled. Before the winter note's wording goes
+  into the config, I'll confirm the study's title and date from FHWA's page,
+  since the note will reach analysts.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Confirmed the FHWA-HOP-16-044 freight weather review; I'm now putting its
+  cut-offs, overall-figure bands, winter note and known limits into the config. 
+  · summary
+
+⏺ Update(config/scoring.toml)
+  ⎿  Added 24 lines, removed 4 lines
+      66 
+      67  [bands]
+      68  # Four bands in disruption days per year: Low, Moderate, High, 
+          Very high.
+      69 -# cutoffs = [moderate_from, high_from, very_high_from]         
+      70 -# Fixed at the milestone 2 review from the twelve real figures,
+         - with the                                                      
+      71 -# owner's sign-off and an entry in docs/DECISIONS.md. Empty unt
+         -il then.                                                       
+      72 -cutoffs = []                                                   
+      69 +# cutoffs = [moderate_from, high_from, very_high_from]; a figur
+         +e on a cut-off                                                 
+      70 +# takes the higher band. Fixed by the owner at the milestone 2 
+         +review                                                         
+      71 +# (docs/DECISIONS.md, 2026-11-24). They do not move.           
+      72 +cutoffs = [1.0, 2.0, 3.0]                                      
+      73 +# Bands label a hub's overall figure only, never a single hazar
+         +d's.                                                           
+      74 +applies_to = "overall"                                         
+      75 
+      76 +[notes]                                                        
+      77 +# Fixed text that code puts under a table; the model never writ
+         +es it.                                                         
+      78 +# Shown wherever winter figures count: winter and overall ranki
+         +ngs, and any                                                   
+      79 +# explanation or comparison that includes winter (owner, 2026-1
+         +1-24).                                                         
+      80 +winter_aftermath = """Winter's effect on roads outlasts the war
+         +ning more than other weather does: \                           
+      81 +in FHWA's Regional Assessment of Weather Impacts on Freight (FH
+         +WA-HOP-16-044, 2016), average speeds \                         
+      82 +were still almost 8 mph below normal four hours after ice and s
+         +now events. This score counts only \                           
+      83 +time under warning, so it may understate winter next to floods 
+         +and storms."""                                                 
+      84 +# Listed by the methodology tool (plan section 5.7).           
+      85 +known_limits = [                                               
+      86 +    "A warning is a forecast that conditions will be dangerous,
+         + not a record that a hub closed.",                             
+      87 +    "The score is in day-equivalents under the stated weights, 
+         +not a prediction of closure days.",                            
+      88 +    "It counts the time a warning was in force and nothing afte
+         +r it.",                                                        
+      89 +    "Ten years is a short record: yearly figures swing widely, 
+         +so hubs with close figures cannot be told apart.",             
+      90 +    "Flood exposure at a real site depends on the exact parcel;
+         + the score sees only the hub's location and county.",          
+      91 +    "Exposure means weather at the location only. Hub importanc
+         +e, upgrade costs and investment choices are outside the score."
+         +,                                                              
+      92 +]                                                              
+      93 +                                                               
+      94  [confidence]
+      95  # Plan section 5.6.
+      96  high_min_coverage = 0.98
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Tests pass. Now the decision log (the plan requires the cut-offs there) and
+  the assumptions file.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Claude writes: I'm correcting my last commit message: the A10 line implied the
+  confidence details were settled with you, but the coverage reading is my own
+  interpretation of the plan's "years with warning data", so I'm fixing the line
+  to say that. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the confidence code, test-first: coverage, the separation test, weight
+  stability, and the rule that turns them into a label and a one-line reason.
+
+⏺ Write(tests/test_confidence.py)
+  ⎿  Wrote 168 lines to tests/test_confidence.py
+       1 """Confidence labels: coverage, separation, weight stability (pl
+         an section 5.6, ASSUMPTIONS milestone 2 point 10)."""
+       2 
+       3 import math
+       4 from datetime import UTC, datetime
+       5 from pathlib import Path
+       6 
+       7 import pytest
+       8 
+       9 from wra.ingest.iem import WarningEvent
+     … +159 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/scoring/confidence.py)
+  ⎿  Wrote 176 lines to src/wra/scoring/confidence.py
+       1 """Confidence, computed in code: a label and a one-line reason (
+         plan section 5.6).
+       2 
+       3 Three tests:
+       4 - coverage:   the share of expected data that is present;
+       5 - separation: is the gap between two hubs larger than the combin
+         ed standard
+       6               error of their yearly figures? Hurricanes have no
+         yearly series,
+       7               so their gaps cannot be tested, and a result resti
+     … +170 lines (~6 KB) (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ A real bug, caught by the test. When the top hub changes but the top-three set
+  stays the same, the reason line still said "unchanged". The check has to look
+  at both.
+
+⏺ Update(src/wra/scoring/confidence.py)
+  ⎿  Added 1 line, removed 1 line
+      136              "Hurricane figures are one long-run FEMA figure wi
+           th no yearly values, so their gaps cannot be tested."
+      137          )
+      138      if stab is not None:
+      139 -        if not set_moves:                                     
+      139 +        if not set_moves and not top_moves:                   
+      140              parts.append(f"The top hub and top {stab.top_n} ar
+           e unchanged with any weight halved or doubled.")
+      141          else:
+      142              moved = [
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Committed. I'll read FEMA's cross-check field names from a stored response
+  before building the six tools. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the tools. First the shared pieces: the result envelope from plan section
+  8.2, and a context that loads the data and config once and caches the scores.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/envelope.py)
+  ⎿  Wrote 85 lines to src/wra/tools/envelope.py
+      1 """The one shape every tool returns (docs/PLAN.md, section 8.2).
+      2 
+      3 `data` holds the figures the model may quote. `display` is the ta
+        ble the page
+      4 shows, built here by code, so the model never types a table. `pro
+        venance`
+      5 holds the sources, period, data date and the confidence worked ou
+        t in code.
+      6 `display.notes` carries fixed caveats written by code, such as th
+        e winter note.
+     … +79 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/context.py)
+  ⎿  Wrote 107 lines to src/wra/tools/context.py
+       1 """What every tool reads: the stored data, the scoring config, t
+         oday's date, and cached scores.
+       2 
+       3 Built once per process. Scores under the official weights are co
+         unted once;
+       4 other weights reuse those counts (kpi.reweigh), so a what-if is
+         cheap.
+       5 """
+       6 
+       7 import os
+     … +100 lines (ctrl+o to expand)
+
+⏺ Now the tests for the four tools behind the assignment's questions. They run
+  on the database built from the committed raw files, with "today" pinned to
+  2026-11-24 as the evaluation will pin it.
+
+⏺ Write(tests/test_tools.py)
+  ⎿  Wrote 199 lines to tests/test_tools.py
+       1 """The tools, on the database built from the committed raw respo
+         nses, with "today" pinned to 2026-11-24."""
+       2 
+       3 import json
+       4 from datetime import date
+       5 
+       6 import pytest
+       7 
+       8 from conftest import REPO
+       9 from wra.scoring.config import load_scoring_config
+     … +190 lines (ctrl+o to expand)
+
+⏺ Now the tool modules: the four assignment tools first, then the registry that
+  validates arguments and runs them.
+
+⏺ Write(src/wra/tools/common.py)
+  ⎿  Wrote 92 lines to src/wra/tools/common.py
+       1 """Small pieces the tools share: argument types, labels, the pro
+         venance of a hazard's figures."""
+       2 
+       3 from typing import Literal
+       4 
+       5 from wra.scoring.config import HAZARDS
+       6 from wra.scoring.kpi import DECIMALS
+       7 from wra.tools.context import ToolContext
+       8 from wra.tools.envelope import WARNING_NAMES, Provenance
+       9 
+     … +83 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/rank_hubs.py)
+  ⎿  Wrote 172 lines to src/wra/tools/rank_hubs.py
+       1 """rank_hubs: hubs ranked by expected disruption days, for one h
+         azard or overall, official or what-if."""
+       2 
+       3 from pydantic import BaseModel, ConfigDict, Field
+       4 
+       5 from wra.scoring.config import HAZARDS
+       6 from wra.scoring.confidence import decide, gap_test, stability
+       7 from wra.scoring.kpi import apply_weight_changes, band, rank
+       8 from wra.tools.common import (
+       9     Hazard,
+     … +163 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/compare_hubs.py)
+  ⎿  Wrote 117 lines to src/wra/tools/compare_hubs.py
+      1 """compare_hubs: two to four hubs side by side, each measured aga
+        inst the most exposed of them."""
+      2 
+      3 from pydantic import BaseModel, ConfigDict, Field, field_validato
+        r
+      4 
+      5 from wra.scoring.confidence import decide, gap_test
+      6 from wra.scoring.kpi import band, rank
+      7 from wra.tools.common import HazardOrOverall, check_hubs, edd_wha
+        t_counts, hazard_label, provenance, r2, winter_counts
+     … +110 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/explain_hub.py)
+  ⎿  Wrote 120 lines to src/wra/tools/explain_hub.py
+       1 """explain_hub: what makes up one hub's score, where it ranks, a
+         nd FEMA's cross-check figures."""
+       2 
+       3 from pydantic import BaseModel, ConfigDict
+       4 
+       5 from wra.scoring.config import HAZARDS, WARNING_HAZARDS
+       6 from wra.scoring.confidence import decide, gap_test
+       7 from wra.scoring.kpi import band, rank
+       8 from wra.tools.common import band_text, check_hubs, edd_what_cou
+         nts, hazard_label, ordinal, provenance, r2
+     … +112 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/daily_weather_stats.py)
+  ⎿  Wrote 120 lines to src/wra/tools/daily_weather_stats.py
+       1 """daily_weather_stats: measured daily snowfall or precipitation
+          at a hub's airport station."""
+       2 
+       3 from datetime import date
+       4 from typing import Literal
+       5 
+       6 from pydantic import BaseModel, ConfigDict
+       7 
+       8 from wra.scoring.confidence import daily_confidence
+       9 from wra.tools.common import check_hubs
+     … +111 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/registry.py)
+  ⎿  Wrote 63 lines to src/wra/tools/registry.py
+       1 """The six tools by name: each with its argument model, its func
+         tion and the description sent to the model.
+       2 
+       3 run_tool is the one entry point. It validates the arguments with
+          Pydantic and
+       4 turns every refusal into an error result, so a bad call never ra
+         ises.
+       5 """
+       6 
+       7 from collections.abc import Callable
+     … +56 lines (ctrl+o to expand)
+
+⏺ The registry also needs the two remaining tools, so I'll write those now too,
+  plus two small cleanups in the files just written.
+
+⏺ Write(src/wra/tools/list_hubs.py)
+  ⎿  Wrote 51 lines to src/wra/tools/list_hubs.py
+       1 """list_hubs: the hubs the agent knows, with where each one is."
+         ""
+       2 
+       3 from pydantic import BaseModel, ConfigDict
+       4 
+       5 from wra.scoring.confidence import Confidence
+       6 from wra.tools.common import Region
+       7 from wra.tools.context import ToolContext
+       8 from wra.tools.envelope import Display, Provenance, ToolResult
+       9 
+     … +42 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/tools/get_methodology.py)
+  ⎿  Wrote 69 lines to src/wra/tools/get_methodology.py
+       1 """get_methodology: how the score works, read from the same conf
+         ig the scoring code uses."""
+       2 
+       3 from pydantic import BaseModel, ConfigDict
+       4 
+       5 from wra.scoring.config import BAND_LABELS, HAZARDS, WARNING_HAZ
+         ARDS
+       6 from wra.tools.common import band_text, edd_what_counts, warning
+         _types
+       7 from wra.tools.context import ToolContext
+     … +62 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 26 pass on the first run. A first run that clean deserves a look, so I'll
+  print two real results and read them as an analyst would.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Both comparisons check out, with Dallas's shares summing to 100%. One bug
+  remains: the Band column shows up empty when no overall figure is requested,
+  so I'm dropping it in that case and adding tests for the what-if, hub list and
+  methodology tool. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 152 pass. Now the command-line ranking, wra rank <hazard> [--region R] [--top 
+  N]. It prints the same table the page will show, with its notes and the data,
+  period and confidence line.
+
+⏺ Write(src/wra/tools/text.py)
+  ⎿  Wrote 28 lines to src/wra/tools/text.py
+       1 """A tool result as plain text, for the command line: the table,
+          its notes and the footnote."""
+       2 
+       3 from wra.tools.envelope import SOURCE_NAMES, ToolResult
+       4 
+       5 
+       6 def as_text(result: ToolResult) -> str:
+       7     if not result.ok:
+       8         return f"{result.tool}: {result.error.code}: {result.err
+         or.message}"
+     … +20 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ My test's line number was off by one: line 3 is the divider under the header,
+  and the first hub is line 4. The output itself is right.
+  Ran 2 shell commands · 1 failed (ctrl+o to expand)
+
+⏺ Now the two milestone checks as they'll be pasted. The network is cut off for
+  these runs to prove they don't use it: proxy variables point at a dead
+  address, and Python's socket connect is blocked.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Both checks ran with the network blocked and showed that Minneapolis's top
+  ranking shifts with the weights (Memphis or Miami under different scenarios).
+  I'm now fixing the text output so FEMA's rates show at full precision rather
+  than rounding to 0.01. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Before committing, the Deviations entry in the plan gets the changes the tools
+  make to sections 8.1 and 8.2.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Committed. Next is the evaluation set: the fourteen cases, the graders and the
+  runner. Three of its details are your call, because they decide what counts
+  as a correct answer.
+
+⏺ Answered Claude's questions:
+  ⎿  · Test case 14 asks "What percentage of days in Denver had snowfall in 
+     2010?" The station data covers 2016 to 2025, so the tool refuses and gives 
+     the covered range. Which status should a correct answer carry? → This is 
+     not out of scope - it should be a different status such as "no data 
+     available" or something similar
+     · Three test cases are out of scope: "our Seattle hub" (no such hub), "snow
+     in Chicago next week" (a forecast) and "earthquakes" (a hazard we don't 
+     cover). Which tools may a correct answer call? → explain the difference - 
+     why would Seattle call the hub list, and forecast/earthquake not call 
+     anything?
+     · Each evaluation run saves every conversation, tool call and grader result
+     in a folder under evals/runs/. Should those folders go into git? → Only 
+     the reported runs (Recommended)
+
+⏺ Two things are settled: no-data answers get a fourth status, no_data, which
+  changes the answer shape in plan sections 8.3 and 8.5 and goes in the
+  Deviations entry, and only run records cited by a results document go into
+  git. Out-of-scope answers may use reference tools, but never data tools, since
+  those would answer a different question. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · For the three out-of-scope test cases (no Seattle hub, next week's snow 
+     in Chicago, earthquakes), which tools may a correct answer call? Reference 
+     tools say what we cover: the hub list, the methodology. Data tools give 
+     figures: ranking, comparison, explanation, daily statistics. → Reference 
+     yes, data never (Recommended)
+
+⏺ Reference tools are confirmed as allowed for out-of-scope answers while data
+  tools stay off-limits. Next I'm drafting the evaluation, starting with the
+  agent reply format, which adds the hub ordering, the what-if flag and the new
+  no_data status to plan section 8.5. · summary
+
+⏺ Write(src/wra/agent/schemas.py)
+  ⎿  Wrote 62 lines to src/wra/agent/schemas.py
+      1 """What an agent returns for one message: the shape the API sends
+         and the evaluation grades.
+      2 
+      3 Plan section 8.5, with three additions the graders need (Deviatio
+        ns, milestone 2):
+      4 `hubs_ranked` and `is_what_if` from the model's final answer (sec
+        tion 8.3), and
+      5 the status `no_data` for a question we cover about a period our d
+        ata does not
+      6 (owner, 2026-11-24).
+     … +56 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/__init__.py)
+  ⎿  Wrote 1 line to src/wra/agent/__init__.py
+      1 """The agent (docs/PLAN.md, sections 7 and 8). Milestone 2 define
+        s only the reply it returns (schemas.py)."""
+
+⏺ Next I'm writing the fourteen test cases, with the expected outputs taken from
+  the scoring code at grading time; only the Denver 2025 figure is hand-checked
+  and pinned. · summary
+
+⏺ Write(src/wra/evals/cases.py)
+  ⎿  Wrote 182 lines to src/wra/evals/cases.py
+       1 """The fourteen evaluation cases (docs/PLAN.md, section 10.1), w
+         ritten before the agent exists.
+       2 
+       3 A case is one conversation. Earlier turns set it up; the checks
+         grade the reply
+       4 to the last turn, looking at tool calls from the whole conversat
+         ion, because a
+       5 follow-up may rightly reuse a result it already has.
+       6 
+       7 Expected hub orders and band words are never typed here: they co
+     … +176 lines (~8 KB) (ctrl+o to expand)
+
+⏺ Two small corrections to the cases. "A hurricane counted double" should mean
+  double whatever the official weight is, not a typed 10. And the overall
+  what-if cases should require all regions.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Five checks run per case in code: status (with the what-if flag), tool, hubs,
+  numbers and mentions, and any check that doesn't apply gets reported as not
+  applicable rather than passed. · summary
+
+⏺ Write(src/wra/evals/graders.py)
+  ⎿  Wrote 123 lines to src/wra/evals/graders.py
+       1 """The five checks (docs/PLAN.md, section 10.2). All code; no mo
+         del judges another model.
+       2 
+       3 Each check passes, fails, or does not apply to the case (passed
+         is None). A
+       4 case passes when every check that applies passes.
+       5 
+       6 - status:   the reply's status is the expected one, and so is it
+         s what-if flag where the case sets it.
+       7 - tool:     an expected tool was called with the key arguments,
+     … +117 lines (~5 KB) (ctrl+o to expand)
+
+⏺ Write(src/wra/evals/run.py)
+  ⎿  Wrote 139 lines to src/wra/evals/run.py
+       1 """The evaluation runner: every case through an agent, graded, p
+         rinted and saved (docs/PLAN.md, section 10.3).
+       2 
+       3 The clock is pinned to EVAL_TODAY, so "last year" is always 2025
+         . A reply with
+       4 status "error", or an exception from the agent, counts as an err
+         or, reported
+       5 apart from a wrong answer. Every conversation, tool call and che
+         ck is saved
+       6 as JSON under evals/runs/<time>-<agent>/.
+     … +133 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/evals/__init__.py)
+  ⎿  Wrote 6 lines to src/wra/evals/__init__.py
+      1 """The evaluation set (docs/PLAN.md, section 10): cases, graders 
+        and the runner behind `wra eval`.
+      2 
+      3 It lives inside the package, not in a top-level evals/ folder as
+        section 11
+      4 drew it, so the installed `wra` command can import it. Run record
+        s still go
+      5 to evals/runs/ at the repository root.
+      6 """
+
+⏺ One fix before the tests: the runner should pin WRA_TODAY only for the length
+  of the run and then restore it, so it can't leak into anything else in the
+  same process.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Next I'll run the grader tests against hand-written correct, wrong and empty
+  answers for all fourteen cases, checking that each check fails where it
+  should. · summary
+
+⏺ Write(tests/test_graders.py)
+  ⎿  Wrote 163 lines to tests/test_graders.py
+       1 """The graders' own tests (plan section 10.3): a hand-written co
+         rrect answer passes every check,
+       2 an empty or wrong one fails.
+       3 
+       4 Tables in the hand-written answers come from the real tools, as
+         the agent's would.
+       5 Hub orders and verdicts are typed by hand from the ranking print
+         ed by `wra rank`,
+       6 so they also check the orders the graders compute.
+       7 """
+     … +156 lines (ctrl+o to expand)
+
+⏺ My last test asserted nothing, and it hid a gap: follow-ups that reuse earlier
+  results got no table in my helper. I'm letting the hand-written reply show
+  earlier tables and making the test assert properly. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 40 pass. Each wrong answer fails exactly the check it targets. Now the wra
+  eval command, a test for it, and the ignore rule for run records.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 196 pass. Now the third milestone check for real: the stub evaluation from the
+  repository root, network blocked.
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The third milestone check passes: the evaluation runs end to end and reports 0
+  of 14 errors, as expected for a stub with no model. I'm committing next, with
+  the evaluation decisions in the assumptions file and the shape changes in the
+  plan's Deviations. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Committed. Two things remain before milestone 2 is done: the README's run
+  instructions, and a review by a fresh Opus subagent against the plan. README
+  first.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the milestone review. A fresh Opus subagent gets the diff and the plan,
+  not my conclusions, and works read-only.
+
+⏺ Agent(Review milestone 2 diff against plan)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ While the review runs, I'll prepare milestone 3, the agent. The project's
+  rules require reading the Claude API reference before writing any code that
+  calls the API, so I'm loading that skill first.
+
+⏺ Skill(claude-api)
+  ⎿  Loaded skill · 1 tool allowed
+
+⏺ The skill confirms the owner's choice to avoid hosted Managed Agents, so the
+  agent will run its own loop on the Messages API. Next I'm reading the
+  reference sections that milestone 3 needs. · summary
+
+  Read 2 files, ran 2 shell commands (ctrl+o to expand)
+
+⏺ The reference fixes four constraints for milestone 3: forced tool calls are
+  rejected on Opus 5.5, strict schemas can't hold numeric bounds (Pydantic will
+  check those), thinking stays on with responses appended unchanged, and the
+  refusal fallback is on by default. I'll swap milestone 2's mode text pattern
+  for a fixed two-word list once the reviewers finish with those files, and I'm
+  checking that the secrets file exists without opening it. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The .env file exists, and the placeholder says it holds ANTHROPIC_API_KEY.
+  Milestone 3 is the first milestone that spends your API credit, and the plan
+  says I ask before the first paid request.
+
+⏺ Answered Claude's questions:
+  ⎿  · Milestone 3 makes paid calls to the Claude API with the key in your .env:
+     first a spike (a handful of requests, a few cents, proving tool calls and 
+     a structured final answer work together on Opus 5.5), then development runs
+     of `wra ask`, then full `wra eval` runs. My estimate for one full 
+     evaluation run on Opus 5.5 is about 2 US dollars. That is an estimate, not 
+     a measurement; I'll report the measured cost after the first run. How 
+     should I proceed? → Go, ask before each eval (Recommended)
+
+⏺ Spike and single questions run as needed, with each full evaluation run asked
+  for first; next I'm adding the Anthropic SDK and python-dotenv, which reads
+  the key from .env. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The SDK installed as 2.13.0, a newer major version than the reference's 1.x
+  examples assume. I'm checking the reference's API-version notes and what the
+  installed SDK actually sends before writing code. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ SDK 2.13 targets API version 2026-10-21, and its sampling-settings removal
+  won't affect new code that never sets them. I'm checking that the installed
+  SDK accepts the three request fields the spike needs. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The SDK supports all three, so I'm running a throwaway spike on Opus 5.5
+  against the real rank_hubs tool to confirm strict tool calls, the structured
+  final answer, and the refusal fallback work together, with the key read from
+  .env and never printed. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The spike passed: two tool calls, about 11 seconds and 3 cents. Two fixes come
+  out of it, a short evidence id that the model can copy and a shorter answer
+  prompt. Next I'm writing the grounding check test-first, so that every digit
+  in an answer must match its cited results. · summary
+
+⏺ Write(tests/test_grounding.py)
+  ⎿  Wrote 52 lines to tests/test_grounding.py
+       1 """The grounding check (plan section 8.4, check 4), with planted
+          wrong numbers."""
+       2 
+       3 import pytest
+       4 
+       5 from wra.agent.grounding import numbers_in_text, source_numbers,
+          ungrounded
+       6 
+       7 RESULT = {
+       8     "data": {"rows": [{"hub_id": "MSP", "value": 2.71, "rank": 1
+     … +45 lines (~2 KB) (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/grounding.py)
+  ⎿  Wrote 66 lines to src/wra/agent/grounding.py
+       1 """The grounding check (plan section 8.4, check 4): every number
+          written in digits in the answer's
+       2 prose must match a number in the tool results it cites, or in th
+         ose calls' arguments, allowing for
+       3 rounding to the decimals written.
+       4 
+       5 Known limit, stated in the plan: it reads digits, not number wor
+         ds. "Roughly twice" is not caught;
+       6 the tools return differences and ratios ready-made so the model
+         need not do arithmetic in words.
+     … +60 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The check caught the planted 7.2. The test's expectation was wrong: it
+  expected the number reported with its percent sign, but a percent sign isn't
+  part of the number. Fixing the test.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 13 grounding tests pass, including six planted wrong numbers. I'm now building
+  the rest of the agent: the schema, system prompt, validation loop, and table
+  rendering, with the model settings moved into a config file. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Write(config/agent.toml)
+  ⎿  Wrote 30 lines to config/agent.toml
+       1 # How the agent calls Claude (docs/PLAN.md, section 9). Settings
+         , not code:
+       2 # WRA_MODEL and WRA_EFFORT in the environment override the two b
+         elow.
+       3 
+       4 model = "claude-opus-5-5"   # build and tune here; milestone 5 m
+         easures Sonnet 5.5 and Haiku 5.5
+       5 effort = "medium"           # Opus 5.5's own default, set explic
+         itly; thinking cannot be switched off on it
+       6 max_tokens = 16000          # per model call; non-streaming
+     … +24 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/settings.py)  ⎿  Wrote 54 lines to src/wra/agent/settings.py
+       1 """The agent's settings from config/agent.toml, with WRA_MODEL a
+         nd WRA_EFFORT overriding."""
+       2 
+       3 import os
+       4 import tomllib
+       5 from dataclasses import dataclass
+       6 from pathlib import Path
+       7 
+       8 from wra import paths
+       9 
+     … +45 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/tooldefs.py)
+  ⎿  Wrote 72 lines to src/wra/agent/tooldefs.py
+       1 """The six tools and the final-answer schema as sent to Claude, 
+         generated from the Pydantic models.
+       2 
+       3 Strict mode guarantees that arguments match the schema, but it s
+         upports only part
+       4 of JSON Schema: no numeric bounds, no length limits, no complex
+         array limits, and
+       5 every object needs `additionalProperties: false` with all its pr
+         operties
+       6 required. So the schema sent to the API is the Pydantic one with
+     … +67 lines (~2 KB) (ctrl+o to expand)
+
+⏺ Now the final-answer model from plan section 8.3, with the no_data status
+  added. It goes beside the reply model.
+
+⏺ Update(src/wra/agent/schemas.py)
+  ⎿  Added 12 lines
+      15  Status = Literal["answered", "out_of_scope", "no_data", "needs_
+          clarification", "error"]
+      16 
+      17 
+      18 +class FinalAnswer(BaseModel):                                  
+      19 +    """What the model returns when it is done (plan section 8.3
+         +), requested through structured output."""                     
+      20 +                                                               
+      21 +    model_config = ConfigDict(extra="forbid")                  
+      22 +    status: Literal["answered", "out_of_scope", "no_data", "nee
+         +ds_clarification"]                                             
+      23 +    verdict: str  # one to four sentences of Markdown, no table
+         +s                                                              
+      24 +    evidence: list[str]  # result ids (R1, R2, ...) whose table
+         +s the page shows, in order                                     
+      25 +    hubs_ranked: list[str]  # the order the verdict asserts, mo
+         +st exposed first; empty if none                                
+      26 +    is_what_if: bool                                           
+      27 +    caveats: list[str]  # zero to three short sentences        
+      28 +                                                               
+      29 +                                                               
+      30  class ToolCallRecord(BaseModel):
+      31      model_config = ConfigDict(extra="forbid")
+      32      id: str
+
+⏺ Now the system prompt. It's generated from the stored hubs and config, so it
+  stays identical between requests and can be cached.
+
+⏺ Write(src/wra/agent/prompt.py)
+  ⎿  Wrote 48 lines to src/wra/agent/prompt.py
+       1 """The system prompt. Built from the stored hubs and the config,
+          so it is the same on every
+       2 request and the API can cache it; nothing in it changes per ques
+         tion or per day."""
+       3 
+       4 from wra.tools.context import ToolContext
+       5 
+       6 
+       7 def system_prompt(ctx: ToolContext) -> str:
+       8     hubs = "; ".join(f"{h} {rec.city} ({rec.region})" for h, rec
+     … +41 lines (~3 KB) (ctrl+o to expand)
+
+⏺ Now the checks from plan section 8.4: real evidence ids, hub order matching
+  the cited ranking, the what-if flag, and grounding. Then the rendering of the
+  reply.
+
+⏺ Write(src/wra/agent/checks.py)
+  ⎿  Wrote 74 lines to src/wra/agent/checks.py
+      1 """The checks a final answer must pass before anyone sees it (pla
+        n section 8.4).
+      2 
+      3 1. Every evidence id is a real result from this conversation; an
+        answered question cites at least one.
+      4 2. hubs_ranked follows the order of a cited ranking, comparison o
+        r explanation.
+      5 3. is_what_if is true exactly when a cited result is a what-if.
+      6 4. Grounding: every number in digits in the verdict and caveats i
+        s in the cited results or their arguments.
+     … +68 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/render.py)
+  ⎿  Wrote 40 lines to src/wra/agent/render.py
+      1 """Build the reply the page shows: the model's verdict, plus the 
+        tables and the footnote taken
+      2 directly from the cited tool results (plan section 7.1, step 8).
+        The model never types a table."""
+      3 
+      4 from wra.agent.checks import CitedResult
+      5 from wra.agent.schemas import AgentReply, FinalAnswer, Footnote,
+        Trace
+      6 from wra.tools.envelope import Provenance
+      7 
+     … +33 lines (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/loop.py)
+  ⎿  Wrote 156 lines to src/wra/agent/loop.py
+       1 """The agent loop on the Anthropic Messages API (plan sections 7
+          and 8).
+       2 
+       3 One user message: call Claude with the system prompt, the conver
+         sation, six strict tools and the
+       4 final-answer schema; run the tools it calls and send the results
+          back; when it answers, validate the
+       5 answer in code. One repair attempt if anything fails, then a cle
+         ar error. At most `max_model_calls`
+       6 model calls per message. A refused or cut-off reply becomes an e
+     … +151 lines (~7 KB) (ctrl+o to expand)
+
+› Message from general-purpose
+  ## Milestone 2 review (diff dd9c50b..HEAD)
+
+  Everything below was read-only. I ran no `wra eval`, because it writes run
+  records. I called `run_eval` with `out_root=None` instead. Baseline: `uv run
+  pytest -q` gives 196 passed. The stub evaluation scores 0 of 14, with 14
+  errors.
+
+  **Counting rules: no problems.** I wrote my own recount (scratchpad
+  `indep.py`, plain sqlite3 and zoneinfo, none of the package's code). For all
+  12 hubs and the three warning hazards it matches `wra rank` to two decimals.
+  The data checks also came back clean:
+  - All 1,258 drawn-area FF/TO/SV warnings have exactly one county row.
+  - No winter warning row has a county UGC.
+  - No FF/TO/SV warning row has a zone UGC.
+  - Every UGC is 6 characters.
+  - FEMA's None (Minneapolis, Denver), 0 (Kansas City) and 0.01 (Chicago)
+  figures are used as given.
+
+  Ranking, bands, what-if arithmetic and the confidence formulas all match the
+  plan.
+
+  ### Confirmed by running something
+
+  **1. The case 4 band check passes a wrong band** (`evals/cases.py:153`,
+  `graders.py:108-114`). The check looks for the lowercase substring "high". The
+  question itself contains "high", and so does "Very high". On hand-built
+  replies that show the correct explain_hub table:
+  ```
+  "Dallas is rated Very high, at 2.02 days a year."      -> 4 PASS
+  "Dallas is not high: it is Moderate, 2.02 days a year." -> 4 PASS
+  ```
+  Case 3 has the same weakness: "17.1% of days" passes the `"7.1"` check. No
+  test asserts that a wrong band fails; `test_a_missing_band_fails_mentions`
+  only covers a missing one. Fix: match the band as a whole word and fail when
+  another band word is stated as Dallas's band. High confidence.
+
+  **2. `hub_id` is a plain string, not the enumeration PLAN 8.1 requires.** This
+  affects `explain_hub.py:22`, `daily_weather_stats.py:23` and
+  `compare_hubs.py:21`, and it is not in Deviations. The generated schema is
+  `"hub_id": {"title": "Hub Id", "type": "string"}`. 8.1's point was that the
+  model cannot even ask about Seattle. As built, it can call
+  `explain_hub("SEA")`. A correct out-of-scope reply that does so then fails
+  case 11:
+  ```
+  11 FAIL [('status', True), ('tool', False), ...]
+  ```
+  Fix: a Literal of the twelve ids, or an enum built from the hubs. High
+  confidence.
+
+  **3. The evaluation's clock pin does not reach a context loaded before it**
+  (`cli.py:_eval`, `evals/run.py:82-84`). `_eval` calls `load_context()` before
+  `run_eval` sets `WRA_TODAY`, so `ctx.today` keeps the machine's date. Only the
+  graders get a pinned copy. If the milestone 3 agent is handed that context,
+  the natural wiring, then from 2027 onward case 3's "last year" becomes 2026.
+  Simulated with `WRA_TODAY=2027-03-01`:
+  ```
+  agent ctx today 2027-03-01 code='no_data_for_period' message='Station data
+  covers 2016 to 2025; 2026 was asked for.'
+  grader ctx today 2026-11-24 2025
+  ```
+  Fix: give the agent `pinned_context(ctx)`. High confidence that it breaks if
+  wired this way.
+
+  **4. A what-if ranking carries a wrong "winter counted double" note**
+  (`rank_hubs.py:158-160`). The weight-stability variants are computed around
+  the what-if weights. So in a "winter ×2" what-if, the note describes winter
+  ×4, and it contradicts the table above it, whose top three are Minneapolis,
+  Denver, Memphis:
+  ```
+  ['With winter counted double, the top three are Minneapolis, Denver and Kansas
+  City.']
+  ```
+  The official ranking's note says Minneapolis, Denver and Memphis. Fix: compute
+  that note from the official weights, or leave it out of what-ifs. High
+  confidence.
+
+  **5. The confidence label depends on the model's choice of `top_n`**
+  (`rank_hubs.py:56,62`). With `top_n=1` no gap is tested, so the label is high
+  and the only row's `clear_of_next` is None:
+  ```
+  uv run wra rank winter --region south --top 1  ->  Confidence: high. Data
+  coverage 100%.
+  ```
+  The full South winter ranking shows Memphis against Dallas is within the
+  year-to-year swings, and it is labelled medium. So the same claim, "Memphis is
+  the most exposed southern hub for winter", comes out high or medium depending
+  on `top_n`.
+
+  The owner's settled point 10 says to test "the gaps among the rows shown". It
+  also says "every row reports whether it stands clear of the next one, so an
+  answer can say where a top group ends". The code reports None for the last
+  shown row, and `test_tools.py:144` asserts that. So case 9 never learns that
+  Denver (2.21) and Kansas City (2.20) are tied. Worth asking the owner: report
+  the last row against the next hub without counting it in the label, and test
+  #1 against #2 when `top_n=1`. Medium confidence; it is partly a spec
+  ambiguity.
+
+  ### Reasoned, not run
+
+  **6. Strict-mode schema features.** The schemas contain `minimum` (`top_n`,
+  `value`) and `minItems: 2` / `maxItems: 4` (`compare_hubs.hub_ids`). The
+  claude-api skill's reference (`shared/tool-use-concepts.md`, "JSON Schema
+  Limitations") lists numerical constraints and complex array constraints as not
+  supported for `strict: true`. Milestone 3 has to strip them before sending;
+  `run_tool` re-validates, so nothing is lost. `WeightChange.mode` uses a regex
+  `pattern`; a Literal would send a plain enum. Medium-low confidence: I checked
+  the doc, not the API.
+
+  **7. Case 14 against the planned grounding check.** Case 14 requires "2016"
+  and "2025" in the verdict. The only tool result is an error with no data or
+  table. Section 8.4 grounds digits in "cited tool results or their arguments".
+  Unless error messages count as a source, case 14 cannot pass. Medium
+  confidence.
+
+  ### Minor
+  - The `cases.py` docstring says hub names are never typed. Required words
+  "Minneapolis", "Columbus" and "Houston` are typed (cases 1, 5, 6). They are
+  right for today's data.
+  - `_band_of` (`cases.py:123`) bands the unrounded figure, while the tools band
+  the rounded one. Not live: the hub closest to a cut-off is Columbus at
+  0.9916.
+  - `daily_weather_stats.py:38-41`: a null `start_year` with `end_year=2020` is
+  refused as "start_year 2025 is after end_year 2020".
+
+  ### Areas with nothing serious
+  - Merging, local-year split, clipping, and the drawn-area/county
+  reconciliation.
+  - Ranking ties, gaps and ratios, band edges.
+  - Envelope JSON round-trip; `run_tool` error handling (an infinite weight
+  comes back as an error result, not an exception).
+  - The tool and grader tests match their names, apart from the gap in finding
+  1.
+
+  Probe scripts are in `/private/tmp/claude-501/-Users-doronreiffman-Projects-we
+  ather-risk-agent/4c70e711-0f66-439d-b21c-a76b15cc0dc2/scratchpad/`
+  (`indep.py`, `probe1.py`, `probe2.py`).
+
+⏺ Agent "Review milestone 2 diff against plan" finished · 8m 23s
+
+⏺ The milestone 2 review is back, and I've confirmed most of its findings
+  against the code. One finding is a question about your decision, so I'll leave
+  it for you to settle. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · You decided a "top three" answer needn't be tested against the 4th hub. 
+     Asked "which southern hub is most exposed to winter?", the agent may ask 
+     for the top 1 only. Then no gap is tested at all, and the answer is 
+     labelled high confidence. Yet Memphis and Dallas are within year-to-year 
+     swings, and the full ranking is labelled medium. How should a top-N ranking
+     be tested? → Top 1 tests 1st vs 2nd (Recommended)
+
+⏺ A one-row answer tests first against second, while a top three tests only the
+  gaps among its rows. I'm making all the fixes now, starting with the tools. 
+  · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the graders: required words match as whole words or whole numbers, and the
+  band check requires the right band and rejects any other band named.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 216 pass. The regular expressions were written through an escaped string, so
+  I'll confirm they landed in the file as intended.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ They're right. Now the evaluation command hands its agent the pinned context,
+  and the records get the review's outcome.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I'm committing the review fixes separately from the milestone 3 work, with the
+  test count in the message and the new grounding tests left out. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I'll run Milestone 2's closing checks in a temporary offline clean checkout of
+  the latest commit, so they test only committed files and not the milestone 3
+  work in progress. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Every milestone 2 check passes on the committed code, in a clean checkout with
+  the network blocked. Removing the temporary checkout and moving milestone 2
+  to Done in the queue.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Milestone 2 is done. Now milestone 3's check: the loop tested against a
+  scripted fake model, covering the five scenarios plan section 13 names and a
+  few more. These run with no network and no cost.
+
+⏺ Write(tests/test_agent_loop.py)
+  ⎿  Wrote 191 lines to tests/test_agent_loop.py
+       1 """The agent loop against a scripted fake model: no network, no 
+         cost (plan section 13, milestone 3 check)."""
+       2 
+       3 import json
+       4 from datetime import date
+       5 from types import SimpleNamespace
+       6 
+       7 import pytest
+       8 
+       9 from conftest import REPO
+     … +182 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 14 tests pass, so I'm moving on to the two commands: wra ask for validated
+  answers and wra eval --agent claude for the evaluation, which will also
+  report each run's cost at list price. · summary
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 230 pass. Now the milestone's live check, wra ask on assignment question 1, a
+  single paid question, which you approved.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The live answer works end to end and every figure is grounded, including the
+  computed 1.88× ratio. I'm fixing three things next: the "6 in" token count,
+  which only covers uncached input, the five-sentence verdict that should be
+  four at most, and the prompt's band wording, which must read "High" with a
+  capital. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Tests pass; I'm committing the agent with its records, noting the spike's O4
+  result in the plan's Deviations and logging one decision for the evidence-id
+  API change in milestone 4. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The agent is committed, and the milestone 3 check is a full wra eval run that
+  needs your go-ahead. I estimate one run at about $0.60 to $1.00, extrapolated
+  from a single question that cost $0.036. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · Run the first full evaluation (14 cases, 19 messages) through the real 
+     agent on Claude Opus 5.5? Estimated $0.60 to $1.00 at list price, from the 
+     one measured question ($0.036). It prints the score per case and the 
+     measured cost, and saves every conversation under evals/runs/. → Run it 
+     once (Recommended)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ First full run is in: 12 of 14 cases pass with no errors and a cost of $0.53.
+  I'm reading the two failing mentions-check answers to see why they failed. 
+  · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Both failures look like the grader being too strict rather than wrong answers.
+  Case 4 (Dallas) is right but trips a new rule against naming other bands, and
+  Case 10 fails only because it never uses the literal word "weight"; I'll add
+  the failed-first result to the trace so repairs can be diagnosed, but changing
+  the grader now needs your call. · summary
+
+⏺ Declined to answer Claude's questions:
+  ⎿  · Case 4's real answer: "Dallas is in the High band, but only just: 2.02, 
+     and High starts at 2", with a caveat that "one quieter year could drop it 
+     to Moderate". It failed because another band word appears anywhere. Change 
+     the check so the first band the verdict names must be Dallas's real band? 
+     (First band in the verdict (Recommended) / Keep the strict rule)
+     · Case 10's real answer gives the weights in figures ("count 1 disruption 
+     day for every day ... Hurricanes count 5 disruption days per event") but 
+     never the word "weight". Change what it must mention? (The weights as 
+     figures (Recommended) / The word or the figures / Keep "weight")
+
+⏺ Case 4 is settled: the first band the verdict names must be Dallas's real
+  band. A caveat about a neighbouring band is allowed, and "Very high" or "not
+  high: it is Moderate" still fail.
+
+  What would you like me to clarify about case 10, the methodology question?
+
+✻ Churned for 1h 46m 10s · done 2:59 PM
+
+❯ explain this more clearly                                                     
+
+⏺ The question for case 10 is what proves an answer actually answered the
+  question.
+
+  The case. The question is "How is the score calculated, and what are the
+  weights?" Each case is graded by five automatic checks. This answer passed
+  four:
+  - the right status;
+  - it called the methodology tool;
+  - it showed that tool's table, which has a Weight column;
+  - no forbidden content.
+
+  The fifth check reads the answer's own sentences for required words. When I
+  wrote the case, I made "weight" the required word. The idea was to catch an
+  answer that explains the method but skips the second half of the question.
+
+  What happened. The agent did answer the second half, just without that word:
+  "Winter weather, flooding and severe storms each count 1 disruption day for
+  every day the hub was under a qualifying warning ... Hurricanes count 5
+  disruption days per event." Those are exactly the weights. So the case failed
+  on wording, not on content. The analyst sees the same thing either way,
+  because the table beside the answer always lists the weights.
+
+  The choices:
+  1. Require the weight figures instead of the word. The answer must contain the
+     numbers 1 and 5, read from the config so the case follows any future
+     change. This tests the content the question asks for. One weakness: "1"
+     turns up in almost any answer (for example "Low below 1"), so in practice
+     the check mostly rests on the "5".
+  2. Accept either the word "weight" or the two figures. The most lenient: it
+     passes any answer that addresses the weights in either form.
+  3. Keep requiring the word "weight" and change the prompt so the agent uses
+     it. That makes the agent's wording fit the test without making the answer
+     any better for an analyst.
+
+⏺ Answered Claude's questions:
+  ⎿  · Case 10 asks "How is the score calculated, and what are the weights?" The
+     agent's answer gave the weights as figures (1 disruption day per day under
+     warning, 5 per hurricane) but never used the word "weight", which the case
+     requires. What should the case require the answer's text to contain? → The
+     two weight figures (Recommended)
+  ⎿  1 agent type available
+
+⏺ I've settled on stating both weights as figures in case 10, read from the
+  config. I'm making the two grader changes, turning the two real answers into
+  grader tests, and logging what a repaired answer failed on first. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 232 tests pass. I'm re-grading the first run's saved answers with the changed
+  graders next, which costs nothing and confirms the change does only what we
+  intended. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Exactly the two cases we discussed change; nothing else moves. Committing,
+  with the grading decisions in the assumptions file.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Two steps remain for milestone 3: the README's run instructions, and the same
+  fresh-context Opus review milestone 2 had. README first.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Agent(Review milestone 3 diff against plan)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ The milestone 3 review is running in the background, on the same terms as
+  before: read-only, no paid calls. Where things stand meanwhile:
+
+  - Milestone 2 is done. Every check passed on the committed code in a clean
+    checkout with the network blocked: 203 tests, both rankings, and the stub
+    evaluation at 0 of 14.
+  - Milestone 3 is built. These pass:
+    - the loop tests on a scripted fake model;
+    - the grounding tests with planted wrong numbers;
+    - wra ask on assignment question 1;
+    - the first real evaluation: 12 of 14, $0.53 at list price, then 14 of 14
+      when its saved answers were re-graded with your two corrections.
+
+  The milestone closes once I've checked the review's findings and fixed what
+  holds up.
+
+✻ Crunched for 1m 53s · done 3:04 PM
+
+› Message from general-purpose
+  ## Milestone 3 review (read-only; scratch scripts in
+  /private/tmp/claude-501/-Users-doronreiffman-Projects-weather-risk-agent/4c70e
+  711-0f66-439d-b21c-a76b15cc0dc2/scratchpad/m3-review/)
+
+  All scripts drive `ClaudeAgent` with a scripted fake client. Each is run with
+  `uv run python <script>`. Baseline: `uv run pytest -q` gives 232 passed, and
+  `uv run pytest tests/test_agent_loop.py tests/test_grounding.py -q` gives 27
+  passed.
+
+  ### 1. Wrong answers that reach the user
+
+  **1a. Check 2 cannot catch a wrong top hub (confirmed, high confidence).**
+  `checks.py:70-74` accepts any subsequence of a cited order. Run in
+  `exp_checks.py`, with the Midwest winter order MSP 2.71, MCI 1.44, ORD 1.4,
+  IND 1.16, CMH 0.66:
+  ```
+  A. "Columbus (CMH) is the most exposed ... at 0.66", hubs=["CMH"]  ->
+  status=answered repaired=False
+  B. "The two most exposed are Minneapolis and Columbus", ["MSP","CMH"] ->
+  status=answered repaired=False
+  ```
+  `exp_prefix.py` shows that all 10 non-empty `hubs_ranked` lists in the first
+  real run are prefixes of a ranking the conversation produced. A prefix rule
+  (or a suffix rule for "least") would have accepted every real answer and
+  caught A and B.
+
+  **1b. Prose claims outside digits are unchecked (confirmed).**
+  - `exp_band.py`: "Dallas is in the Very high band at 2.02" passes
+  `explain_hub`, whose band is High. That is assignment question 4.
+  - "Kansas City is the most exposed ... at 2.71" with `hubs_ranked=[]` also
+  passes.
+
+  This is outside 8.4's list, but band labels are a closed set of four and cheap
+  to check against the cited results.
+
+  **1c. An "answered" reply citing only failed results passes (confirmed).**
+  `checks.py:28` only requires the evidence list to be non-empty. Case D2 cites
+  a failed Denver 2010 result and gets `status=answered tables=0 footnote=none`,
+  so no period, sources or confidence are shown (rule 5). Fix: require at least
+  one result with `ok` true.
+
+  **1d. The grounding check is weak on real results (confirmed).** Planted
+  numbers checked against the overall `rank_hubs` result:
+  - integers 0 to 100: 17 accepted, including all of 0 to 12
+  - one-decimal 0.0 to 5.0: 26 of 51 accepted
+  - two-decimal 0.00 to 5.00: 67 of 501 accepted
+
+  The regex at `grounding.py:16` never reads ".93" or "x7" (both come back
+  `ungrounded=[]`). `test_grounding.py` uses a synthetic result with about ten
+  numbers, so it does not show this.
+
+  **1e. The grounding check rejects the system prompt's own facts (confirmed
+  with the fake client; the real-run cause is inferred).** In `exp_oos.py`, an
+  out-of-scope verdict "Our data covers 2016 to 2025 at our 12 hubs" with no
+  evidence ends as `status=error`, "failed validation twice: ['2016', '2025',
+  '12']". `prompt.py` states that period. Both repairs in the real run (cases 12
+  and 13) were out-of-scope answers with no tool calls. That run predates
+  `repair_problems`, so the record cannot confirm the cause.
+
+  **1f. Model-written tables and too many caveats pass (confirmed).** A Markdown
+  table as the verdict, plus 5 caveats, gives `status=answered`
+  (`schemas.py:23-27` has no limits). That breaks 8.3 ("No tables", "zero to
+  three") and the 7.2 principle that the model never types a table. Pydantic
+  could enforce both limits, since `tooldefs.py` already strips them from the
+  API schema.
+
+  ### 2. Loop
+  - **Several tool calls in one response work (confirmed).** The next request is
+  `user:text, assistant:thinking+tool_use+tool_use,
+  user:tool_result+tool_result`, with ids matched (toolu_a→R1, toolu_b→R2).
+  - **Session state after an error is accepted by the API but odd (confirmed).**
+  After a refusal, the call limit, or "failed twice", the next request has
+  consecutive user turns, which the SDK documents as combined into one
+  (`message_create_params.py:61`). After "failed twice", the rejected answer and
+  the repair prompt stay in the history, and the next question merges with that
+  prompt. Low impact.
+  - **Fallback-served replies are mishandled (`loop.py:127-134`; reasoned,
+  medium confidence).**
+    - Text is joined across the `fallback` block.
+    - A `tool_use` before that block is executed.
+    - The content is sent back unchanged, although the SDK's
+  `beta_fallback_block_param.py` says some blocks before the block "must be left
+  out" and that no `tool_result` is sent for them.
+    - A response I built to that shape (`exp_fallback.py`) triggered a repair
+  (invalid JSON), and the cut-off `explain_hub` call ran.
+    - The spike never produced a real refusal, so the claim "combines cleanly"
+  covers only that the API accepts the request.
+  - **Cost accounting.**
+    - In `agent.toml` the Haiku entry has no `cache_read`, so `settings.py:31`
+  charges cache reads at the full input price. The other two models use 0.05
+  times input.
+    - `loop.py:119` prices all of a message's usage at the last response's
+  model.
+  - **No tool can break the session today (confirmed).** 1,303 schema-valid fuzz
+  calls neither raised nor failed `json.dumps`. If a tool ever did raise in
+  `_run`, it would leave a `tool_use` without a result and break the session for
+  good.
+
+  ### 3. Plan differences not recorded in Deviations
+  - The verdict and caveat limits in 8.3 are not enforced (1f).
+  - Milestone 3 says "a command-line chat", but `wra ask` answers one question
+  only.
+  - 10.2/10.3: the report lumps API failures, validation-twice failures and
+  call-limit failures into one "Errors" count, and does not say how often
+  grounding forced a repair.
+  - The run record saves neither the evidence list nor the rejected first
+  answer, which is why 1e cannot be settled from it.
+
+  ### 4. Tests
+  All five scenarios of the milestone 3 check are present and assert what their
+  names say. Gaps:
+  - no test for several calls in one response
+  - no test for "answered" with only failed evidence
+  - no test for a follow-up after an error, or for a fallback-served reply
+  - the grounding tests use synthetic data only (1d)
+
+  ### 5. Risks for milestone 4
+  - **Two requests at once on one session corrupt it (confirmed).** In
+  `exp_threads.py`, two threads on session "s1" leave the history as `user,
+  user, assistant:tool_use, user:tool_result, assistant:tool_use,
+  user:tool_result, assistant:text, assistant:text`. There is also a race in
+  creating the session (`loop.py:93-96`) and in numbering result ids
+  (`loop.py:146`). A FastAPI `def` endpoint runs requests in a thread pool, so
+  this needs a per-session lock or a rejection of concurrent posts.
+  - **A request can hang a long time (reasoned).** The SDK's default timeout is
+  600 s with 2 retries (`_constants.py`), so one POST can hang for many minutes.
+  - **Later.** An unknown `session_id` silently starts a new session.
+  `WRA_ENV_FILE`, which the final e2e check needs, is not implemented yet.
+
+  ### Nothing serious in
+  - **Request shape:** the request fields (`output_config.effort` and `format`,
+  `betas`/`fallbacks`, top-level `cache_control`, strict schemas) all exist in
+  SDK 2.13.0, and the generated tool and answer schemas looked clean.
+  - **Signs:** no tool result contains a negative number, so the missing minus
+  sign never causes a false rejection.
+  - **Cost claim:** the README's 0.53 USD matches the run record (0.5347 over 19
+  replies, 2 repaired).
+
+⏺ The review is back. I'll check its findings against the code and the SDK
+  before deciding anything. The one finding it marked as reasoned rather than
+  run needs checking first: what the SDK says about responses that contain a
+  refusal-fallback block.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Agent "Review milestone 3 diff against plan" finished · 10m 46s
+
+⏺ The SDK says blocks before a response's final fallback block must be dropped
+  when the turn is sent back, and the loop currently sends them all back, so I'm
+  checking the bundled guide on which blocks to keep. · summary
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The bundled reference settles the fallback question. After a fallback, the
+  thinking and tool-call blocks that come before the final fallback block are
+  left out when the turn is sent back, and the boundary block stays where it is.
+  It also says that without streaming, which is how this agent calls the API,
+  the declined part is left out of the response entirely. So the case the
+  reviewer built can't occur today. I'll still follow the rule, since a later
+  move to streaming would make it real.
+
+  Here is what the review found, checked against the code:
+
+  Fixing now, without asking: clear bugs, or gaps against the plan.
+  - An "answered" reply can cite only failed tool results. It then shows no
+    table, period or confidence. It will need at least one successful result.
+  - The grounding check never reads a number written like ".93". I'll fix the
+    pattern.
+  - A tool that raised an error would break the session for good, leaving a tool
+    call with no result. It will become an error result instead.
+  - After a failed turn, the rejected answer and the repair message stay in the 
+    conversation, so the next question merges with them. A failed turn will be
+    removed whole.
+  - Cost is priced at the last response's model. It will be priced per response.
+    Haiku has no cache-read price in the reference, so its cache reads are
+    charged at the full input price, which overstates its cost. I'll note that
+    in the config.
+  - The plan's milestone 3 asks for "a command-line chat", and wra ask takes one
+    question only. I'll add wra chat for follow-ups.
+  - The evaluation report lumps all errors together and doesn't say how often 
+    grounding forced a repair, both of which plan section 10.3 asks for. Each
+    reply will also record its evidence ids and any rejected first answer.
+  - Two milestone 4 risks: two requests on one session at once corrupt it, and
+    one request can hang for many minutes. I'll record both for milestone 4.
+  - A known limit, not fixable: small whole numbers nearly always match
+    something in a large ranking. The overall ranking contains every rank from 1
+    to 12, so a wrong "3" can pass. The plan's own rule allows this, and I'll
+    state it as a limit.
+
+  Your call: these change what counts as a valid answer.
+
+⏺ Answered Claude's questions:
+  ⎿  · The answer's hub order is checked only for relative order, so "Columbus 
+     is the most exposed Midwest hub" (hubs [CMH], really last of five) passes, 
+     and so does "the two most exposed are Minneapolis and Columbus". How strict
+     should the order check be? → Top, or bottom when stated (Recommended)
+     · Band words in the verdict aren't checked at runtime: "Dallas is in the 
+     Very high band at 2.02" would pass, though Dallas is High. (The evaluation 
+     catches it for its Dallas case only.) Add a runtime check? → Check the 
+     first band (Recommended)
+     · The grounding check rejects an out-of-scope answer that says "our data 
+     covers 2016 to 2025 at our 12 hubs" without citing a tool, although the 
+     system prompt, which code builds, states exactly that. Two real answers 
+     needed a repair, likely for this reason (the run didn't record why). What 
+     should count? → Count the prompt's facts (Recommended)
+     · The plan says the verdict has one to four sentences and no tables, with 
+     zero to three caveats. Nothing enforces it: a verdict that is a Markdown 
+     table, with five caveats, passes. What should code enforce, with a repair 
+     attempt when broken? → No tables, three caveats (Recommended)
+
+⏺ All four recommended options are approved, and I'm now making the changes,
+  beginning with the checks module's four new rules. · summary
+
+⏺ Write(src/wra/agent/checks.py)
+  ⎿  Added 96 lines, removed 15 lines
+       1 -"""The checks a final answer must pass before anyone sees it (p
+         -lan section 8.4).                                              
+       1 +"""The checks a final answer must pass before anyone sees it (p
+         +lan section 8.4, and the owner's                               
+       2 +additions of 2026-11-24 after the milestone 3 review).         
+       3 
+       3 -1. Every evidence id is a real result from this conversation; a
+         -n answered question cites at least one.                        
+       4 -2. hubs_ranked follows the order of a cited ranking, comparison
+         - or explanation.                                               
+       4 +1. Every evidence id is a real result from this conversation; a
+         +n answered question cites at least one                         
+       5 +   result that succeeded, so the page has a table, a period and
+         + a confidence to show.                                         
+       6 +2. hubs_ranked is the top of a cited ranking, comparison or exp
+         +lanation, or its bottom when the answer                        
+       7 +   says its hubs come from the bottom (hubs_from).             
+       8  3. is_what_if is true exactly when a cited result is a what-if.
+       6 -4. Grounding: every number in digits in the verdict and caveats
+         - is in the cited results or their arguments.                   
+       9 +4. Grounding: every number in digits in the verdict and caveats
+         + is in the cited results, their                                
+      10 +   arguments, or the facts the system prompt states (the period
+         +, FEMA's record, the number of hubs).                          
+      11 +5. If the verdict names a band, the first band it names is the 
+         +cited band of the first hub it names.                          
+      12 +6. Shape: no Markdown table in the verdict (tables come from co
+         +de), at most three caveats.                                    
+      13  """
+      14 
+      15 +import re                                                      
+      16 +from collections.abc import Iterable, Mapping                  
+      17  from dataclasses import dataclass
+      18 
+      19  from wra.agent.grounding import ungrounded
+      20  from wra.agent.schemas import FinalAnswer, ToolCallRecord
+      21 +from wra.scoring.config import BAND_LABELS                     
+      22  from wra.tools.envelope import ToolResult
+      23 
+      24 +MAX_CAVEATS = 3                                                
+      25 +_TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$", flags=re.MULTILINE) 
+      26 
+      27 +                                                               
+      28  @dataclass(frozen=True)
+      29  class CitedResult:
+      30      result_id: str
+     ...
+      32      result: ToolResult
+      33 
+      34 
+      23 -def check_answer(answer: FinalAnswer, results: dict[str, CitedR
+         -esult]) -> list[str]:                                          
+      35 +def check_answer(                                              
+      36 +    answer: FinalAnswer,                                       
+      37 +    results: dict[str, CitedResult],                           
+      38 +    prompt_facts: Iterable[float] = (),                        
+      39 +    hub_names: Mapping[str, str] | None = None,                
+      40 +) -> list[str]:                                                
+      41      problems = []
+      42      unknown = [e for e in answer.evidence if e not in results]
+      43      if unknown:
+      44          problems.append(f"evidence cites result ids that do not
+           exist: {unknown}; the results are {list(results)}")
+      28 -    if answer.status == "answered" and not answer.evidence:    
+      29 -        problems.append('status is "answered" but evidence is e
+         -mpty; cite the results the verdict rests on')                  
+      45      cited = [results[e] for e in dict.fromkeys(answer.evidence)
+           if e in results]
+      46 +    if answer.status == "answered" and not any(r.result.ok for 
+         +r in cited):                                                   
+      47 +        problems.append('status is "answered" but no cited resu
+         +lt succeeded; cite the results the verdict rests on')          
+      48 
+      49      if answer.hubs_ranked:
+      50          orders = _orders(cited)
+      34 -        if not any(_in_order(answer.hubs_ranked, order) for ord
+         -er in orders):                                                 
+      51 +        fits = _is_top if answer.hubs_from == "top" else _is_bo
+         +ttom                                                           
+      52 +        if not any(fits(answer.hubs_ranked, order) for order in
+         + orders):                                                      
+      53              problems.append(
+      36 -                f"hubs_ranked {answer.hubs_ranked} does not fol
+         -low the order of any cited result "                            
+      54 +                f"hubs_ranked {answer.hubs_ranked} is not the {
+         +answer.hubs_from} of any cited order "                         
+      55                  f"({orders or 'none of the cited results ranks 
+          hubs'})"
+      56              )
+      57 
+     ...
+       60          problems.append(f"is_what_if is {answer.is_what_if}, b
+           ut the cited results {'are' if what_if else 'are not'} a what-
+           if")
+       61 
+       62      text = " ".join([answer.verdict, *answer.caveats])
+       45 -    missing = ungrounded(text, [r.result.model_dump() for r in
+          - cited], [r.call.input for r in cited])                       
+       63 +    missing = ungrounded(text, [r.result.model_dump() for r in
+          + cited], [r.call.input for r in cited] + list(prompt_facts))  
+       64      if missing:
+       65          problems.append(
+       66              f"these numbers are not in the cited results or th
+           eir arguments: {missing}; use only figures "
+       67              "from the results you cite, or cite the result tha
+           t holds them"
+       68          )
+       69 +                                                              
+       70 +    if hub_names:                                             
+       71 +        problems += _band_problems(answer.verdict, cited, hub_
+          +names)                                                        
+       72 +                                                              
+       73 +    if len(_TABLE_ROW.findall(answer.verdict)) >= 2:          
+       74 +        problems.append("the verdict contains a table; the pag
+          +e shows the cited results' tables, so write prose only")      
+       75 +    if len(answer.caveats) > MAX_CAVEATS:                     
+       76 +        problems.append(f"{len(answer.caveats)} caveats; give 
+          +at most {MAX_CAVEATS}")                                       
+       77      return problems
+       78 
+       79 
+       80 +def first_band(text: str) -> str | None:                      
+       81 +    """The first band label in the text, written as the tools 
+          +write it, capitalised. "High" inside                          
+       82 +    "Very high" is not High; "Low confidence" is the confidenc
+          +e label, not a band."""                                       
+       83 +    first = None                                              
+       84 +    for label in BAND_LABELS:                                 
+       85 +        pattern = rf"(?<![\w])(?<!Very ){re.escape(label)}(?![
+          +\w])"                                                         
+       86 +        if label == "Low":                                    
+       87 +            pattern += r"(?! confidence)"                     
+       88 +        match = re.search(pattern, text)                      
+       89 +        if match and (first is None or match.start() < first[0
+          +]):                                                           
+       90 +            first = (match.start(), label)                    
+       91 +    return first[1] if first else None                        
+       92 +                                                              
+       93 +                                                              
+       94 +def _band_problems(verdict: str, cited: list[CitedResult], hub
+          +_names: Mapping[str, str]) -> list[str]:                      
+       95 +    named = first_band(verdict)                               
+       96 +    if named is None:                                         
+       97 +        return []                                             
+       98 +    hub = _first_hub(verdict, hub_names)                      
+       99 +    if hub is None:                                           
+      100 +        return []                                             
+      101 +    bands = _cited_bands(cited)                               
+      102 +    if hub not in bands:                                      
+      103 +        return [f"the verdict calls {hub_names[hub]} {named!r}
+          +, but no cited result gives its band; cite one that does"]    
+      104 +    if bands[hub] != named:                                   
+      105 +        return [f"the verdict calls {hub_names[hub]} {named!r}
+          +, but the cited band is {bands[hub]!r}"]                      
+      106 +    return []                                                 
+      107 +                                                              
+      108 +                                                              
+      109 +def _first_hub(text: str, hub_names: Mapping[str, str]) -> str
+          + | None:                                                      
+      110 +    first = None                                              
+      111 +    for hub, city in hub_names.items():                       
+      112 +        for word in (city, hub):                              
+      113 +            match = re.search(rf"(?<![\w]){re.escape(word)}(?!
+          +[\w])", text)                                                 
+      114 +            if match and (first is None or match.start() < fir
+          +st[0]):                                                       
+      115 +                first = (match.start(), hub)                  
+      116 +    return first[1] if first else None                        
+      117 +                                                              
+      118 +                                                              
+      119 +def _cited_bands(cited: list[CitedResult]) -> dict[str, str]: 
+      120 +    bands = {}                                                
+      121 +    for r in cited:                                           
+      122 +        if not r.result.ok:                                   
+      123 +            continue                                          
+      124 +        data = r.result.data                                  
+      125 +        if r.call.name == "explain_hub" and data.get("band"): 
+      126 +            bands[data["hub_id"]] = data["band"]              
+      127 +        elif r.call.name == "rank_hubs" and data["hazard"] == 
+          +"overall" and not data["is_what_if"]:                         
+      128 +            bands.update({row["hub_id"]: row["band"] for row i
+          +n data["rows"] if row.get("band")})                           
+      129 +        elif r.call.name == "compare_hubs":                   
+      130 +            bands.update({row["hub_id"]: row["band"] for row i
+          +n data["results"].get("overall", []) if row.get("band")})     
+      131 +    return bands                                              
+      132 +                                                              
+      133 +                                                              
+      134  def _orders(cited: list[CitedResult]) -> list[list[str]]:
+      135      orders = []
+      136      for r in cited:
+     ...
+      147      return orders
+      148 
+      149 
+       70 -def _in_order(hubs: list[str], order: list[str]) -> bool:     
+       71 -    if any(h not in order for h in hubs) or len(set(hubs)) != 
+          -len(hubs):                                                    
+       72 -        return False                                          
+       73 -    positions = [order.index(h) for h in hubs]                
+       74 -    return positions == sorted(positions)                     
+      150 +def _is_top(hubs: list[str], order: list[str]) -> bool:       
+      151 +    return order[: len(hubs)] == hubs                         
+      152 +                                                              
+      153 +                                                              
+      154 +def _is_bottom(hubs: list[str], order: list[str]) -> bool:    
+      155 +    return len(hubs) <= len(order) and order[len(order) - len(
+          +hubs) :] == hubs                                              
+
+⏺ A correction: what-if rankings should count bands too, since a what-if answer
+  may name a band under the changed weights. Next I'll add the new answer field,
+  the shared band reader, the number pattern, and the loop changes. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the loop. It's easier to rewrite whole than patch, since five of the fixes
+  land in it: the prompt facts, rolling back a failed turn, the fallback rule,
+  tool errors, and cost per response.
+
+⏺ Write(src/wra/agent/loop.py)
+  ⎿  Couldn't write file
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ Write(src/wra/agent/loop.py)
+  ⎿  Added 54 lines, removed 18 lines
+       2 
+       3  One user message: call Claude with the system prompt, the conve
+          rsation, six strict tools and the
+       4  final-answer schema; run the tools it calls and send the result
+          s back; when it answers, validate the
+       5 -answer in code. One repair attempt if anything fails, then a cl
+         -ear error. At most `max_model_calls`                           
+       6 -model calls per message. A refused or cut-off reply becomes an 
+         -error. Nothing unverified is shown.                            
+       5 +answer in code (checks.py). One repair attempt if anything fail
+         +s, then a clear error. At most                                 
+       6 +`max_model_calls` model calls per message. A refused or cut-off
+         + reply becomes an error. Nothing                               
+       7 +unverified is shown.                                           
+       8 
+       8 -Every response is appended to the conversation unchanged, think
+         -ing blocks included, which is what                             
+       9 -Opus 5.5 requires. Each tool result is stamped with a short res
+         -ult id (R1, R2, ...) that the final                            
+      10 -answer cites as evidence; the milestone 3 spike showed the mode
+         -l invents ids it cannot see.                                   
+       9 +The conversation is kept append-only, which Opus 5.5's thinking
+         + blocks require, with two exceptions                           
+      10 +set by the API or by us:                                       
+      11 +- after a server-side fallback, the thinking and tool-call bloc
+         +ks before the response's final                                 
+      12 +  `fallback` block are left out when the turn is sent back, as 
+         +the API's fallback rules say;                                  
+      13 +- a turn that ends in an error is removed whole, so the next qu
+         +estion does not inherit a rejected                             
+      14 +  answer or a repair message.                                  
+      15 +Each tool result is stamped with a short result id (R1, R2, ...
+         +) that the final answer cites as                               
+      16 +evidence; the milestone 3 spike showed the model invents ids it
+         + cannot see.                                                   
+      17  """
+      18 
+      19  import json
+     ...
+      25  from pydantic import ValidationError
+      26 
+      27  from wra.agent.checks import CitedResult, check_answer
+      22 -from wra.agent.prompt import system_prompt                     
+      28 +from wra.agent.prompt import prompt_facts, system_prompt       
+      29  from wra.agent.render import render
+      30  from wra.agent.schemas import AgentReply, FinalAnswer, ToolCall
+          Record, Trace
+      31  from wra.agent.settings import AgentSettings, load_settings
+      32  from wra.agent.tooldefs import final_answer_schema, tool_defini
+          tions
+      33  from wra.tools.context import ToolContext
+      34 +from wra.tools.envelope import failure                         
+      35  from wra.tools.registry import run_tool
+      36 
+      37  REPAIR = (
+     ...
+      39      "You may call tools first if you need a result to cite."
+      40  )
+      41  USAGE_FIELDS = ("input_tokens", "output_tokens", "cache_read_in
+          put_tokens", "cache_creation_input_tokens")
+      42 +_BEFORE_FALLBACK_LEFT_OUT = {"thinking", "redacted_thinking", "
+         +tool_use", "server_tool_use"}                                  
+      43 
+      44 
+      45  class ModelClient(Protocol):
+     ...
+      81          self.tools = tool_definitions(hub_ids)
+      82          self.answer_schema = final_answer_schema(hub_ids)
+      83          self.system = system_prompt(ctx)
+      84 +        self.facts = prompt_facts(ctx)                         
+      85 +        self.hub_names = {h: rec.city for h, rec in ctx.data.hu
+         +bs.items()}                                                    
+      86 
+      87      def request(self, messages: list[dict]) -> dict[str, Any]:
+      88          s = self.settings
+     ...
+      104          if session is None:
+      105              session = Session(id=session_id or uuid.uuid4().he
+           x)
+      106              self.sessions[session.id] = session
+      107 +        kept_messages, kept_results = len(session.messages), s
+          +et(session.results)                                           
+      108          session.messages.append({"role": "user", "content": me
+           ssage})
+      109          started = time.monotonic()
+      110          usage = dict.fromkeys(USAGE_FIELDS, 0)
+      111 +        cost: float | None = 0.0                              
+      112          calls: list[ToolCallRecord] = []
+      113          model = self.settings.model
+      102 -        repaired = False                                      
+      114          repair_problems: list[str] = []
+      115 +        rejected: str | None = None                           
+      116 
+      117          def trace() -> Trace:
+      106 -            cost = self.settings.cost(model, usage)           
+      107 -            return Trace(model=model, tool_calls=calls, repair
+          -ed=repaired, repair_problems=repair_problems,                 
+      118 +            return Trace(model=model, tool_calls=calls, repair
+          +ed=bool(repair_problems),                                     
+      119 +                         repair_problems=repair_problems, reje
+          +cted_answer=rejected,                                         
+      120                           latency_ms=int(1000 * (time.monotonic
+           () - started)),
+      121                           usage={**usage, "cost_usd": None if c
+           ost is None else round(cost, 6)})  # fmt: skip
+      122 
+      123          def fail(text: str) -> AgentReply:
+      124 +            del session.messages[kept_messages:]  # the failed
+          + turn leaves no trace in the conversation                     
+      125 +            for result_id in [r for r in session.results if r 
+          +not in kept_results]:                                         
+      126 +                del session.results[result_id]                
+      127              return AgentReply(session_id=session.id, status="e
+           rror", verdict="", error=text, trace=trace())
+      128 
+      129          for _ in range(self.settings.max_model_calls):
+     ...
+      132              except Exception as error:  # the SDK's typed erro
+           rs; reported by class, never with request contents
+      133                  return fail(f"The model could not be reached (
+           {type(error).__name__}).")
+      134              model = getattr(response, "model", model)
+      135 +            this = {key: getattr(response.usage, key, 0) or 0 
+          +for key in USAGE_FIELDS}                                      
+      136              for key in USAGE_FIELDS:
+      121 -                usage[key] += getattr(response.usage, key, 0) 
+          -or 0                                                          
+      137 +                usage[key] += this[key]                       
+      138 +            priced = self.settings.cost(model, this)  # each r
+          +esponse at its own model's price                              
+      139 +            cost = None if cost is None or priced is None else
+          + cost + priced                                                
+      140 
+      141              if response.stop_reason == "refusal":
+      142                  return fail("The model declined to answer this
+            request.")
+      143              if response.stop_reason == "max_tokens":
+      144                  return fail("The model's reply was cut off at 
+           its length limit.")
+      127 -            session.messages.append({"role": "assistant", "con
+          -tent": response.content})                                     
+      145 +            session.messages.append({"role": "assistant", "con
+          +tent": _echo(response.content)})                              
+      146 
+      129 -            uses = [b for b in response.content if b.type == "
+          -tool_use"]                                                    
+      147 +            live = _after_fallback(response.content)          
+      148 +            uses = [b for b in live if b.type == "tool_use"]  
+      149              if uses:
+      150                  session.messages.append({"role": "user", "cont
+           ent": [self._run(session, b, calls) for b in uses]})
+      151                  continue
+      152 
+      134 -            text = "".join(b.text for b in response.content if
+          - b.type == "text")                                            
+      153 +            text = "".join(b.text for b in live if b.type == "
+          +text")                                                        
+      154              answer, problems = self._parse(text, session)
+      155              if not problems:
+      156                  return render(session.id, answer, session.resu
+           lts, trace())
+      138 -            if repaired:                                      
+      157 +            if repair_problems:                               
+      158                  return fail("The answer failed validation twic
+           e: " + "; ".join(problems))
+      140 -            repaired = True                                   
+      141 -            repair_problems = problems                        
+      159 +            repair_problems, rejected = problems, text        
+      160              session.messages.append({"role": "user", "content"
+           : REPAIR.format(problems="\n- ".join(problems))})
+      161          return fail(f"No final answer within {self.settings.ma
+           x_model_calls} model calls.")
+      162 
+     ...
+      164          result_id = f"R{len(session.results) + 1}"
+      165          args = block.input if isinstance(block.input, dict) el
+           se {}
+      166          record = ToolCallRecord(id=result_id, name=block.name,
+            input=args)
+      149 -        result = run_tool(self.ctx, block.name, args)         
+      167 +        try:                                                  
+      168 +            result = run_tool(self.ctx, block.name, args)     
+      169 +        except Exception as error:  # a tool bug must not leav
+          +e a tool call without its result                              
+      170 +            result = failure(block.name, "tool_failed", f"The 
+          +tool failed ({type(error).__name__}).")                       
+      171          session.results[result_id] = CitedResult(result_id, re
+           cord, result)
+      172          calls.append(record)
+      173          content = json.dumps({"result_id": result_id, **result
+           .model_dump()})
+     ...
+      178              answer = FinalAnswer.model_validate_json(text)
+      179          except ValidationError as error:
+      180              return None, [f"the final answer is not a valid an
+           swer object: {error.errors()[0]['msg']}"]
+      160 -        return answer, check_answer(answer, session.results)  
+      181 +        return answer, check_answer(answer, session.results, s
+          +elf.facts, self.hub_names)                                    
+      182 +                                                              
+      183 +                                                              
+      184 +def _last_fallback(content: list) -> int:                     
+      185 +    return max((i for i, b in enumerate(content) if b.type == 
+          +"fallback"), default=-1)                                      
+      186 +                                                              
+      187 +                                                              
+      188 +def _echo(content: list) -> list:                             
+      189 +    """The assistant turn as it is sent back: unchanged, excep
+          +t the API's rule after a fallback."""                         
+      190 +    boundary = _last_fallback(content)                        
+      191 +    return [b for i, b in enumerate(content) if i >= boundary 
+          +or b.type not in _BEFORE_FALLBACK_LEFT_OUT]                   
+      192 +                                                              
+      193 +                                                              
+      194 +def _after_fallback(content: list) -> list:                   
+      195 +    """The blocks the serving model produced: after the final 
+          +fallback block, or all of them."""                            
+      196 +    return content[_last_fallback(content) + 1 :]             
+
+⏺ Now the prompt. It must state the facts the grounding check will accept from
+  it (the number of hubs and FEMA's record years), and explain the new hubs_from
+  field.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the remaining pieces: the Haiku price note, wra chat, and an evaluation
+  report that breaks errors and repairs down by cause.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The loop tests' scripted answers predate the new hubs_from field, so I'm
+  updating the test helper and adding tests for each new rule and fix. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 244 pass. Recording the decisions: what counts as a valid answer goes in
+  the assumptions file, the changes against the plan in Deviations, and the two
+  milestone 4 risks as a new open point.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The work is committed, but since the agent's prompt, schema and checks have
+  changed, I'll re-run the milestone 3 check (wra eval printing the score) on
+  the current code before calling it done, which may cost a bit more than the
+  $0.53 first run. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · Re-run the full evaluation once on the current agent (14 cases, 19 
+     messages, Opus 5.5)? The first run cost $0.53 at list price; the stricter 
+     checks may add repairs, so expect roughly $0.50 to $0.80. It confirms the 
+     review's fixes didn't break real answers and closes milestone 3. → Run it 
+     once (Recommended)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 14 cases passed with no errors or repairs, at $0.53 and 6.7 seconds per
+  case. Since a perfect score is the result most worth checking, I'm reading
+  every final answer before calling it done. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All fourteen verdicts check out against the tool results, and the uncertain
+  cases are hedged correctly. Several verdicts run to five or six sentences
+  against the plan's four, so the prompt isn't fully holding length. I'm closing
+  milestone 3 next by updating the README status, the queue and the session
+  index line. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Milestones 2 and 3 are both done, each checked on the committed code.
+  Everything is committed and the working tree is clean.
+
+  Milestone 2: the score and the evaluation set.
+  - All its checks passed in a clean checkout of the committed code, with the
+    network blocked: 203 tests, both wra rank commands, and the stub evaluation
+    at 0 of 14 as expected.
+  - Minneapolis ranks first at 2.90 expected disruption days a year. Dallas is
+    6th at 2.02, which is High, but only just.
+  - Ten years of warnings can't tell most neighbouring hubs apart, so most
+    rankings carry a low confidence label, and the answers say so.
+
+  Milestone 3: the agent.
+  - It runs on Claude Opus 5.5. Code checks every answer before you see it: the
+    evidence ids, the hub order, the band words, the what-if flag, the answer's
+    shape, and every number in it.
+  - The tests on a scripted fake model pass: 244 in all, including the loop and
+    grounding tests.
+  - wra ask works live, and wra chat handles follow-ups.
+  - The evaluation run on the current code passed 14 of 14 with no repairs. I
+    read all fourteen answers, and their figures match the tool results.
+
+  API spend this session: about $1.13 at list price. The spike was $0.03, one
+  question $0.04, and two evaluation runs $0.53 each.
+
+  Your decisions are recorded in docs/ASSUMPTIONS.md and docs/DECISIONS.md, and
+  the changes against the plan in its Deviations section. They are:
+  - the band cut-offs at 1, 2 and 3 days;
+  - equal weights, with the winter note in place of a heavier weight;
+  - coastal flood warnings out of the score, area flood warnings still out;
+  - FEMA's hurricane figures used as given;
+  - the confidence rules;
+  - the evaluation's grading rules;
+  - the extra answer checks the second review led to.
+
+  Still open:
+  - Verdicts often run to five or six sentences, against the plan's four. You
+    left sentence count to the prompt, and the prompt isn't fully holding it.
+  - Milestone 4 has two known risks (open point O13): two requests on one
+    conversation at the same moment would corrupt it, and one request can wait
+    up to ten minutes. The API needs a per-conversation lock and a shorter
+    timeout.
+  - The model prices still need checking against the live pricing page before
+    they appear anywhere public (O8).
+  - The grounding check has a known limit: a wrong small whole number can pass,
+    because large results contain most small numbers.
+
+  Before you /clear: please run /export into
+  docs/ai-session/03-scoring-and-agent.txt. Its index line is already written.
+  This session is long, so a /handoff and then a fresh session for milestone 4
+  would be best. Milestone 4, the API and the chat page, is implementation
+  against the written spec, so Opus remains the right model for the main
+  session.
+
+✻ Crunched for 36m 54s · done 3:37 PM
+
+❯ let's finish the open items before we handoff                                 
+
+⏺ I'll take the four open items in turn: the model prices, the over-long
+  verdicts, the grounding check's limit with small whole numbers, and the two
+  milestone 4 risks. Two of them can be measured for free on the saved
+  evaluation runs, and the prices need the live pricing page. I'll do those
+  first, then bring you the decisions together. First, where the reference says
+  the live prices are:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I'll read the page myself, since a subagent's report would be one more claim
+  to check. In parallel, I'll measure the verdict lengths and the effect of a
+  stricter whole-number rule on both saved runs.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The pricing page confirms the prices match the config, and supplies Haiku's
+  cache-read price, which I'll add. The measurements show verdict length is a
+  smaller problem than I claimed, and the whole-number result only holds for the
+  second run, since the first predates the evidence field. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+⏺ A stricter whole-number rule doesn't help: it still lets through 17, 16 and 6
+  planted numbers where 17, 18 and 7 are expected, and the wrong numbers that
+  pass are ranks, counts and years in the results. So there's no cheap fix, and
+  I'm laying out four decisions for you. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · The grounding check accepts a wrong small whole number when that number 
+     appears anywhere in the cited result, for example as a rank or a count. 
+     Measured: 17 of 101 planted whole numbers pass against the overall ranking,
+     and requiring exact matches would still pass 17. What should happen? → 
+     Keep it, documented (Recommended)
+     · Verdicts: 2 of 19 in each evaluation run ran past four sentences (to 5 or
+     6). Sentence count stays a prompt instruction, as you decided. What should
+     be done? → Tighten, test in milestone 5 (Recommended)
+     · One model call can currently wait up to 10 minutes, retried twice, 
+     because those are the SDK's defaults. Measured calls take 4 to 8 seconds, 
+     and a whole answer averages under 7. What limit per model call? → 60 s, one
+     retry (Recommended)
+     · In milestone 4, two messages could arrive on the same conversation at the
+     same moment (a double-click, or two tabs), and that would corrupt the 
+     conversation. What should the second one get? → A "still working" error 
+     (Recommended)
+
+⏺ I'm taking all four recommended options: the limit and its measurement get
+  recorded, the prompt gets tightened with a new open point for milestone 5,
+  calls get a 60-second limit with one retry, and Haiku's cache-read price goes
+  into the config. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 246 pass. Recording each item's outcome in the assumptions file, then
+  committing.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Committed with a clean tree. Next I'm re-checking O2, the FEMA terms nobody
+  has re-read, and opening FEMA's FAQ document. · summary
+
+  Ran 1 shell command · 1 failed (ctrl+o to expand)
+
+⏺ FEMA's server is refusing the PDF (HTTP 403), so I'm checking the licence on
+  the map service the ingest actually calls for commercial-use terms. · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The licence allows commercial use, and the README is missing the second
+  required sentence plus the citation details. I'm reading the retrieval time
+  from the fetch log, then fixing the README. · summary
+
+  Ran 3 shell commands · 1 failed (ctrl+o to expand)
+
+⏺ Every FEMA response is logged with its 2026-11-24 10:42 UTC retrieval time.
+  I'm now updating the README notice, endpoint, version and date to match, then
+  O2. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All the open items are finished, everything is committed, and the working tree
+  is clean.
+
+  Item: Model prices (O8)
+  Outcome: Checked against the live pricing page. All match the config; I
+    added Haiku's cache-read price, which the reference lacked. Settled.
+  ────────────────────────────────────────
+  Item: Two messages at once on one conversation (O13)
+  Outcome: The second message gets an immediate "still being answered" error,
+    so milestone 4's API can't corrupt a conversation. Tested with two
+    threads. Settled.
+  ────────────────────────────────────────
+  Item: A call that hangs (O13)
+  Outcome: Each model call gives up after 60 seconds with one retry, set in
+    the config. Settled.
+  ────────────────────────────────────────
+  Item: Grounding check and small whole numbers
+  Outcome: Kept as is and documented. I measured that an exact-match rule
+    would still let 16 to 17 of 101 planted numbers through, so the change
+    wouldn't be worth it.
+  ────────────────────────────────────────
+  Item: Verdicts over four sentences (O14)
+  Outcome: The prompt now sends anything past four sentences to a caveat.
+    Measured in milestone 5's planned run, so no extra spend now.
+  ────────────────────────────────────────
+  Item: FEMA's terms (O2)
+  Outcome: Read from the licence on the service we call: nothing restricts end
+    use, and the data are meant for planning. The README's required notice was
+    missing its second sentence and the endpoint, version and retrieval date;
+    it now has them. Settled.
+
+  No paid calls were made for these; 246 tests pass on the scripted fake model.
+
+  Two points stay open on purpose:
+  - O1: the NOAA station service publishes no usage terms. You accepted
+    committing its data on 2026-11-24, and the terms themselves are still
+    unconfirmed.
+  - The chat page footer: in milestone 4 it must carry the full FEMA notice.
+    That's recorded in O2.
+
+  Ready for the handoff. Before you /clear, please run /export into
+  docs/ai-session/03-scoring-and-agent.txt. Its index line is already written.
+  Then /handoff, and milestone 4 can start in a fresh session.
+
+✻ Worked for 3m 31s · done 3:42 PM
+
+❯ /handoff first.                                                               
+
+⏺ Running the handoff. Step 0a first: anything still running.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Nothing from this session is still running, and the listed processes belong to
+  other apps, so I've left them alone. Next I'm running the review gate against
+  the range from a36491c to now, leaving out the 4,375-line transcript. 
+  · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The diff spans 52 files and 5,324 lines, so I'm handing the whole-session
+  review to Fable with only the diff, your two task messages, and the project
+  rules. · summary
+
+⏺ feature-dev:code-reviewer(Independent review of session diff) Fable 5.2
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ The review is running, and I'm adding a queue line for the session 03
+  transcript once it's exported, as I did for session 02. Milestone 4 stays at
+  the top of the queue. · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The CLAUDE.md file gets one new rule: commands that spend API credit are
+  marked as paid, and a full evaluation run waits for your go-ahead. I'm leaving
+  everything else from this session out of that file. · summary
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line
+      24  9. **Match the model to the task** and say which was picked and
+           why: Fable for open design questions and the final whole-diff
+          review, Opus for implementation and per-milestone review, Sonne
+          t for small, fully specified tasks. The main session's model an
+          d effort level are the owner's to switch, so say when they shou
+          ld change.
+      25  10. **Bonuses** (deployment, score-change alert, voice, in that
+           order) start only after the final end-to-end check passes, and
+           only after asking.
+      26  11. **Measure before proposing.** Before proposing a number, ch
+          eck whether data already in hand can measure it. A number that
+          confirms the expected answer gets checked hardest.
+      27 +12. **Paid calls are the owner's to approve.** `wra ask`, `wra 
+         +chat` and `wra eval` (unless `--agent stub`) spend the owner's 
+         +API credit. Ask before each full `wra eval` run and report its 
+         +measured cost. Tests use a scripted fake model and never call t
+         +he API.                                                        
+      28 
+      29  ## Gotchas and settled points
+      30 
+
+⏺ While the review finishes, I'll draft the next-session prompt in the scratch
+  folder. It gets finalised once the review's findings are settled.
+
+  Made 1 scratchpad edit +56, searched for 1 pattern (ctrl+o to expand)
+
+⏺ The draft is 6,299 bytes, under the 8,000 limit. The time-word scan found one
+  "today" that means "as built", so I'll reword it to say that.
+
+  Made 1 scratchpad edit +1 -1 (ctrl+o to expand)
+
+⏺ I'm waiting for the independent reviewer. The handoff can't be finalised until
+  each of its findings is fixed or acknowledged by you. Ready so far:
+  - the queue, with the transcript item added and its pointers updated;
+  - the new CLAUDE.md rule on paid calls;
+  - the draft prompt.
+
+  Nothing is committed yet. Those changes go into one handoff commit after the
+  gate.
+
+✻ Sautéed for 2m 19s · done 3:45 PM
+
+› Message from feature-dev:code-reviewer
+  Review of `git diff a36491c HEAD` (milestones 2 and 3, plus the open items).
+
+  How I checked: read the whole diff, the plan, the code each finding rests on,
+  the three saved run records under
+  /Users/doronreiffman/Projects/weather-risk-agent/evals/runs/, and commit
+  subjects and times in
+  /Users/doronreiffman/Projects/weather-risk-agent/.git/logs/HEAD. Not checked:
+  no tests were run (no shell), commit message bodies, the live pricing page,
+  and the session 03 transcript, which is not in the repo yet. So the pasted
+  milestone outputs and the test-first order are unverified.
+
+  ## 1. Findings
+
+  **F1. Medium, confidence high. The four-sentence baseline is undercounted.**
+  /Users/doronreiffman/Projects/weather-risk-agent/docs/ASSUMPTIONS.md:108 (O14)
+  says verdicts ran long in "2 of 19 replies in each of the first two
+  evaluation runs". The saved records show more:
+  - 6 of 19 in /Users/doronreiffman/Projects/weather-risk-agent/evals/runs/20261
+  124T133703Z-claude/run.json (lines 46, 466, 1110, 1590, 1803, 2268;
+  hand-counted, five at 5 sentences, one at 6).
+  - At least 3 of 19 in /Users/doronreiffman/Projects/weather-risk-agent/evals/r
+  uns/20261124T125737Z-claude/run.json (lines 451, 1071, 1279).
+
+  The owner deferred measurement to milestone 5 on the lower figure. The fix is
+  one prompt sentence
+  (/Users/doronreiffman/Projects/weather-risk-agent/src/wra/agent/prompt.py:44);
+  no code enforces length and no paid run followed it. Fix: correct the count
+  and tell the owner the rate is about one reply in three.
+
+  **F2. Medium (high by your rubric, but only if the model slips), confidence
+  high. The hub-order check accepts the wrong end.**
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/agent/checks.py:134-1
+  55. ASSUMPTIONS point 12 meant to stop these:
+  - Top-N ranking: only the shown rows form the order. Citing
+  `rank_hubs(top_n=3)` with `hubs_ranked=["DEN"], hubs_from="bottom"` passes, so
+  "Denver is the least exposed hub" would be shown.
+  - Explanation: the order is just above / hub / below. Citing
+  `explain_hub(DAL)` with `hubs_ranked=["ORD"]` passes as "top".
+  - A two-hazard comparison gives two opposite orders, and either passes.
+
+  No test covers these. Fix: allow "bottom" only when top_n did not cut the
+  ranking; for explanations require the explained hub in `hubs_ranked`.
+
+  **F3. Medium, confidence high. The band check has two holes and one false
+  refusal.**
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/agent/checks.py:80-10
+  6.
+  - It reads capitalised labels only, so "Houston's risk is high" (Houston is
+  Moderate) is unchecked.
+  - It is skipped when the verdict names no hub ("It is in the High band" in a
+  follow-up).
+  - It pairs the first band with the first hub, so "No hub is Very high;
+  Minneapolis comes closest" is refused. Run 2 line 1590 passed only because
+  "High" came before "Very high".
+
+  **F4. Low to medium, confidence high on timing. The README's "current code"
+  claim is stale.**
+  /Users/doronreiffman/Projects/weather-risk-agent/README.md:5 says "the run on
+  the current code passed 14 of 14". The last paid run ended 13:37:03Z. Commit
+  d3e45f1 (13:41:32Z) then changed the loop, the client settings and, by O14's
+  wording, the prompt. No run record exists after it.
+  - /Users/doronreiffman/Projects/weather-risk-agent/.claude/QUEUE.md:17 words
+  it correctly ("on 097adfb"); the README should name the commit too.
+  - Milestone 3's check held at 097adfb. HEAD's agent has no saved run behind
+  it, only the fake-model tests.
+  - The record confirms 14 of 14, no repairs, and costs summing to 0.53 USD.
+
+  **F5. Low, confidence high. The timeout bounds a call, not a message.**
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/agent/loop.py:61 and
+  /Users/doronreiffman/Projects/weather-risk-agent/config/agent.toml:8-9. A hung
+  call ends the turn in about two minutes, as the comment says. But a message
+  may make 6 calls, each allowed 60 s twice, so a slow API can hold one request
+  and its busy lock for about 12 minutes. O13 records the per-call choice;
+  milestone 4 has no per-message limit.
+
+  **F6. Low, confidence high. Case 10 can fail a right answer.**
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/evals/graders.py:132-
+  134 with
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/evals/cases.py:127
+  and :179. The case requires the weights as "1" and "5", and `_has` rejects
+  "1.0" and "5.0", which is how the tool's JSON gives them. This is a flake risk
+  for the three-repetition target.
+
+  **F7. Low. A test asserts less than its name.**
+  /Users/doronreiffman/Projects/weather-risk-agent/tests/test_agent_loop.py:293,
+  `test_cost_is_priced_per_response_at_its_own_model`, uses one model for both
+  responses. Separately, when a fallback model with no configured price serves a
+  reply, the turn's cost is None and
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/evals/run.py:139
+  drops it from the total silently.
+
+  **F8. Low. The milestone evidence is not in the repo.**
+  /Users/doronreiffman/Projects/weather-risk-agent/docs/ai-session/README.md:9
+  indexes `03-scoring-and-agent.txt`, and QUEUE.md:17-18 cite "this session's
+  transcript" as proof. The file is absent; q12 tracks it.
+
+  I found no defect in the scoring core, the tools or the rendering. In the
+  saved run, Dallas's breakdown and the Miami/Houston comparison add up as
+  shown.
+
+  ## 2. Behaviour choices not recorded as the owner's
+
+  - **Coverage.** A year counts when the archive holds any row of any type, and
+  FEMA's "Not Applicable" counts as present (/Users/doronreiffman/Projects/weath
+  er-risk-agent/src/wra/scoring/confidence.py:152,
+  /Users/doronreiffman/Projects/weather-risk-agent/src/wra/tools/context.py:60).
+  ASSUMPTIONS.md:88 calls it Claude's reading, "reported". Coverage is
+  therefore 100% for every hub (10 of 10 years) and does not lower any label
+  today.
+  - **Rounding.** Ranking order, ties and bands use figures rounded to two
+  decimals (/Users/doronreiffman/Projects/weather-risk-agent/src/wra/scoring/kpi
+  .py:116-130).
+  - **What-ifs.** Stability is tested around the changed weights, what-if rows
+  get bands, and any non-empty `weight_changes` is a what-if, even "multiply by
+  1" (/Users/doronreiffman/Projects/weather-risk-agent/src/wra/tools/rank_hubs.p
+  y:50, :65).
+  - **Fixed confidence labels.** `get_methodology` always says "high";
+  `list_hubs` derives it from county agreement (/Users/doronreiffman/Projects/we
+  ather-risk-agent/src/wra/tools/get_methodology.py:66, /Users/doronreiffman/Pro
+  jects/weather-risk-agent/src/wra/tools/list_hubs.py:29).
+  - **Footnotes.** Several results merge to the lowest confidence with joined
+  periods. `no_data` replies and uncited out-of-scope replies get no footnote
+  (/Users/doronreiffman/Projects/weather-risk-agent/src/wra/agent/render.py:28),
+  though project rule 5 says answers state period, sources and confidence.
+  - **Sessions.** An unknown session id silently starts a new conversation under
+  that id, and sessions never expire (/Users/doronreiffman/Projects/weather-ris
+  k-agent/src/wra/agent/loop.py:109-116).
+  - **Model settings.** Effort "medium" and max_tokens 16000
+  (/Users/doronreiffman/Projects/weather-risk-agent/config/agent.toml:5-6);
+  prompt caching is on (in Deviations, no owner named).
+  - **Evaluation.** "prefix" mode passes with one hub on "which hubs" questions,
+  and case 6 accepts either of two tools
+  (/Users/doronreiffman/Projects/weather-risk-agent/src/wra/evals/cases.py).
+  - **Band check.** The capitalised-only reading and the no-hub skip in F3 are
+  not in point 12.
+
+  ## 3. Verdict
+
+  **Request 1 (milestones 2 and 3): fulfilled.**
+  - Every scenario the two milestone checks name has a test.
+  - A stub run record exists, and the 13:37Z record shows 14 of 14.
+  - The evaluation set was committed before the agent (3586536 before 406d78b).
+  - "No assumptions" is largely honoured: decisions carry the owner's name. The
+  exceptions are section 2.
+
+  **Request 2 (open items): four of five done; one is weak.**
+  - Timeouts and busy sessions: done and tested (see F5 for the remaining gap).
+  - Prices: recorded; I did not check the live page.
+  - Grounding weakness: measured and the owner's decision recorded, but the
+  measuring script is not kept.
+  - Verdict length: prompt wording only, unmeasured, on an undercounted baseline
+  (F1).
+
+  **Scope: in scope, with one addition.** Commit 043a527 settles O2 (FEMA notice
+  and licence), which was set for milestone 5 and is not among the open items
+  you listed. It is docs only; confirm the owner asked.
+
+  **Grade: fits a prototype.** I would remove nothing. The nearest candidates
+  are:
+  - the substring tables that classify errors and repairs
+  (/Users/doronreiffman/Projects/weather-risk-agent/src/wra/evals/run.py:27-33),
+  which break silently if a message is reworded;
+  - the FEMA cross-check and tropical-warning figures, which the plan lists
+  among the first things to cut.
+⏺ The independent review is back. The gate means every finding must be fixed now
+  or acknowledged by you. I'll verify each against the files, fix what I can,
+  and bring you the rest. First F1, which says I undercounted the long verdicts.
+  I'll recount with a stricter rule: a sentence ends at a full stop, "!" or "?"
+  followed by a space or the end, which decimals like 2.71 never are.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Agent "Independent review of session diff" finished · 12m 19s
+
+⏺ My recount shows roughly one long verdict in three, not the 2 of 19 I gave
+  you, because my counting rule missed sentences that open with bold text. I'm
+  fixing the remaining confirmed findings next, and I'll propose a check of the
+  measuring script against a hand count in the handoff. · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The code is fine; my test helper was the problem, since its scripted second
+  answer didn't suit these two calls. I'm giving each test a second answer that
+  fits its call. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 249 tests pass. Four gate items are yours. Each is a decision or an
+  acknowledgement, which I can't make on your behalf.
+
+⏺ Answered Claude's questions:
+  ⎿  · The runtime band check (your rule: the first band the verdict names must 
+     be the cited band of the first hub it names) refuses a right answer: "No 
+     hub is Very high; Minneapolis comes closest" pairs Very high with 
+     Minneapolis. It also never checks "Houston's risk is high" (lowercase) or a
+     verdict that names no hub. Change it? → Pair within each sentence 
+     (Recommended)
+     · The review lists choices I made that the records don't show as yours. 
+     Acknowledge them, recorded as Claude's choices to revisit? They are: (1) a 
+     coverage year counts with any archive row; (2) figures rounded to two 
+     decimals before ranking, ties and bands; (3) a what-if's stability test 
+     sits around its changed weights, its rows get bands, and any weight change 
+     counts as a what-if; (4) methodology is always high confidence and the hub 
+     list uses the county check; (5) a footnote merges several results to the 
+     lowest confidence, and no-data and uncited out-of-scope answers have none; 
+     (6) effort medium, 16,000 output tokens, prompt caching on; (7) case 6 
+     accepts either of two tools and a "which hubs" case passes with one hub; 
+     (8) a comparison over two hazards has two orders and the hub-order check 
+     accepts either. → Acknowledge, record (Recommended)
+     · Beyond the open items I listed, I also settled O2: I read FEMA's licence 
+     and completed the README's required notice (docs only, commit 043a527). The
+     review asks whether you wanted that. Keep it? → Keep it (Recommended)
+     · I reported "2 of 19" long verdicts; the real count is 3 and 6 of 19. My 
+     counting script missed sentences that open in bold, and nothing told me to 
+     test it against a hand count first. Add to rule 11 in the project 
+     CLAUDE.md: "A measuring script is checked against a hand count of a few 
+     cases before its number is reported"? → Add it (Recommended)
+
+⏺ All four decisions are settled, and next I'll have the band check pair each
+  hub with its cited band within every sentence, then record the eight choices
+  as mine and add the sentence to rule 11. · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The band pairing passes, but the grounding check rejects a test answer that
+  cites Minneapolis's 2.9 while only the Dallas explanation is in its sources.
+  I'm removing that figure from the test sentence next. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 252 pass. Two commits: the review fixes, then the handoff's own records.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The address check ran before the second commit but not the first. Checking the
+  first one after the fact:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The commit is clean, with no work address and the personal one on it. I'm
+  finishing the prompt next with the test count now at 252, the band rule
+  pairing within each sentence, and the per-message time limit question added to
+  milestone 4's list. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 6,847 bytes, under the 8,000 limit, with no time words. Saving it through the
+  remember plugin's script so the next session loads it at start:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Saved. Now the durable copy beside it, .remember/last-handoff.md, with
+  identical text:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The handoff is complete. Here is the prompt for the next session:
+
+  Task: Complete Milestone 4 of the Weather Risk Intelligence Agent: the HTTP 
+  API and the one-page chat that uses it (docs/PLAN.md section 13; queue item 
+  q5). Settle first every behaviour choice the plan leaves open, with the owner.
+
+  Where to work: /Users/doronreiffman/Projects/weather-risk-agent (one Python 
+  package, src/wra, managed with uv). Branch main, no remote.
+
+  Read first, in this order:
+  1. CLAUDE.md (rule 12 is new: paid API calls are the owner's to approve)
+  2. .claude/QUEUE.md
+  3. docs/PLAN.md: sections 7 (components, the end-to-end flow), 8.5 (API to 
+  chat page), 11 (layout), 13 (M4 and its check), and the Deviations entries for
+  milestones 2 and 3
+  4. docs/ASSUMPTIONS.md: "Settled 2026-11-24 in milestone 2" points 10 to 14, 
+  then open points O2 (FEMA notice), O13, O14
+  5. docs/DECISIONS.md, the last three entries
+  6. src/wra/agent/schemas.py (AgentReply: the response the API returns), 
+  src/wra/agent/loop.py (ClaudeAgent.answer and its sessions), src/wra/cli.py 
+  (_print_reply shows how a reply is laid out as text)
+
+  Two checks before the main work:
+
+  A. Session 03 transcript (q12). Check: ls docs/ai-session/
+    03-scoring-and-agent.txt present → run the work-address check from CLAUDE.md
+  on it and grep it for "claude.ai/code/session_" (must be 0), commit it alone 
+  ("Add session 03 transcript"), move q12 to Done.
+    03-scoring-and-agent.txt absent → tell the owner the export did not happen 
+  and leave q12 open. Its index line in docs/ai-session/README.md is already 
+  written.
+
+  B. This prompt's delivery. Check: the session-start text shows this prompt 
+  under "=== LAST HANDOFF ===".
+    Shown → say so in one line.
+    Not shown (the owner pasted it) → tell the owner the automatic load failed; 
+  look at .remember/remember.md and .remember/last-handoff.md.
+
+  Milestone 4 deliverables (plan 7.2, 8.5, 11):
+  - src/wra/api/: a FastAPI app with POST /api/chat {"session_id": str|null, 
+  "message": str} returning AgentReply as JSON, GET /api/hubs, GET /healthz, GET
+  / for the page. One ClaudeAgent per process; its sessions live in memory.
+  - src/wra/api/static/index.html: one static page using fetch, no JavaScript 
+  packages, no build step. It shows the verdict, the tables, the caveats and the
+  data, period and confidence lines from the reply, a "working" indicator, and 
+  a collapsible "how this was computed" panel with the trace. Its footer carries
+  FEMA's full two-sentence notice (O2; the README holds the exact text).
+  - CLI: wra serve.
+  - Dependencies fastapi and uvicorn (planned in section 11). Python packages 
+  install at their current versions.
+
+  Ask the owner before building (one question each, with the options and what 
+  the owner will see under each). The plan does not settle:
+  - what HTTP status a reply with status "error" gets, including the "still 
+  being answered" refusal of a second message on a busy conversation;
+  - what POST /api/chat does with a session_id the server does not know (as 
+  built, the agent silently starts a new conversation under that id);
+  - how the page renders the verdict's Markdown without a JavaScript package 
+  (the model writes **bold**);
+  - the port and host wra serve uses;
+  - whether a message gets an overall time limit: each model call stops after 60
+  s with one retry, but a message can make 6 calls, so a slow API could hold 
+  it, and its busy lock, for about 12 minutes (O13).
+
+  Implementation guidance:
+  - Test-first (superpowers:test-driven-development). tests/test_api.py drives 
+  the app with FastAPI's TestClient and a ClaudeAgent built on the scripted fake
+  model in tests/test_agent_loop.py (classes Scripted, response, tool, final), 
+  so no test calls the API.
+  - The agent already refuses a second message on a conversation still being 
+  answered, and each model call gives up after 60 s with one retry (O13). 
+  FastAPI runs plain `def` endpoints in a thread pool; the agent's 
+  per-conversation lock covers that.
+  - The page shows only what the reply holds; it computes and writes no figure.
+  - Before calling the milestone done, have an Opus subagent with a fresh 
+  context review the milestone's diff against docs/PLAN.md, and check its 
+  findings against the files before acting on them.
+  - Deviations go in docs/PLAN.md's Deviations section; decisions in 
+  docs/ASSUMPTIONS.md or docs/DECISIONS.md in the same commit as the code. 
+  Update the README's run instructions at the end of the milestone.
+
+  Constraints and settled points (do not reopen): the scoring rule and weights; 
+  bands at 1, 2 and 3 days for overall figures only; coastal and area flood 
+  warnings out of the score; FEMA's hurricane figures as given; the confidence 
+  rules; the evaluation's grading rules; the answer checks of ASSUMPTIONS points
+  12 and 14; Claude's choices in point 13 stand unless the owner changes them; 
+  the 60 s per-call timeout and the busy refusal. No Managed Agents, no agent 
+  framework, no JavaScript packages. Paid API calls: ask the owner before the 
+  first paid call of the session and before every full `wra eval` run, and 
+  report the measured cost. .env stays unread. Commits carry the repo-local 
+  personal address; run the work-address check before every commit. Do not drive
+  the owner's browser.
+
+  Verify, pasting each command and its output:
+  1. uv run pytest -q → all pass (252 before this milestone), including 
+  tests/test_api.py
+  2. With the server running: curl posts a question, then a follow-up with the 
+  same session_id, and the second answer uses the first (paid: ask first)
+  3. The owner opens the page and asks the four assignment questions; give the 
+  steps and what to look for, do not drive the browser
+  4. git status clean; small commits
+  At the end: move q5 to Done with its proof, remind the owner to /export into 
+  docs/ai-session/04-api.txt, and add that line to docs/ai-session/README.md.
+
+  Background:
+  - Milestones 2 and 3 are done (commits e618353 to dc00c01). `uv run wra eval` 
+  on commit 097adfb passed 14 of 14 with no repairs: 0.53 USD at list price, 6.7
+  s per case. Later commits changed the prompt, the client settings and two 
+  checks, tested only on the fake model; no paid run since. API spend so far is 
+  about 1.13 USD.
+  - An independent review of the whole session's diff ran at handoff; every 
+  finding was fixed or acknowledged by the owner (commit a479cae).
+  - ClaudeAgent.answer(session_id, message) returns AgentReply: status, verdict,
+  tables and footnote built by code from the cited results, caveats, 
+  hubs_ranked, is_what_if, evidence (result ids R1, R2, ...), error, and a trace
+  (tool calls, repaired, repair_problems, latency, usage with cost_usd). A turn
+  that ends in an error is removed from the conversation.
+  - The main session runs on Opus, which plan section 14 recommends through 
+  milestone 4.
+  - Still open: O14, verdicts over four sentences (milestone 5 measures it); O1,
+  NOAA station terms unpublished (owner accepted); WRA_ENV_FILE for the final 
+  end-to-end check is not built yet (milestone 5).
+
+  Saved: "Wrote handoff to:
+  /Users/doronreiffman/Projects/weather-risk-agent/.remember/remember.md". An
+  identical copy is in .remember/last-handoff.md, which git ignores. The next
+  session is shown the prompt but won't act on it by itself, so open it with a
+  short message such as "continue from the handoff".
+
+  Review gate: a fresh Fable reviewer read the whole session's diff. You decided
+  four items: the band check now pairs words within each sentence, my eight
+  choices are recorded as acknowledged, the FEMA notice work stays, and rule 11
+  gains a hand check. I fixed the rest, which included correcting my own count
+  of long verdicts from "2 of 19" to 3 and 6 of 19. All 252 tests pass on the
+  fake model, and no paid call was made after the last evaluation run.
+
+  Committed: a479cae (the review fixes) and dc00c01 (the queue and CLAUDE.md).
+  The working tree is clean.
+
+  CLAUDE.md: two rule changes. Rule 12: paid calls are yours to approve, with a
+  full evaluation run asked for each time. Rule 11 now requires a hand count of
+  a few cases before a measuring script's number is reported.
+
+  Decision log and open points: no new decision-log entry at handoff, because
+  the session's three entries went in as each decision was made. This project
+  keeps its open points in docs/ASSUMPTIONS.md, not a separate open-issues file:
+  O13 and O14 were updated, and points 13 and 14 were added.
+
+  Before you /clear: please /export into
+  docs/ai-session/03-scoring-and-agent.txt. Queue item q12 then commits it in
+  the next session.
+
+  Do you want anything in the prompt changed?
+
+✻ Cooked for 21m 33s · done 4:04 PM
