@@ -157,34 +157,20 @@ def _says_no_order(verdict: str) -> bool:
     return _NO_ORDER.search(verdict) is not None
 
 
-_HAZARD_WORDS = {"hurricane": r"hurricanes?", "flood": r"flood(?:s|ing)?"}
-_SENTENCE = re.compile(r"(?<=[.!?])\s+|(?<=[.!?]\*\*)\s+")
-
-
 def _leads(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
-    """For each hazard, the hub the verdict pairs with it must be the one that leads on it (review, 2026-11-25:
-    with the hubs swapped every figure is still in the result, so the number checks pass). The pairing: in the
-    first sentence that names the hazard and a hub of the pair, the hub named just before the hazard's word,
-    else the first one after it. Measured on the 36 saved answers to case 2's question: all paired right."""
+    """For each hazard, the answer's hazard_orders must start with the hub that leads it (owner, 2026-11-25:
+    a swapped comparison passes the number checks, and reading the prose for it proved fragile)."""
+    claims = {o.hazard: o.hubs for o in last.hazard_orders}
     problems, pairs = [], []
     for hazard, hub_ids in case.leads:
         want = rank(ctx.scores(), hazard, list(hub_ids))[0].hub_id
-        got = _paired_hub(last.verdict, hazard, {h: (ctx.data.hubs[h].city, h) for h in hub_ids})
+        got = claims.get(hazard)
         pairs.append(f"{hazard}: {got}")
-        if got != want:
-            problems.append(f"the verdict pairs {hazard} with {got}; the scoring code gives {want} the lead")
-    return Check("hubs", not problems, "; ".join(problems) or f"leads paired right ({', '.join(pairs)})")
-
-
-def _paired_hub(verdict: str, hazard: str, names: dict[str, tuple[str, str]]) -> str | None:
-    for sentence in _SENTENCE.split(verdict):
-        word = re.search(rf"\b{_HAZARD_WORDS[hazard]}\b", sentence, flags=re.IGNORECASE)
-        found = sorted((m.start(), hub) for hub, words in names.items() for w in words
-                       for m in re.finditer(rf"\b{re.escape(w)}\b", sentence))  # fmt: skip
-        if word and found:
-            before = [hub for pos, hub in found if pos < word.start()]
-            return before[-1] if before else next(hub for pos, hub in found if pos > word.start())
-    return None
+        if not got:
+            problems.append(f"the answer gives no order for {hazard}")
+        elif got[0] != want:
+            problems.append(f"the answer puts {got[0]} first on {hazard}; the scoring code gives {want} the lead")
+    return Check("hubs", not problems, "; ".join(problems) or f"each hazard's lead is right ({', '.join(pairs)})")
 
 
 def _in_order(got: list[str], expected: list[str]) -> bool:

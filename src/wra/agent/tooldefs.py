@@ -18,7 +18,7 @@ from wra.tools.registry import TOOLS
 
 _DROP = {"title", "default", "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
          "minLength", "maxLength", "minItems", "maxItems", "pattern", "uniqueItems"}  # fmt: skip
-_HUB_FIELDS = {"hub_id", "hub_ids", "hubs_ranked"}
+_HUB_FIELDS = {"hub_id", "hub_ids", "hubs_ranked", "hubs"}
 
 RESULT_NOTE = (
     " Each result carries a result_id (R1, R2, ...): cite it in the final answer's evidence to show that "

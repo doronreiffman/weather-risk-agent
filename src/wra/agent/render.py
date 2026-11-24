@@ -22,6 +22,7 @@ def render(session_id: str, answer: FinalAnswer, results: dict[str, CitedResult]
         hubs_ranked=answer.hubs_ranked,
         is_what_if=answer.is_what_if,
         evidence=list(dict.fromkeys(answer.evidence)),
+        hazard_orders=answer.hazard_orders,
         trace=trace,
     )
 

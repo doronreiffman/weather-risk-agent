@@ -67,6 +67,7 @@ def check_answer(
             "from the results you cite, or cite the result that holds them"
         )
 
+    problems += _hazard_order_problems(answer, cited)
     if hub_names:
         problems += _band_problems(answer.verdict, cited, hub_names)
 
@@ -125,6 +126,28 @@ def _hub_mentions(text: str, hub_names: Mapping[str, str]) -> list[tuple[int, st
         if not merged or merged[-1][1] != hub:
             merged.append((pos, hub))
     return merged
+
+
+def _hazard_order_problems(answer: FinalAnswer, cited: list[CitedResult]) -> list[str]:
+    """Each hazard_orders entry must be the start of that hazard's order in a cited ranking or comparison."""
+    by_hazard: dict[str, list[list[str]]] = {}
+    for r in cited:
+        if not r.result.ok:
+            continue
+        data = r.result.data
+        if r.call.name == "rank_hubs":
+            by_hazard.setdefault(data["hazard"], []).append([row["hub_id"] for row in data["rows"]])
+        elif r.call.name == "compare_hubs":
+            for hazard, rows in data["results"].items():
+                by_hazard.setdefault(hazard, []).append([row["hub_id"] for row in rows])
+    problems = []
+    for claim in answer.hazard_orders:
+        orders = by_hazard.get(claim.hazard)
+        if not orders:
+            problems.append(f"hazard_orders names {claim.hazard}, but no cited result orders it; cite the comparison")
+        elif not any(order[: len(claim.hubs)] == claim.hubs for order in orders):
+            problems.append(f"hazard_orders gives {claim.hazard} as {claim.hubs}; the cited result orders it {orders[0]}")
+    return problems
 
 
 def _cited_bands(cited: list[CitedResult]) -> dict[str, list[str]]:

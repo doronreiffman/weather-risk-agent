@@ -56,6 +56,8 @@ when status is "answered".
 comparison. Empty if the verdict asserts no order.
 - hubs_from: "top" when those hubs are the most exposed end of the cited order; "bottom" when the verdict is \
 about the least exposed end (then hubs_ranked ends with the least exposed hub).
+- hazard_orders: when the verdict compares hubs on more than one hazard, one entry per hazard with its hubs \
+most exposed first, as the cited result orders them. Empty otherwise.
 - is_what_if: true exactly when you cite a what-if result.
 - caveats: zero to three short sentences, only what neither the verdict nor the tables' notes already say.
 - For "no_data", cite the result that reported the missing period and give the covered range it states.

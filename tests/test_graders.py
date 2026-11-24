@@ -39,7 +39,7 @@ def snow(start=None, end=None, threshold="measurable"):
                                     "end_year": end, "threshold": threshold})  # fmt: skip
 
 
-def reply(ctx, status, verdict, calls=(), hubs=(), what_if=False, show=None, caveats=(), cited=()):
+def reply(ctx, status, verdict, calls=(), hubs=(), what_if=False, show=None, caveats=(), cited=(), orders=()):
     """An answer as the agent would build it: tool calls recorded, their tables shown (or those in `show`).
 
     `cited` are calls from earlier turns whose tables this answer shows again, without calling anew.
@@ -52,7 +52,8 @@ def reply(ctx, status, verdict, calls=(), hubs=(), what_if=False, show=None, cav
         if result.ok and (show is None or n in show):
             tables.append(result.display)
     return AgentReply(session_id="s", status=status, verdict=verdict, tables=tables, caveats=list(caveats),
-                      hubs_ranked=list(hubs), is_what_if=what_if, trace=Trace(model="hand", tool_calls=records))  # fmt: skip
+                      hubs_ranked=list(hubs), is_what_if=what_if, trace=Trace(model="hand", tool_calls=records),
+                      hazard_orders=[{"hazard": h, "hubs": list(o)} for h, o in orders])  # fmt: skip
 
 
 def correct(ctx, case_id: int) -> list[AgentReply]:
@@ -60,7 +61,8 @@ def correct(ctx, case_id: int) -> list[AgentReply]:
     setup_overall = r("answered", "Minneapolis leads.", [rank()], ["MSP", "MEM", "DEN"])
     setup_q1 = r("answered", "Minneapolis is most exposed.", [rank("winter", "midwest")], ["MSP", "MCI"])
     setup_q2 = r("answered", "Miami leads on hurricanes, Houston on floods.",
-                 [("compare_hubs", {"hub_ids": ["MIA", "IAH"], "hazards": ["hurricane", "flood"]})])
+                 [("compare_hubs", {"hub_ids": ["MIA", "IAH"], "hazards": ["hurricane", "flood"]})],
+                 orders=[("hurricane", ["MIA", "IAH"]), ("flood", ["IAH", "MIA"])])
     answers = {
         1: [r("answered", "Minneapolis stands clear at the top; Kansas City and Chicago are close behind.",
               [rank("winter", "midwest")], ["MSP", "MCI", "ORD"])],
@@ -282,12 +284,12 @@ def test_no_order_without_saying_so_or_a_wrong_order_still_fails(ctx, verdict, h
     assert checks["hubs"].passed is False
 
 
-def test_the_comparison_checks_which_hub_leads_each_hazard(ctx):
-    # Review, 2026-11-25: with the hubs swapped every figure is still in the result, so only this catches it.
+def test_the_comparison_checks_the_answers_order_for_each_hazard(ctx):
     right = correct(ctx, 2)
-    swapped = right[0].model_copy(update={"verdict": "Houston has the higher hurricane exposure, at 1.52 against "
-                                          "Miami's 0.92. Miami has the higher flood exposure, at 0.47 against "
-                                          "Houston's 0.21."})  # fmt: skip
+    swapped = AgentReply.model_validate({**right[0].model_dump(), "hazard_orders": [
+        {"hazard": "hurricane", "hubs": ["IAH", "MIA"]}, {"hazard": "flood", "hubs": ["MIA", "IAH"]}]})  # fmt: skip
+    missing = right[0].model_copy(update={"hazard_orders": []})
     assert {c.name: c for c in grade(ctx, BY_ID[2], right)}["hubs"].passed is True
     check = {c.name: c for c in grade(ctx, BY_ID[2], [swapped])}["hubs"]
     assert check.passed is False and "hurricane" in check.detail
+    assert {c.name: c for c in grade(ctx, BY_ID[2], [missing])}["hubs"].passed is False

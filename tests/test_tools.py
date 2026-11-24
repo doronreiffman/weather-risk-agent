@@ -363,3 +363,14 @@ def test_the_snowfall_share_shows_at_the_precision_the_tool_rounds_it(ctx):
     result = run_tool(ctx, "daily_weather_stats", stats_args())
     assert result.display.rows[-1] == ["Share of observed days (%)", "7.1"]
     assert "7.10" not in display_text(result.display)
+
+
+def test_a_comparison_over_several_hazards_says_who_leads_each(ctx):
+    notes = run_tool(ctx, "compare_hubs", MIA_IAH).display.notes
+    assert ("Most exposed first, by hazard. Hurricanes: Miami 1.52, then Houston 0.92. "
+            "Flooding: Houston 0.47, then Miami 0.21.") in notes
+
+
+def test_a_comparison_over_one_hazard_has_no_lead_note(ctx):
+    notes = run_tool(ctx, "compare_hubs", {"hub_ids": ["MIA", "IAH"], "hazards": ["flood"]}).display.notes
+    assert not any(n.startswith("Most exposed first") for n in notes)

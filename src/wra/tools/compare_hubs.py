@@ -101,6 +101,10 @@ def _display(ctx, args, results, supporting) -> Display:
         + clear_text("Clear of the highest", "the gap below the most exposed hub", "hurricane" in args.hazards)
     )
     notes = []
+    if len(results) > 1:  # the fact a reader most needs from a comparison across hazards, written by code
+        orders = ". ".join(f"{hazard_label(ctx, hazard)}: " + ", then ".join(
+            f"{ctx.data.hubs[r['hub_id']].city} {r['value']:.2f}" for r in rows) for hazard, rows in results.items())
+        notes.append(f"Most exposed first, by hazard. {orders}.")
     if winter_counts(list(args.hazards)):
         notes.append(cfg.winter_note)
     if "hurricane" in args.hazards or "overall" in args.hazards:

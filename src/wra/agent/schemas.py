@@ -8,7 +8,7 @@ the status `no_data` for a question we cover about a period our data does not
 
 from typing import Any, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from wra.tools.envelope import Display
 
@@ -18,6 +18,15 @@ Status = Literal["answered", "out_of_scope", "no_data", "needs_clarification", "
 # `error` is for people, the code for programs.
 ErrorCode = Literal["busy", "unknown_conversation", "model_call_failed", "time_limit", "declined", "cut_off",
                     "invalid_twice", "too_many_calls", "internal_error"]  # fmt: skip
+
+
+class HazardOrder(BaseModel):
+    """One hazard's order in a comparison across several: which hub leads it is a claim code can check
+    (owner, 2026-11-25; the prose cannot be read reliably, and one `hubs_ranked` holds one order)."""
+
+    model_config = ConfigDict(extra="forbid")
+    hazard: Literal["overall", "winter", "flood", "severe_storm", "hurricane"]
+    hubs: list[str] = Field(min_length=1)  # most exposed first
 
 
 class FinalAnswer(BaseModel):
@@ -31,6 +40,7 @@ class FinalAnswer(BaseModel):
     hubs_from: Literal["top", "bottom"]  # which end of the cited order those hubs come from
     is_what_if: bool
     caveats: list[str]  # zero to three short sentences
+    hazard_orders: list[HazardOrder] = []  # a comparison across several hazards: each hazard's order
 
 
 class ToolCallRecord(BaseModel):
@@ -71,6 +81,7 @@ class AgentReply(BaseModel):
     hubs_ranked: list[str] = []
     is_what_if: bool = False
     evidence: list[str] = []  # the result ids the answer cites; their tables are `tables`
+    hazard_orders: list[HazardOrder] = []
     error: str | None = None  # a plain message when status is "error"
     error_code: ErrorCode | None = None  # which failure, when status is "error"
     trace: Trace

@@ -49,9 +49,10 @@ def tool(name, args, call_id="toolu_1"):
 
 
 def final(verdict="Minneapolis is clearly the most exposed, at 2.71 days a year.", evidence=("R1",),
-          hubs=("MSP", "MCI"), status="answered", what_if=False, caveats=(), hubs_from="top"):  # fmt: skip
+          hubs=("MSP", "MCI"), status="answered", what_if=False, caveats=(), hubs_from="top", hazard_orders=()):  # fmt: skip
     body = {"status": status, "verdict": verdict, "evidence": list(evidence), "hubs_ranked": list(hubs),
-            "hubs_from": hubs_from, "is_what_if": what_if, "caveats": list(caveats)}  # fmt: skip
+            "hubs_from": hubs_from, "is_what_if": what_if, "caveats": list(caveats),
+            "hazard_orders": [{"hazard": h, "hubs": list(order)} for h, order in hazard_orders]}  # fmt: skip
     return response("end_turn", SimpleNamespace(type="text", text=json.dumps(body)))
 
 
@@ -653,3 +654,42 @@ def test_a_period_two_results_share_is_shown_once(ctx):
     a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), tool("explain_hub", {"hub_id": "MSP"}, "toolu_2"), answer)
     reply = a.answer(None, "Which hubs in the Midwest are most exposed, and why Minneapolis?")
     assert reply.footnote.period == "2016-2025; hurricanes 1851-2024"
+
+
+# --- which hub leads each hazard, as a structured claim (owner, 2026-11-25) --------------------
+
+MIA_IAH_TWO = {"hub_ids": ["MIA", "IAH"], "hazards": ["hurricane", "flood"]}
+SPLIT = "Miami leads on hurricanes, 1.52 against 0.92; Houston leads on floods, 0.47 against 0.21."
+
+
+def test_each_hazards_order_is_checked_against_the_cited_comparison(ctx):
+    right = final(verdict=SPLIT, hubs=(), hazard_orders=[("hurricane", ["MIA", "IAH"]), ("flood", ["IAH", "MIA"])])
+    a, _ = agent(ctx, tool("compare_hubs", MIA_IAH_TWO), right)
+    reply = a.answer(None, "Compare Miami and Houston on hurricanes and floods.")
+    assert reply.status == "answered" and not reply.trace.repaired, reply.trace.repair_problems
+    assert [(o.hazard, o.hubs) for o in reply.hazard_orders] == [("hurricane", ["MIA", "IAH"]), ("flood", ["IAH", "MIA"])]
+
+
+def test_a_swapped_hazard_order_is_repaired(ctx):
+    swapped = final(verdict=SPLIT, hubs=(), hazard_orders=[("hurricane", ["IAH", "MIA"]), ("flood", ["MIA", "IAH"])])
+    right = final(verdict=SPLIT, hubs=(), hazard_orders=[("hurricane", ["MIA", "IAH"]), ("flood", ["IAH", "MIA"])])
+    a, _ = agent(ctx, tool("compare_hubs", MIA_IAH_TWO), swapped, right)
+    reply = a.answer(None, "Compare Miami and Houston on hurricanes and floods.")
+    assert reply.status == "answered" and reply.trace.repaired
+    assert "hazard_orders gives hurricane as ['IAH', 'MIA']" in reply.trace.repair_problems[0]
+
+
+def test_a_hazard_no_cited_result_orders_is_repaired(ctx):
+    wrong = final(verdict=SPLIT, hubs=(), hazard_orders=[("winter", ["MIA", "IAH"])])
+    right = final(verdict=SPLIT, hubs=(), hazard_orders=[("hurricane", ["MIA", "IAH"])])
+    a, _ = agent(ctx, tool("compare_hubs", MIA_IAH_TWO), wrong, right)
+    reply = a.answer(None, "Compare Miami and Houston on hurricanes and floods.")
+    assert reply.trace.repaired and "names winter, but no cited result orders it" in reply.trace.repair_problems[0]
+
+
+def test_the_answer_schema_offers_hazard_orders_with_hub_ids_only(ctx):
+    from wra.agent.tooldefs import final_answer_schema
+
+    item = final_answer_schema(list(ctx.data.hubs))["properties"]["hazard_orders"]["items"]
+    assert item["properties"]["hubs"]["items"]["enum"] == list(ctx.data.hubs)
+    assert item["required"] == ["hazard", "hubs"] and item["additionalProperties"] is False

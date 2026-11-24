@@ -35,7 +35,7 @@ The band lines are round numbers, not natural breaks. Dallas is only 0.02 days a
 - **Severe storms:** tornado and severe thunderstorm warnings.
 - **Hurricanes:** the hurricanes and tropical storms a year the hub's county can expect, from the Federal Emergency Management Agency (FEMA).
 
-Time is what counts: a day under any of these warnings is one disruption day, so a long warning weighs more than a short one. Each expected hurricane counts as 5 days, a figure checked against the warning records at Miami and Houston.
+Time is what counts: the hours a hub spends under these warnings, in days, are its disruption days, counted for each hazard separately, so a long warning weighs more than a short one. Each expected hurricane counts as 5 days, a figure checked against the warning records at Miami and Houston.
 
 ## What it cannot tell you
 
@@ -60,9 +60,9 @@ Weather warnings for 2016 to 2025 come from the National Weather Service, throug
 
 Once the system is installed, someone on the team starts the chat page with the command `uv run wra serve` and opens http://127.0.0.1:8000/ in a browser on the same computer. Questions are typed in plain English, for example "Which hubs in the Midwest are most exposed to winter disruption?" or "What if a hurricane counted double?". A what-if is labelled as such and leaves the official ranking unchanged.
 
-An AI model, Anthropic's Claude, writes only a short verdict. Every number in it must match a figure the system computed, or the answer is sent back once for correction; the check cannot tell which hub a figure belongs to, and can miss a wrong small whole number such as a rank, so the tables beside the verdict, which are built without the AI, always show the true figures. Each answer with figures shows its sources, period and confidence. If an answer fails the checks twice, the page shows a plain error instead. Follow-up questions keep the context. Questions the data cannot answer, such as a city with no hub or next week's weather, are marked Out of scope. In the latest test an answer took about four and a half seconds, and never more than eight. Each question is a paid request to Anthropic, at well under a cent.
+An AI model, Anthropic's Claude, writes only a short verdict. Every number in it must match a figure the system computed, or the answer is sent back once for correction; the check cannot tell which hub a figure belongs to, and can miss a wrong small whole number such as a rank, so the tables beside the verdict, which are built without the AI, always show the true figures. Each answer with figures shows its sources, period and confidence. If an answer fails the checks twice, the page shows a plain error instead. Follow-up questions keep the context. Questions the data cannot answer, such as a city with no hub or next week's weather, are marked Out of scope. In the final test an answer took about four seconds, and at most about ten. Each question is a paid request to Anthropic, at well under a cent.
 
-**How it was tested.** On 24 November 2026, 14 test questions were each asked three times, 42 in all, on Claude Haiku 5.5, the model the system uses. 41 passed every automatic check: the expected status, the right lookup, the right hubs in the right order, and tables matching the system's own figures. The one miss was a right answer that wrote a weight as a word ("five days"), which the check cannot verify. No answer was refused. The larger Claude Opus 5.5 passed all 42 but costs about 27 times as much per answer.
+**How it was tested.** On 24 November 2026, 14 test questions were each asked three times, 42 in all, on Claude Haiku 5.5, the model the system uses. In the final test all 42 passed every automatic check: the expected status, the right lookup, the right hubs in the right order, and tables matching the system's own figures. No answer was refused. In the earlier comparison of models, Haiku passed 41 of 42 and the larger Claude Opus 5.5 all 42, at about 27 times Haiku's cost per answer.
 
 ---
 

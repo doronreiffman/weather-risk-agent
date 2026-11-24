@@ -67,6 +67,7 @@ Example: asked "Which hubs in the Midwest are most exposed to winter disruption?
 | `hubs_ranked` | the order the verdict asserts, most exposed first |
 | `hubs_from` | `top` or `bottom`: which end of the cited order those hubs are |
 | `is_what_if` | true exactly when a cited result is a what-if |
+| `hazard_orders` | for a comparison across several hazards, each hazard with its hubs, most exposed first; checked against the cited result, because one `hubs_ranked` holds one order and prose cannot be read reliably |
 | `caveats` | zero to three short sentences |
 
 The reply the API sends (`AgentReply`, same file) adds `session_id`, `tables`, `footnote`, `error`, `error_code` and a `trace` (tool calls, repair reasons, latency, tokens, cost). `src/wra/agent/render.py` fills `tables` and `footnote` from the cited results; the model never types either.
@@ -85,7 +86,7 @@ After the schema check, `check_answer` (`src/wra/agent/checks.py`) requires:
 
 1. every evidence id is a real result, and an `answered` reply cites one that succeeded;
 2. `hubs_ranked` is the top of a cited order, or its bottom when `hubs_from` says so;
-3. `is_what_if` matches the cited results;
+3. `is_what_if` matches the cited results, and each `hazard_orders` entry is the start of that hazard's cited order;
 4. grounding, below;
 5. in each sentence, the first band named after a hub is that hub's cited band;
 6. no Markdown table in the verdict, at most three caveats.

@@ -668,7 +668,7 @@ Changes forced by reality are appended here, newest last.
 - *A check by hand of the page before the demo (owner, queue q16).* README, "Checking the page by hand before a demo".
 - *The model is Haiku 5.5, against section 9's rule (owner).* The rule was the cheapest model whose score equals the best; Opus scored 42 of 42 and Haiku 41 of 42, at about one twenty-seventh of the cost per answer. Its refusal fallback is off, since Haiku has none. `docs/EVAL_RESULTS.md`.
 - *Three check fixes from the comparison (owner).* `docs/ASSUMPTIONS.md`, milestone 5 section.
-- *Fixes from the final whole-repository review (owner).* A prompt line, the snowfall share's precision, labelled confidence reasons, a hub-pairing check on the Miami and Houston case, and three end-to-end script fixes. `docs/ASSUMPTIONS.md`, milestone 5 section, point 6.
+- *Fixes from the final whole-repository review (owner).* A prompt line, the snowfall share's precision, labelled confidence reasons, each hazard's order as a checked field of the answer (`hazard_orders`) with a code-written lead note under comparisons, and three end-to-end script fixes. `docs/ASSUMPTIONS.md`, milestone 5 section, point 6.
 
 ---
 

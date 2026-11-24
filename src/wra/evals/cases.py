@@ -99,7 +99,7 @@ class Case:
     is_what_if: bool | None = None
     required: list[str | Callable[[ToolContext], str]] = field(default_factory=list)  # whole words or numbers
     band_of: str | None = None  # the first band the verdict names must be this hub's real band (owner, 2026-11-24)
-    leads: tuple[tuple[str, tuple[str, ...]], ...] = ()  # (hazard, hubs): the verdict pairs the hazard with its leader
+    leads: tuple[tuple[str, tuple[str, ...]], ...] = ()  # (hazard, hubs): hazard_orders must name its leader first
     forbidden: list[str] = field(default_factory=lambda: list(FORBIDDEN_EVERYWHERE))
     pinned: dict[str, Any] = field(default_factory=dict)  # figures in the matching tool result's data
     shows_table: bool = True  # whether the expected tool's table must be among the reply's tables
