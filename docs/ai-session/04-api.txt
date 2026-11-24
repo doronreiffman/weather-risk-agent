@@ -1,0 +1,3159 @@
+ ▐▛███▛█   Claude Code v2.1.331
+▝▜██████▀  Opus 5.5 · Claude Ultra
+ ▝▝   ▝▝   ~/Projects/weather-risk-agent
+
+
+❯ /clear                                                                        
+
+❯ okay, let's get to work. Milestone 4 - let's talk through the open questions  
+  like HTTP status, unknown session_id, etc.                                    
+
+  Searched for 2 patterns, read 7 files, listed 1 directory, ran 1 shell command · 1 failed (ctrl+o to expand)
+
+⏺ The session 03 transcript is present, but its only session-link hit is the
+  handoff's own quoted search text, with no real link. I'm committing it on its
+  own now, then I'll lay out the milestone 4 questions. · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Removed 1 line
+       6 
+       7  ## Queue
+       8 
+       9 -- [q12] Commit the session 03 transcript once the owner has exp
+         -orted it as `docs/ai-session/03-scoring-and-agent.txt`. → `docs
+         -/ai-session/README.md`                                         
+       9  - [q5] Milestone 4: API and chat page. The page footer carries
+          FEMA's full notice. → `docs/PLAN.md` section 13, `docs/ASSUMPTI
+          ONS.md` O2
+      10  - [q6] Milestone 5: results, documents, fresh-context review, f
+          inal end-to-end check. Measures verdict length. → `docs/PLAN.md
+          ` section 13, `docs/ASSUMPTIONS.md` O14
+      11  - [q10] Deployment to a public URL, ask first. The assignment c
+          alls it preferred, so it stands apart from the bonuses. → `docs
+          /PLAN.md` section 13
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 1 line
+      13 
+      14  ## Done / Dropped
+      15 
+      16 +- [q12] Session 03 transcript committed. Done 2026-11-24. Proof
+         +: commit `170d557`. The one match for "claude.ai/code/session_"
+         + is the handoff quoting that search text; no real link.        
+      17  - [q4] Milestone 3: the agent. Done 2026-11-24. Proof: commits
+          `406d78b` to `097adfb`; `wra eval` on `097adfb` passed 14 of 14
+           with no repairs (0.53 USD), loop and grounding tests on a scri
+          pted fake model, `wra ask` live; all in this session's transcri
+          pt.
+      18  - [q3] Milestone 2: scoring core and evaluation set. Done 2026-
+          11-24. Proof: commits `e618353` to `b31c2a5`; the checks, run o
+          n `b31c2a5` in a clean checkout with the network blocked, are i
+          n this session's transcript (203 tests passed, `wra eval --agen
+          t stub` 0 of 14).
+      19  - [q11] Session 02 transcript committed. Done 2026-11-24. Proof
+          : commit `9d551f5`.
+
+⏺ Now I'll check a few facts that will go into the questions: the timeout
+  settings, how the model's verdicts actually use Markdown, and how long real
+  messages took.
+
+  Listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+⏺ Before I quote those counts, a hand check of a few verdicts against the
+  script's reading:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The hand check agrees: all six verdicts above use bold and nothing else, and
+  the longest took 7.5 s. Committing the queue update, then the questions.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The handoff loaded at session start, and the session 03 transcript and queue
+  are both done. For milestone 4 I'm building a single-process demo for the
+  take-home, with in-memory conversations, no streaming, and the server bound to
+  127.0.0.1:8000 unless you tell me otherwise, and four choices are still yours
+  to make. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · When the agent can't give an answer, what HTTP code should the chat 
+     endpoint send? Today it returns a reply with status "error" and a plain 
+     message. The causes are: a second message on a conversation still being 
+     answered, the model unreachable or timed out, the model declining, or the 
+     answer failing validation twice. The JSON body is the same reply object 
+     under every option. → 409 busy, 502 others (Recommended)
+     · What should the chat endpoint do with a conversation id the server 
+     doesn't know? This happens mainly after a server restart, when the open 
+     page still holds the old id. As built, the agent quietly starts a fresh 
+     conversation under that id, so a follow-up like "and which is the least 
+     exposed?" gets answered with no memory of the first question. → what's the 
+     practical difference between 1 and 2?
+     · How should the page show the model's Markdown? In the two saved 
+     evaluation runs, the only Markdown the model wrote was bold (28 of 38 
+     verdicts, e.g. **High**). No lists, links, italics or line breaks appeared.
+     → Bold only, in the page (Recommended)
+     · Should one message get an overall time limit? Each model call already 
+     gives up after 60 s with one retry, but a message can make up to 6 calls. A
+     slow API could keep the page on "working" for about 12 minutes, with the 
+     conversation locked all that time. The longest message in the two saved 
+     evaluation runs took 8.7 s, and the median about 5 s. → 90 s per message 
+     (Recommended)
+
+⏺ Picked the first option: unknown ids get a 404 and the page holds your text,
+  so a single click resends it in a new conversation. The second option saves
+  that click but can send a follow-up with no context and produce a paid,
+  possibly wrong answer. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · After a server restart, the open page still holds a conversation id the 
+     server no longer knows. What should happen to the question you just sent? →
+     Refuse with 404 (Recommended)
+
+⏺ Four points are settled (409 for busy, 502 for model failure, 404 for unknown
+  ids, bold-only markdown, 90 s limit), and I'm checking how the Anthropic SDK
+  times retries, since a 60 s call plus a retry could exceed 90 s. · summary
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ This SDK version waits as long as the API requests before retrying, with no
+  upper bound. I'm checking whether a single call can set its own timeout and
+  whether the API actually sends such a wait time. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ A single call can take its own timeout
+  (resources/beta/messages/messages.py:161). Now the API side:
+
+  Called Context7 2 times (ctrl+o to expand)
+
+⏺ The SDK's built-in retry would let a single message run past 90 seconds, so
+  I'm turning it off and running the one retry in our own loop, capped at 60
+  seconds per attempt or the time left. I'll also correct the record's claim
+  about the two-minute bound in the assumptions file (O13), since it only holds
+  when the API sends no retry-after wait. · summary
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+⏺ Two quick checks before the tests: which HTTP library the SDK's errors are
+  built on (the tests will need to construct them), and how the page-facing
+  pieces are shaped.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The SDK's errors are built on a library called httpx2 (version 2.16.2), not on
+  httpx, so the tests will construct httpx2 objects. One more look at the
+  result shapes and the shared tool context:
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ Thread safety holds, since the scores are computed once at startup and only
+  read afterwards. I'm writing the agent tests first, then the API and the page.
+  · summary
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now the test edits: error codes on the existing failure tests, the busy test
+  no longer inventing an id, and the new tests.
+
+⏺ Update(tests/test_agent_loop.py)  ⎿  Added 1 line
+      87      a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final(
+          evidence=["R9"]), final(evidence=["R9"]))
+      88      reply = a.answer(None, "Which hubs in the Midwest are most 
+          exposed to winter disruption?")
+      89      assert reply.status == "error" and "failed validation twice
+          " in reply.error
+      90 +    assert reply.error_code == "invalid_twice"                 
+      91      assert reply.verdict == "" and reply.tables == []
+      92 
+      93 
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 3 lines, removed 2 lines
+      102  def test_a_declined_reply_is_an_error(ctx):
+      103      a, _ = agent(ctx, response("refusal"))
+      104      reply = a.answer(None, "Which hubs are most exposed?")
+      105 -    assert reply.status == "error" and "declined" in reply.err
+          -or                                                            
+      105 +    assert reply.status == "error" and "declined" in reply.err
+          +or and reply.error_code == "declined"                         
+      106 
+      107 
+      108  # --- more ways an answer can go wrong -----------------------
+           -------------------------------
+     ...
+      110 
+      111  def test_a_reply_cut_off_at_the_token_limit_is_an_error(ctx):
+      112      a, _ = agent(ctx, response("max_tokens", SimpleNamespace(t
+           ype="text", text='{"status": "ans')))
+      113 -    assert "cut off" in a.answer(None, "Which hubs are most ex
+          -posed?").error                                                
+      113 +    reply = a.answer(None, "Which hubs are most exposed?")    
+      114 +    assert "cut off" in reply.error and reply.error_code == "c
+          +ut_off"                                                       
+      115 
+      116 
+      117  def test_text_that_is_not_an_answer_object_is_repaired(ctx):
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 3 lines, removed 2 lines
+      140  def test_the_model_call_limit_ends_in_an_error(ctx):
+      141      a, _ = agent(ctx, *[tool("list_hubs", {"region": "all"}, f
+           "toolu_{n}") for n in range(6)])
+      142      reply = a.answer(None, "Which hubs are there?")
+      143 -    assert reply.status == "error" and "6 model calls" in repl
+          -y.error                                                       
+      143 +    assert reply.status == "error" and "6 model calls" in repl
+          +y.error and reply.error_code == "too_many_calls"              
+      144 
+      145 
+      146  def test_an_api_failure_is_an_error_naming_only_its_kind(ctx):
+      147 -    a, _ = agent(ctx, ConnectionError("secret request details"
+          -))                                                            
+      147 +    a, client = agent(ctx, ConnectionError("secret request det
+          +ails"))                                                       
+      148      reply = a.answer(None, "Which hubs are most exposed?")
+      149      assert reply.status == "error" and "ConnectionError" in re
+           ply.error and "secret" not in reply.error
+      150 +    assert reply.error_code == "model_call_failed" and len(cli
+          +ent.requests) == 1  # not an SDK error: no retry              
+      151 
+      152 
+      153  # --- conversations and the no-data case ---------------------
+           -------------------------------
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 1 line, removed 1 line
+      345      monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k:
+            None)  # no .env is read in tests
+      346      monkeypatch.setattr(anthropic, "Anthropic", lambda **kwarg
+           s: made.update(kwargs))
+      347      AnthropicClient(load_settings(REPO / "config" / "agent.tom
+           l"))
+      348 -    assert made == {"timeout": 60.0, "max_retries": 1}        
+      348 +    assert made == {"timeout": 60.0, "max_retries": 0}  # the 
+          +loop makes the one retry, within the message's time           
+      349 
+      350 
+      351  def test_a_second_message_while_the_first_is_answered_is_refus
+           ed(ctx):
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 119 lines, removed 3 lines
+      362      client = Slow(tool("rank_hubs", WINTER_MIDWEST), final())
+      363      a = ClaudeAgent(ctx, load_settings(REPO / "config" / "agen
+           t.toml"), client)
+      364      replies = {}
+      365 -    first = threading.Thread(target=lambda: replies.update(fir
+          -st=a.answer("s1", "Which hubs?")))                            
+      365 +    first = threading.Thread(target=lambda: replies.update(fir
+          +st=a.answer(None, "Which hubs?")))                            
+      366      first.start()
+      367      started.wait(5)
+      368 -    replies["second"] = a.answer("s1", "Which hubs, again?")  
+      368 +    (session_id,) = a.sessions                                
+      369 +    replies["second"] = a.answer(session_id, "Which hubs, agai
+          +n?")                                                          
+      370      release.set()
+      371      first.join(5)
+      372      assert replies["second"].status == "error" and "still bein
+           g answered" in replies["second"].error
+      373 +    assert replies["second"].error_code == "busy"             
+      374      assert replies["first"].status == "answered"
+      373 -    assert [m["role"] for m in a.sessions["s1"].messages] == [
+          -"user", "assistant", "user", "assistant"]                     
+      375 +    assert [m["role"] for m in a.sessions[session_id].messages
+          +] == ["user", "assistant", "user", "assistant"]               
+      376 +                                                              
+      377 +                                                              
+      378 +# --- milestone 4: unknown conversations and the time limit pe
+          +r message -----------------------                             
+      379 +                                                              
+      380 +                                                              
+      381 +def test_an_unknown_conversation_is_refused_without_a_model_ca
+          +ll(ctx):                                                      
+      382 +    a, client = agent(ctx, final())                           
+      383 +    reply = a.answer("from-before-a-restart", "And which is th
+          +e least exposed?")                                            
+      384 +    assert reply.status == "error" and reply.error_code == "un
+          +known_conversation"                                           
+      385 +    assert reply.session_id == "from-before-a-restart" and "no
+          + longer on the server" in reply.error                         
+      386 +    assert client.requests == [] and a.sessions == {}         
+      387 +                                                              
+      388 +                                                              
+      389 +class Clock:                                                  
+      390 +    """Stands in for the loop's time module: calls on the fake
+          + model move it on, sleeps are recorded."""                    
+      391 +                                                              
+      392 +    def __init__(self):                                       
+      393 +        self.now, self.slept = 0.0, []                        
+      394 +                                                              
+      395 +    def monotonic(self):                                      
+      396 +        return self.now                                       
+      397 +                                                              
+      398 +    def sleep(self, seconds):                                 
+      399 +        self.slept.append(seconds)                            
+      400 +        self.now += seconds                                   
+      401 +                                                              
+      402 +                                                              
+      403 +@pytest.fixture                                               
+      404 +def clock(monkeypatch):                                       
+      405 +    import wra.agent.loop                                     
+      406 +                                                              
+      407 +    fake = Clock()                                            
+      408 +    monkeypatch.setattr(wra.agent.loop, "time", fake)         
+      409 +    return fake                                               
+      410 +                                                              
+      411 +                                                              
+      412 +class Timed(Scripted):                                        
+      413 +    """Each call takes the given number of seconds on the fake
+          + clock."""                                                    
+      414 +                                                              
+      415 +    def __init__(self, clock, seconds, *responses):           
+      416 +        super().__init__(*responses)                          
+      417 +        self.clock, self.seconds = clock, list(seconds)       
+      418 +                                                              
+      419 +    def create(self, **request):                              
+      420 +        self.clock.now += self.seconds.pop(0)                 
+      421 +        return super().create(**request)                      
+      422 +                                                              
+      423 +                                                              
+      424 +def timed(ctx, clock, seconds, *responses):                   
+      425 +    client = Timed(clock, seconds, *responses)                
+      426 +    return ClaudeAgent(ctx, load_settings(REPO / "config" / "a
+          +gent.toml"), client), client                                  
+      427 +                                                              
+      428 +                                                              
+      429 +def _request():                                               
+      430 +    import httpx2                                             
+      431 +                                                              
+      432 +    return httpx2.Request("POST", "https://api.anthropic.com/v
+          +1/messages")                                                  
+      433 +                                                              
+      434 +                                                              
+      435 +def timeout_error():                                          
+      436 +    import anthropic                                          
+      437 +                                                              
+      438 +    return anthropic.APITimeoutError(request=_request())      
+      439 +                                                              
+      440 +                                                              
+      441 +def rate_limited(retry_after):                                
+      442 +    import anthropic                                          
+      443 +    import httpx2                                             
+      444 +                                                              
+      445 +    reply = httpx2.Response(429, headers={"retry-after": retry
+          +_after}, request=_request())                                  
+      446 +    return anthropic.RateLimitError("rate limited", response=r
+          +eply, body=None)                                              
+      447 +                                                              
+      448 +                                                              
+      449 +def test_each_call_waits_at_most_the_time_left_in_the_message(
+          +ctx, clock):                                                  
+      450 +    a, client = timed(ctx, clock, [50, 5], tool("rank_hubs", W
+          +INTER_MIDWEST), final())                                      
+      451 +    assert a.answer(None, "Which hubs in the Midwest are most 
+          +exposed?").status == "answered"                               
+      452 +    assert [r["timeout"] for r in client.requests] == [60, 40]
+          +  # 60 s per call, but only 40 s of the 90 were left          
+      453 +                                                              
+      454 +                                                              
+      455 +def test_no_model_call_starts_after_the_message_time_limit(ctx
+          +, clock):                                                     
+      456 +    a, client = timed(ctx, clock, [50, 45, 1], tool("list_hubs
+          +", {"region": "all"}, "toolu_1"),                             
+      457 +                      tool("list_hubs", {"region": "all"}, "to
+          +olu_2"), final())  # fmt: skip                                
+      458 +    reply = a.answer(None, "Which hubs are there?")           
+      459 +    assert reply.status == "error" and reply.error_code == "ti
+          +me_limit" and "90-second limit" in reply.error                
+      460 +    assert len(client.requests) == 2                          
+      461 +    session = a.sessions[reply.session_id]                    
+      462 +    assert session.messages == [] and session.results == {} an
+          +d not session.busy.locked()                                   
+      463 +                                                              
+      464 +                                                              
+      465 +def test_a_timed_out_call_is_retried_once_within_the_time_left
+          +(ctx, clock):                                                 
+      466 +    a, client = timed(ctx, clock, [60, 5, 5], timeout_error(),
+          + tool("rank_hubs", WINTER_MIDWEST), final())                  
+      467 +    reply = a.answer(None, "Which hubs in the Midwest are most
+          + exposed?")                                                   
+      468 +    assert reply.status == "answered" and clock.slept == [0.5]
+      469 +    assert [r["timeout"] for r in client.requests] == [60, 29.
+          +5, 24.5]                                                      
+      470 +                                                              
+      471 +                                                              
+      472 +def test_a_second_failure_of_the_same_call_ends_the_message(ct
+          +x, clock):                                                    
+      473 +    a, client = timed(ctx, clock, [60, 20], timeout_error(), t
+          +imeout_error(), final())                                      
+      474 +    reply = a.answer(None, "Which hubs are most exposed?")    
+      475 +    assert reply.error_code == "model_call_failed" and "APITim
+          +eoutError" in reply.error                                     
+      476 +    assert len(client.requests) == 2                          
+      477 +                                                              
+      478 +                                                              
+      479 +def test_a_wait_the_api_asks_for_is_kept_when_it_fits(ctx, clo
+          +ck):                                                          
+      480 +    a, client = timed(ctx, clock, [1, 1, 1], rate_limited("2")
+          +, tool("rank_hubs", WINTER_MIDWEST), final())                 
+      481 +    assert a.answer(None, "Which hubs in the Midwest are most 
+          +exposed?").status == "answered"                               
+      482 +    assert clock.slept == [2.0] and len(client.requests) == 3 
+      483 +                                                              
+      484 +                                                              
+      485 +def test_a_wait_longer_than_the_time_left_ends_the_message_at_
+          +once(ctx, clock):                                             
+      486 +    a, client = timed(ctx, clock, [1], rate_limited("120"), fi
+          +nal())                                                        
+      487 +    reply = a.answer(None, "Which hubs are most exposed?")    
+      488 +    assert reply.error_code == "model_call_failed" and "120 se
+          +conds" in reply.error                                         
+      489 +    assert clock.slept == [] and len(client.requests) == 1    
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 14 new or changed tests fail because the error code and the limit don't
+  exist yet. Now the code: the schema first, then the settings and the loop.
+
+⏺ Update(src/wra/agent/schemas.py)
+  ⎿  Added 4 lines
+      13  from wra.tools.envelope import Display
+      14 
+      15  Status = Literal["answered", "out_of_scope", "no_data", "needs_
+          clarification", "error"]
+      16 +# Why a reply is an error. The API sends busy as 409, unknown_c
+         +onversation as 404 and the rest as 502                         
+      17 +# (owner, milestone 4); the message in `error` is for people, t
+         +he code for programs.                                          
+      18 +ErrorCode = Literal["busy", "unknown_conversation", "model_call
+         +_failed", "time_limit", "declined", "cut_off",                 
+      19 +                    "invalid_twice", "too_many_calls"]  # fmt: 
+         +skip                                                           
+      20 
+      21 
+      22  class FinalAnswer(BaseModel):
+
+⏺ Update(src/wra/agent/schemas.py)
+  ⎿  Added 1 line
+      71      is_what_if: bool = False
+      72      evidence: list[str] = []  # the result ids the answer cites
+          ; their tables are `tables`
+      73      error: str | None = None  # a plain message when status is 
+          "error"
+      74 +    error_code: ErrorCode | None = None  # which failure, when 
+         +status is "error"                                              
+      75      trace: Trace
+      76 
+      77 
+
+⏺ Update(src/wra/agent/settings.py)
+  ⎿  Added 1 line
+      18      max_model_calls: int
+      19      timeout_seconds: float
+      20      max_retries: int
+      21 +    message_time_limit_seconds: float                          
+      22      fallback_beta: str
+      23      fallbacks: str
+      24      prices: dict[str, dict[str, float]]
+
+⏺ Update(src/wra/agent/settings.py)
+  ⎿  Added 1 line
+      53          max_model_calls=int(raw["max_model_calls"]),
+      54          timeout_seconds=float(raw["timeout_seconds"]),
+      55          max_retries=int(raw["max_retries"]),
+      56 +        message_time_limit_seconds=float(raw["message_time_limi
+         +t_seconds"]),                                                  
+      57          fallback_beta=raw["fallback_beta"],
+      58          fallbacks=raw["fallbacks"],
+      59          prices={model: dict(p) for model, p in raw.get("prices"
+          , {}).items()},
+
+⏺ Update(config/agent.toml)
+  ⎿  Added 2 lines, removed 1 line
+       6  max_tokens = 16000          # per model call; non-streaming
+       7  max_model_calls = 6         # per user message (plan section 8.
+          4)
+       8  timeout_seconds = 60        # per model call; measured calls ta
+          ke 4 to 8 seconds (owner, 2026-11-24)
+       9 -max_retries = 1             # so a stuck answer ends in a plain
+         - error within about two minutes                                
+       9 +max_retries = 1             # per model call, made by the agent
+         + loop, not the SDK, so it fits the limit below                 
+      10 +message_time_limit_seconds = 90  # per user message, all model 
+         +calls and the retry included (owner, milestone 4)              
+      11 
+      12  # Server-side refusal fallback: when the model's safety system 
+          declines, the
+      13  # API re-runs the request on a substitute model chosen by the r
+          efusal's category.
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 4 lines, removed 2 lines
+       3  One user message: call Claude with the system prompt, the conve
+          rsation, six strict tools and the
+       4  final-answer schema; run the tools it calls and send the result
+          s back; when it answers, validate the
+       5  answer in code (checks.py). One repair attempt if anything fail
+          s, then a clear error. At most
+       6 -`max_model_calls` model calls per message. A refused or cut-off
+         - reply becomes an error. Nothing                               
+       7 -unverified is shown.                                           
+       6 +`max_model_calls` model calls per message, and all of them with
+         +in `message_time_limit_seconds`: each                          
+       7 +call waits at most its own timeout or the time left, and the lo
+         +op, not the SDK, makes the one retry,                          
+       8 +so a wait the API asks for cannot run past the limit. A refused
+         + or cut-off reply becomes an error.                            
+       9 +Nothing unverified is shown.                                   
+      10 
+      11  The conversation is kept append-only, which Opus 5.5's thinking
+           blocks require, with two exceptions
+      12  set by the API or by us:
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 3 lines, removed 2 lines
+      51 
+      52  class AnthropicClient:
+      53      """The real client. The key comes from the environment, whi
+          ch `.env` fills via python-dotenv.
+      54 -    Each call gives up after the configured time and is retried
+         - at most the configured number of times."""                    
+      54 +    The SDK's own retries are off: SDK 2.13.0 waits as long as 
+         +a `retry-after` header asks, with no upper                     
+      55 +    bound (anthropic/_base_client.py, _calculate_retry_timeout)
+         +, so the loop retries instead (_call)."""                      
+      56 
+      57      def __init__(self, settings: AgentSettings) -> None:
+      58          import anthropic
+     ...
+      61          from wra import paths
+      62 
+      63          load_dotenv(paths.root() / ".env")
+      63 -        self._client = anthropic.Anthropic(timeout=settings.tim
+         -eout_seconds, max_retries=settings.max_retries)                
+      64 +        self._client = anthropic.Anthropic(timeout=settings.tim
+         +eout_seconds, max_retries=0)                                   
+      65 
+      66      def create(self, **request: Any) -> Any:
+      67          return self._client.beta.messages.create(**request)
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 11 lines
+      68 
+      69 
+      70  BUSY = "The last question in this conversation is still being a
+          nswered. Send this one when it has finished."
+      71 +UNKNOWN = ("This conversation is no longer on the server, proba
+         +bly because the server restarted. Your question "              
+      72 +           "was not sent; send it again to start a new conversa
+         +tion.")  # fmt: skip                                           
+      73 +FIRST_RETRY_PAUSE = 0.5  # seconds, the SDK's first back-off (a
+         +nthropic/_constants.py, INITIAL_RETRY_DELAY)                   
+      74 
+      75 
+      76 +class _Stop(Exception):                                        
+      77 +    """A model call ended the message without an error from the
+         + model's API itself."""                                        
+      78 +                                                               
+      79 +    def __init__(self, text: str, code: str) -> None:          
+      80 +        super().__init__(text)                                 
+      81 +        self.text, self.code = text, code                      
+      82 +                                                               
+      83 +                                                               
+      84  @dataclass
+      85  class Session:
+      86      id: str
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 11 lines, removed 7 lines
+      121          return request
+      122 
+      123      def answer(self, session_id: str | None, message: str) ->
+           AgentReply:
+      124 -        """Answer one message. A second message on a conversat
+          -ion that is still being answered is refused                   
+      125 -        at once (owner, 2026-11-24): two turns at the same mom
+          -ent would corrupt the conversation."""                        
+      124 +        """Answer one message; session_id None starts a new co
+          +nversation. A conversation this agent does not                
+      125 +        hold is refused without a model call, so a follow-up i
+          +s never answered without its context (owner,                  
+      126 +        milestone 4). A second message on a conversation that 
+          +is still being answered is refused at once                    
+      127 +        (owner, 2026-11-24): two turns at the same moment woul
+          +d corrupt the conversation."""                                
+      128          with self._sessions_lock:
+      127 -            session = self.sessions.get(session_id) if session
+          -_id else None                                                 
+      128 -            if session is None:                               
+      129 -                session = Session(id=session_id or uuid.uuid4(
+          -).hex)                                                        
+      129 +            if session_id:                                    
+      130 +                session = self.sessions.get(session_id)       
+      131 +                if session is None:                           
+      132 +                    return self._refused(session_id, UNKNOWN, 
+          +"unknown_conversation")                                       
+      133 +            else:                                             
+      134 +                session = Session(id=uuid.uuid4().hex)        
+      135                  self.sessions[session.id] = session
+      136          if not session.busy.acquire(blocking=False):
+      132 -            return AgentReply(session_id=session.id, status="e
+          -rror", verdict="", error=BUSY,                                
+      133 -                              trace=Trace(model=self.settings.
+          -model))  # fmt: skip                                          
+      137 +            return self._refused(session.id, BUSY, "busy")    
+      138          try:
+      139              return self._answer(session, message)
+      140          finally:
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 5 lines
+      140          finally:
+      141              session.busy.release()
+      142 
+      143 +    def _refused(self, session_id: str, text: str, code: str) 
+          +-> AgentReply:                                                
+      144 +        return AgentReply(session_id=session_id, status="error
+          +", verdict="", error=text, error_code=code,                   
+      145 +                          trace=Trace(model=self.settings.mode
+          +l))  # fmt: skip                                              
+      146 +                                                              
+      147      def _answer(self, session: Session, message: str) -> Agent
+           Reply:
+      148          kept_messages, kept_results = len(session.messages), s
+           et(session.results)
+      149          session.messages.append({"role": "user", "content": me
+           ssage})
+      150          started = time.monotonic()
+      151 +        deadline = started + self.settings.message_time_limit_
+          +seconds                                                       
+      152          usage = dict.fromkeys(USAGE_FIELDS, 0)
+      153          cost: float | None = 0.0
+      154          calls: list[ToolCallRecord] = []
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 7 lines, removed 4 lines
+      162                           latency_ms=int(1000 * (time.monotonic
+           () - started)),
+      163                           usage={**usage, "cost_usd": None if c
+           ost is None else round(cost, 6)})  # fmt: skip
+      164 
+      165 -        def fail(text: str) -> AgentReply:                    
+      165 +        def fail(text: str, code: str) -> AgentReply:         
+      166              del session.messages[kept_messages:]  # the failed
+            turn leaves no trace in the conversation
+      167              for result_id in [r for r in session.results if r
+           not in kept_results]:
+      168                  del session.results[result_id]
+      169 -            return AgentReply(session_id=session.id, status="e
+          -rror", verdict="", error=text, trace=trace())                 
+      169 +            return AgentReply(session_id=session.id, status="e
+          +rror", verdict="", error=text, error_code=code,               
+      170 +                              trace=trace())  # fmt: skip     
+      171 
+      172          for _ in range(self.settings.max_model_calls):
+      173              try:
+      173 -                response = self.client.create(**self.request(s
+          -ession.messages))                                             
+      174 +                response = self._call(self.request(session.mes
+          +sages), deadline)                                             
+      175 +            except _Stop as stop:                             
+      176 +                return fail(stop.text, stop.code)             
+      177              except Exception as error:  # the SDK's typed erro
+           rs; reported by class, never with request contents
+      175 -                return fail(f"The model could not be reached (
+          -{type(error).__name__}).")                                    
+      178 +                return fail(f"The model could not be reached (
+          +{type(error).__name__}).", "model_call_failed")               
+      179              model = getattr(response, "model", model)
+      180              this = {key: getattr(response.usage, key, 0) or 0
+           for key in USAGE_FIELDS}
+      181              for key in USAGE_FIELDS:
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 2 lines, removed 2 lines
+      184              cost = None if cost is None or priced is None else
+            cost + priced
+      185 
+      186              if response.stop_reason == "refusal":
+      187 -                return fail("The model declined to answer this
+          - request.")                                                   
+      187 +                return fail("The model declined to answer this
+          + request.", "declined")                                       
+      188              if response.stop_reason == "max_tokens":
+      189 -                return fail("The model's reply was cut off at 
+          -its length limit.")                                           
+      189 +                return fail("The model's reply was cut off at 
+          +its length limit.", "cut_off")                                
+      190              session.messages.append({"role": "assistant", "con
+           tent": _echo(response.content)})
+      191 
+      192              live = _after_fallback(response.content)
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 25 lines, removed 2 lines
+      200              if not problems:
+      201                  return render(session.id, answer, session.resu
+           lts, trace())
+      202              if repair_problems:
+      203 -                return fail("The answer failed validation twic
+          -e: " + "; ".join(problems))                                   
+      203 +                return fail("The answer failed validation twic
+          +e: " + "; ".join(problems), "invalid_twice")                  
+      204              repair_problems, rejected = problems, text
+      205              session.messages.append({"role": "user", "content"
+           : REPAIR.format(problems="\n- ".join(problems))})
+      206 -        return fail(f"No final answer within {self.settings.ma
+          -x_model_calls} model calls.")                                 
+      206 +        return fail(f"No final answer within {self.settings.ma
+          +x_model_calls} model calls.", "too_many_calls")               
+      207 
+      208 +    def _call(self, request: dict[str, Any], deadline: float) 
+          +-> Any:                                                       
+      209 +        """One model call. Each attempt waits at most the per-
+          +call timeout or the time left in the message,                 
+      210 +        whichever is shorter. A failure the SDK would retry is
+          + retried `max_retries` times, after the wait                  
+      211 +        the API asks for when it fits in the time left; a long
+          +er wait ends the message at once."""                          
+      212 +        s = self.settings                                     
+      213 +        for attempt in range(s.max_retries + 1):              
+      214 +            left = deadline - time.monotonic()                
+      215 +            if left <= 0:                                     
+      216 +                raise _Stop(f"No answer within the {s.message_
+          +time_limit_seconds:g}-second limit for one question. "        
+      217 +                            "Try again in a moment.", "time_li
+          +mit")  # fmt: skip                                            
+      218 +            try:                                              
+      219 +                return self.client.create(timeout=min(s.timeou
+          +t_seconds, left), **request)                                  
+      220 +            except Exception as error:                        
+      221 +                wait = _retry_wait(error)                     
+      222 +                if wait is None or attempt == s.max_retries:  
+      223 +                    raise                                     
+      224 +                if wait >= deadline - time.monotonic():       
+      225 +                    raise _Stop(f"The model could not be reach
+          +ed in time: its API asked to wait {wait:g} seconds "          
+      226 +                                "before a retry, longer than t
+          +his question has left. Try again shortly.",                   
+      227 +                                "model_call_failed") from erro
+          +r  # fmt: skip                                                
+      228 +                time.sleep(wait)                              
+      229 +        raise AssertionError("unreachable: the last attempt re
+          +turns or raises")                                             
+      230 +                                                              
+      231      def _run(self, session: Session, block: Any, calls: list[T
+           oolCallRecord]) -> dict:
+      232          result_id = f"R{len(session.results) + 1}"
+      233          args = block.input if isinstance(block.input, dict) el
+           se {}
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 26 lines
+      249          return answer, check_answer(answer, session.results, s
+           elf.facts, self.hub_names)
+      250 
+      251 
+      252 +def _retry_wait(error: Exception) -> float | None:            
+      253 +    """Seconds to wait before retrying a failed call, or None 
+          +when it is not retried. The SDK's own rule                    
+      254 +    (anthropic/_base_client.py, _should_retry and _calculate_r
+          +etry_timeout): connection errors and timeouts,                
+      255 +    and HTTP 408, 409, 429 and 5xx unless the `x-should-retry`
+          + header says otherwise; the wait the API asks                 
+      256 +    for in `retry-after-ms` or `retry-after` (seconds) is kept
+          +. A `retry-after` given as a date, which the                  
+      257 +    SDK also reads, gets the first back-off instead."""       
+      258 +    import anthropic                                          
+      259 +                                                              
+      260 +    if isinstance(error, anthropic.APIConnectionError):  # inc
+          +ludes APITimeoutError                                         
+      261 +        return FIRST_RETRY_PAUSE                              
+      262 +    if not isinstance(error, anthropic.APIStatusError):       
+      263 +        return None                                           
+      264 +    headers = error.response.headers                          
+      265 +    flag = headers.get("x-should-retry")                      
+      266 +    if flag == "false" or (flag != "true" and error.status_cod
+          +e not in (408, 409, 429) and error.status_code < 500):        
+      267 +        return None                                           
+      268 +    for name, per_second in (("retry-after-ms", 1000), ("retry
+          +-after", 1)):                                                 
+      269 +        try:                                                  
+      270 +            seconds = float(headers.get(name)) / per_second   
+      271 +        except (TypeError, ValueError):                       
+      272 +            continue                                          
+      273 +        if seconds > 0:                                       
+      274 +            return seconds                                    
+      275 +    return FIRST_RETRY_PAUSE                                  
+      276 +                                                              
+      277 +                                                              
+      278  def _last_fallback(content: list) -> int:
+      279      return max((i for i, b in enumerate(content) if b.type ==
+           "fallback"), default=-1)
+      280 
+
+⏺ Now the evaluation report, so it labels the new time-limit error instead of
+  filing it under "other":
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(src/wra/evals/run.py)
+  ⎿  Added 1 line, removed 1 line
+      25  # Plan section 10.3: errors are reported by kind, apart from wr
+          ong answers, and the report says how
+      26  # often each check forced a repair. Both are read from the agen
+          t's own messages.
+      27  ERROR_KINDS = {"could not be reached": "API or network", "decli
+          ned": "declined", "cut off": "cut off",
+      28 -               "still being answered": "busy",                 
+      28 +               "still being answered": "busy", "-second limit f
+         +or one question": "time limit",                                
+      29                 "failed validation twice": "failed validation tw
+          ice", "No final answer within": "call limit",
+      30                 "has no model": "no model (stub)"}  # fmt: skip
+      31  REPAIR_CAUSES = {"numbers are not in the cited": "grounding", "
+          evidence": "evidence", "hubs_ranked": "hub order",
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 259 tests pass (7 new), and I'm now recording this part in the same commit
+  across the assumptions file, decision log, and plan Deviations. · summary
+
+⏺ Update(docs/ASSUMPTIONS.md)
+  ⎿  Added 5 lines
+      74  13. **Choices Claude made in milestones 2 and 3, acknowledged b
+          y the owner and open to change** (listed by the handoff review,
+           2026-11-24): a coverage year counts when the archive holds any
+           row for the hub in it; figures are rounded to two decimals bef
+          ore ranking, ties and bands; a what-if's stability test sits ar
+          ound its changed weights, its rows get bands, and any weight ch
+          ange counts as a what-if; the methodology result is always labe
+          lled high confidence, and the hub list's label comes from the c
+          ounty check; a footnote merges several results to the lowest co
+          nfidence and joins their periods, and a no-data or uncited out-
+          of-scope answer has none; effort medium, 16,000 output tokens p
+          er call and prompt caching on (milestone 5 measures the model a
+          nd effort); evaluation case 6 accepts either of two tools, and
+          a "which hubs" case passes with a single hub; a comparison over
+           two hazards has two orders, and the hub-order check accepts ei
+          ther.
+      75  14. **The band check pairs within each sentence (owner, 2026-11
+          -24, replacing point 12's "first band, first hub").** In each s
+          entence of the verdict, the first band named after a hub, befor
+          e the next hub is named, must be that hub's cited band. The ear
+          lier rule refused a right answer ("No hub is Very high; Minneap
+          olis comes closest"). Band words written in lowercase, and sent
+          ences that name no hub, stay unchecked.
+      76 
+      77 +## Settled 2026-11-24 in milestone 4: how the API and the page 
+         +behave                                                         
+      78 +                                                               
+      79 +1. **A conversation the server does not hold is refused (owner)
+         +.** After a restart the open page still holds its old conversat
+         +ion id. The agent refuses that id without a model call, and the
+         + page keeps the question in the box so one click sends it in a 
+         +new conversation. Rejected: starting a fresh conversation silen
+         +tly under the old id (as built in milestone 3), or under a new 
+         +id with a notice; both let a follow-up reach the model without 
+         +its context.                                                   
+      80 +2. **One message has 90 seconds, all model calls and retries in
+         +cluded (owner; O13).** Each call still waits at most 60 seconds
+         + and gets one retry, but no attempt waits longer than the time 
+         +left in the message, and no call starts after the limit. The re
+         +try moved from the SDK into the agent loop, because SDK 2.13.0 
+         +sleeps as long as a `retry-after` header asks, with no upper bo
+         +und (`anthropic/_base_client.py`, `_calculate_retry_timeout`), 
+         +and the Claude API's rate-limit replies may carry that header (
+         +platform.claude.com/docs/en/api/rate-limits, read 2026-11-24). 
+         +A requested wait that does not fit in the time left ends the me
+         +ssage at once with a plain error. In the two saved evaluation r
+         +uns (19 replies each) messages took a median of 5.1 and 5.5 sec
+         +onds and at most 7.5 and 8.7.                                  
+      81 +                                                               
+      82  ## Assumptions
+      83 
+      84  | # | Assumption | Standing |
+
+⏺ Update(docs/ASSUMPTIONS.md)
+  ⎿  Added 1 line, removed 1 line
+      111  | O9 | How far the `.env` deny rule in `.claude/settings.json`
+            reaches. Tested 2026-11-24 on a placeholder file: the file-re
+           ading tool was refused, and so was `cat .env` in the shell. An
+            indirect read, such as a script that opens the file, was not
+           tested and is not claimed to be blocked. | Settled for direct
+           reads |
+      112  | O10 | Whether Coastal Flood Warnings stay in the flood group
+           . They do not (milestone 2 section, point 3). | Settled in M2
+           |
+      113  | O11 | What the score does where FEMA gives a county no hurri
+           cane figure (Minneapolis, Denver), zero (Kansas City) or its m
+           inimum of 0.01 a year (Chicago). FEMA's figures as given (mile
+           stone 2 section, point 1). | Settled in M2 |
+      114 -| O13 | Two risks the milestone 3 review found for milestone 4
+          -'s API: two requests on one session at the same moment corrupt
+          - its conversation, and one request could wait many minutes (th
+          -e SDK's default is 600 seconds with 2 retries). Settled in the
+          - agent, so the API inherits it: a second message on a conversa
+          -tion still being answered is refused at once with a plain "sti
+          -ll being answered" error (owner's choice), and each model call
+          - gives up after 60 seconds with one retry (owner's choice; mea
+          -sured calls take 4 to 8 seconds). That bounds one call at abou
+          -t two minutes, not one message: a message may make up to 6 cal
+          -ls, so a slow API could hold it, and its conversation's busy l
+          -ock, for about 12 minutes. Whether the API adds a limit per me
+          -ssage is milestone 4's to ask. | Settled 2026-11-24 for one ca
+          -ll; per message, M4 |                                         
+      114 +| O13 | Two risks the milestone 3 review found for milestone 4
+          +'s API: two requests on one session at the same moment corrupt
+          + its conversation, and one request could wait many minutes. Se
+          +ttled in the agent, so the API inherits it: a second message o
+          +n a conversation still being answered is refused at once with 
+          +a plain "still being answered" error (owner's choice); each mo
+          +del call gives up after 60 seconds with one retry (owner's cho
+          +ice); and one message has 90 seconds in all (owner's choice, m
+          +ilestone 4 section, point 2). The milestone 3 reading that 60 
+          +seconds and one retry bounded a call at about two minutes held
+          + only when the API asked for no wait before the retry. | Settl
+          +ed 2026-11-24 |                                               
+      115  | O14 | Verdicts run past the plan's four sentences in 3 of 19
+            replies in the first evaluation run and 6 of 19 in the second
+            (5 or 6 sentences), about one reply in three. An earlier coun
+           t of "2 of 19" came from a script that missed sentences openin
+           g in bold; the handoff review's hand count corrected it. The p
+           rompt now says anything beyond four sentences goes in a caveat
+           . Measured in milestone 5's three-repetition run (owner's choi
+           ce: no extra run now). | M5 |
+      116  | O12 | How to count a drawn-area warning whose county row end
+           ed earlier or later. The earlier of the two ends (milestone 2
+           section, point 2). | Settled in M2 |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the plan's Deviations entry for milestone 4. It opens with these two
+  changes, and I'll extend it as the API and page land.
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 6 lines
+      649  - *The evaluation report breaks errors and repairs down by kin
+           d (section 10.3),* read from each reply's trace, which now als
+           o keeps the rejected first answer and what it failed.
+      650  - *More modules under `agent/` than section 11 listed.* `check
+           s.py` (the checks of section 8.4), `settings.py` and `tooldefs
+           .py` beside `schemas.py`, `prompt.py`, `loop.py`, `grounding.p
+           y` and `render.py`.
+      651 
+      652 +**2026-11-24, milestone 4. What the API build changed.**      
+      653 +                                                              
+      654 +- *The reply names its failure (section 8.5).* A reply with st
+          +atus `error` carries `error_code` (busy, unknown_conversation,
+          + model_call_failed, time_limit, declined, cut_off, invalid_twi
+          +ce, too_many_calls) beside its plain message, so the API can c
+          +hoose an HTTP status without reading the text.                
+      655 +- *The API does not create a conversation for an id it does no
+          +t hold (section 7.1, step 2: "finds or creates the session").*
+          + A null id starts a conversation; an unknown id is refused wit
+          +hout a model call (owner). `docs/ASSUMPTIONS.md`, milestone 4 
+          +section, point 1.                                             
+      656 +- *A time limit per message, and the retry moved from the SDK 
+          +into the loop (section 8.4, "other limits").* 90 seconds per m
+          +essage, all calls included (owner). Decision log, same date.  
+      657 +                                                              
+      658  ---
+      659 
+      660  ## Appendix A. Commands that reproduce today's checks
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The fake clock now replaces the loop module's time import, so none of the
+  timing tests actually sleeps, and the busy test uses a real conversation id
+  since invented ids are refused. Agent part is committed as ac1912e; next I'm
+  adding the two planned API dependencies. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ FastAPI 0.165.0 and Uvicorn 0.54.0 are in. Because JavaScript can't reproduce
+  the command line's number formatting and id-to-name lookup after parsing JSON,
+  the API will send tables and footnotes pre-formatted, and I'm checking the
+  hubs endpoint's list shape next. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the API tests, written before the app. They drive it through FastAPI's
+  test client, on the same scripted fake model the agent tests use.
+
+⏺ Write(tests/test_api.py)
+  ⎿  Wrote 185 lines to tests/test_api.py
+      1 """The HTTP API through FastAPI's test client, on the scripted fa
+        ke model: no network, no cost
+      2 (plan section 13, milestone 4 check)."""
+      3 
+      4 import threading
+      5 from datetime import date
+      6 from typing import get_args
+      7 
+      8 import pytest
+      9 from fastapi.testclient import TestClient
+     … +176 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ It fails as expected, because the API package doesn't exist yet. Now the code.
+  First the command line's cell formatter becomes public, so the API reuses it
+  rather than copying it:
+
+⏺ Update(src/wra/tools/text.py)
+  ⎿  Added 1 line, removed 1 line
+      10 
+      11 
+      12  def display_text(d: Display) -> str:
+      13 -    cells = [d.columns] + [["" if c is None else _cell(c) for c
+         - in row] for row in d.rows]                                    
+      13 +    cells = [d.columns] + [[cell_text(c) for c in row] for row 
+         +in d.rows]                                                     
+      14      widths = [max(len(row[i]) for row in cells) for i in range(
+          len(d.columns))]
+      15      lines = [d.title, ""]
+      16      for n, row in enumerate(cells):
+
+⏺ Update(src/wra/tools/text.py)
+  ⎿  Added 5 lines, removed 2 lines
+      30      ])  # fmt: skip
+      31 
+      32 
+      33 -def _cell(value) -> str:                                       
+      34 -    """Figures as the tool gives them, padded to two decimals: 
+         -2.9 shows as 2.90, FEMA's 0.0115 stays 0.0115."""              
+      33 +def cell_text(value) -> str:                                   
+      34 +    """Figures as the tool gives them, padded to two decimals: 
+         +2.9 shows as 2.90, FEMA's 0.0115 stays 0.0115.                 
+      35 +    The command line and the chat page both show cells this way
+         +; an empty cell is blank."""                                   
+      36 +    if value is None:                                          
+      37 +        return ""                                              
+      38      if isinstance(value, float):
+      39          return f"{value:.2f}" if round(value, 2) == value else
+          str(value)
+      40      return str(value)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Write(src/wra/api/app.py)
+  ⎿  Wrote 77 lines to src/wra/api/app.py
+       1 """The HTTP API and the chat page it serves (plan sections 7.1 a
+         nd 8.5).
+       2 
+       3 POST /api/chat answers one message through the agent. GET /api/h
+         ubs lists the hubs and GET /healthz says the
+       4 server is up, neither calling the model. GET / is the page. One
+         agent per process holds every conversation
+       5 in memory. The endpoints are plain functions, so FastAPI runs ea
+         ch request in its thread pool; the agent's
+       6 lock per conversation keeps two messages on one conversation apa
+     … +72 lines (~3 KB) (ctrl+o to expand)
+
+⏺ Now the page: one file, plain JavaScript, no packages.
+
+⏺ Write(src/wra/api/static/index.html)
+  ⎿  Wrote 277 lines to src/wra/api/static/index.html
+       1 <!doctype html>
+       2 <html lang="en">
+       3 <head>
+       4 <meta charset="utf-8">
+       5 <meta name="viewport" content="width=device-width, initial-scale
+         =1">
+       6 <title>Hub Weather Risk</title>
+       7 <style>
+       8   :root {
+       9     --bg: #fafaf8; --surface: #ffffff; --text: #1d1d1b; --muted:
+     … +269 lines (~12 KB) (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 25 API tests pass, and I'm tidying three spots in the trace panel and the
+  page header before I make the one-line prompt change for bold. · summary
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 5 lines, removed 1 line
+      170      t.repair_problems.forEach((p) => problems.append(el("div",
+            null, p)));
+      171      item("First answer failed", problems);
+      172    }
+      173 -  if (t.rejected_answer) item("First answer", el("dd").appendC
+          -hild(el("pre", null, t.rejected_answer)).parentNode);         
+      173 +  if (t.rejected_answer) {                                    
+      174 +    const first = el("dd");                                   
+      175 +    first.append(el("pre", null, t.rejected_answer));         
+      176 +    item("First answer", first);                              
+      177 +  }                                                           
+      178    item("Time", el("dd", null, t.latency_ms + " ms"));
+      179    const usage = el("dd");
+      180    Object.entries(t.usage).forEach(([key, value]) => usage.appe
+           nd(el("div", null, key + ": " + value)));
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 5 lines, removed 5 lines
+      142  }
+      143 
+      144  function footnoteBlock(f) {
+      145 -  const box = el("div", "footnote");                          
+      146 -  box.append(el("p", null, "Data: " + f.sources.join("; ") + "
+          -. Period: " + f.period + ". Data as of " +                    
+      147 -                f.data_as_of + "."));                         
+      148 -  box.append(el("p", null, "Confidence: " + f.confidence + ". 
+          -" + f.confidence_reason));                                    
+      149 -  return box;                                                 
+      145 +  const block = el("div", "footnote");                        
+      146 +  block.append(el("p", null, "Data: " + f.sources.join("; ") +
+          + ". Period: " + f.period + ". Data as of " +                  
+      147 +                  f.data_as_of + "."));                       
+      148 +  block.append(el("p", null, "Confidence: " + f.confidence + "
+          +. " + f.confidence_reason));                                  
+      149 +  return block;                                               
+      150  }
+      151 
+      152  function traceBlock(reply) {
+
+⏺ Update(src/wra/api/static/index.html)  ⎿  Added 2 lines, removed 2 lines
+      66      <div>
+      67        <h1>Hub weather risk</h1>
+      68        <p>Ask which hubs are most exposed to winter storms, floo
+          ds, severe storms and hurricanes, how two hubs
+      69 -        compare, or why a hub ranks where it does. Every figure
+         - comes from the stored data, with its sources,                 
+      70 -        period and confidence shown under the answer.</p>      
+      69 +        compare, or why a hub ranks where it does. Figures come
+         + from stored weather records, and an answer                    
+      70 +        that gives figures shows their sources, period and conf
+         +idence.</p>                                                    
+      71      </div>
+      72      <button id="new" type="button">New conversation</button>
+      73    </header>
+
+⏺ Update(src/wra/agent/prompt.py)
+  ⎿  Added 2 lines, removed 1 line
+      43  question cannot be answered without the user saying more.
+      44  - verdict: at most four short sentences of Markdown; anything m
+          ore goes in a caveat. No tables, no lists of \
+      45  every figure: the page shows the cited results' tables with the
+          ir notes, sources, period and confidence beside \
+      46 -your verdict, so do not repeat them.                           
+      46 +your verdict, so do not repeat them. In the verdict and the cav
+         +eats, **bold** is the only formatting the page \               
+      47 +shows; any other Markdown appears as typed.                    
+      48  - Name a band exactly as the tools write it: Low, Moderate, Hig
+          h, Very high.
+      49  - evidence: the result_ids (R1, R2, ...) of the results whose t
+          ables the page should show, in order. Required \
+      50  when status is "answered".
+
+⏺ I'll run the bold renderer against hostile inputs next, using Node if it's
+  installed here, after pulling the function out of the page. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Safe on every case. Markup in the text comes out as plain characters, and the
+  only tag ever produced is <strong>. Now wra serve. First, how the existing
+  command-line tests are written:
+
+  Read 1 file, listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(src/wra/cli.py)
+  ⎿  Added 2 lines, removed 2 lines
+      1  """Command-line entry point.
+      2 
+      3 -Subcommands are added one milestone at a time (docs/PLAN.md, sec
+        -tion 13).                                                       
+      4 -So far: ingest, data-report, rank, ask, chat, eval. To come: ser
+        -ve.                                                             
+      3 +Subcommands, added one milestone at a time (docs/PLAN.md, sectio
+        +n 13):                                                          
+      4 +ingest, data-report, rank, ask, chat, eval, serve.              
+      5  """
+      6 
+      7  import argparse
+
+⏺ Update(src/wra/cli.py)
+  ⎿  Added 11 lines
+      61                            help="claude: the real agent, paid AP
+          I calls (default); stub: answers nothing")
+      62      evaluate.add_argument("--reps", type=int, default=1, metava
+          r="N", help="repetitions per case (default 1)")
+      63 
+      64 +    serve = commands.add_parser(                               
+      65 +        "serve",                                               
+      66 +        help="run the chat page and its API (each question is a
+         + paid API call)",                                              
+      67 +        description="Serve the chat page at / and the API under
+         + /api from one process; conversations live in "                
+      68 +        "memory until the server stops. Needs ANTHROPIC_API_KEY
+         + in .env.",                                                    
+      69 +    )                                                          
+      70 +    serve.add_argument("--host", default="127.0.0.1",          
+      71 +                       help="address to listen on (default 127.
+         +0.0.1: this machine only, so nobody else can spend "           
+      72 +                            "the API credit)")  # fmt: skip    
+      73 +    serve.add_argument("--port", type=int, default=8000, help="
+         +port to listen on (default 8000)")                             
+      74 +                                                               
+      75      args = parser.parse_args(argv)
+      76      try:
+      77          if args.command == "ingest":
+
+⏺ Update(src/wra/cli.py)
+  ⎿  Added 2 lines
+      86              return _chat()
+      87          if args.command == "eval":
+      88              return _eval(args.agent, args.reps)
+      89 +        if args.command == "serve":                            
+      90 +            return _serve(args.host, args.port)                
+      91      except (SourceError, NoDatabase) as error:
+      92          print(f"error: {error}", file=sys.stderr)
+      93          return 1
+
+⏺ Update(src/wra/cli.py)
+  ⎿  Added 15 lines
+      193      return 0
+      194 
+      195 
+      196 +def _serve(host: str, port: int) -> int:                      
+      197 +    import uvicorn                                            
+      198 +                                                              
+      199 +    from wra.agent.loop import ClaudeAgent                    
+      200 +    from wra.api.app import create_app                        
+      201 +    from wra.tools.context import load_context                
+      202 +                                                              
+      203 +    ctx = load_context()                                      
+      204 +    app = create_app(ClaudeAgent(ctx), ctx)  # one agent for t
+          +he process: every conversation lives in it                    
+      205 +    print(f"Chat page at http://{host}:{port}/ . Each question
+          + is a paid API call. Ctrl-C stops the server.",               
+      206 +          flush=True)  # fmt: skip                            
+      207 +    uvicorn.run(app, host=host, port=port)                    
+      208 +    return 0                                                  
+      209 +                                                              
+      210 +                                                              
+      211  def _print_reply(reply) -> None:
+      212      from wra.tools.text import display_text, footnote_text
+      213 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 285 tests pass. I'm running a smoke test of the live server next, covering
+  health, hubs, the page, a malformed question and an unknown conversation, all
+  without a paid model call. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All endpoints behave correctly on the live server, including the 404 for the
+  unknown conversation, so I'm shutting the server down. Next I'm reading the
+  README's run section and updating the records. · summary
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ The README's paid-calls line wrongly says "These two commands" above three
+  commands, which I'll fix. Then I'll check that FastAPI's generated API
+  reference page is actually served. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(README.md)
+  ⎿  Added 5 lines, removed 2 lines
+      18  uv run pytest -q
+      19  ```
+      20 
+      21 -The agent needs an Anthropic API key. Copy `.env.example` to `.
+         -env` and fill in `ANTHROPIC_API_KEY`; `.env` is git-ignored. Th
+         -ese two commands make paid API calls:                          
+      21 +The agent needs an Anthropic API key. Copy `.env.example` to `.
+         +env` and fill in `ANTHROPIC_API_KEY`; `.env` is git-ignored. Th
+         +ese commands make paid API calls:                              
+      22 
+      23  ```
+      24 +uv run wra serve           # the chat page at http://127.0.0.1:
+         +8000/ and its API; every question is paid                      
+      25  uv run wra ask "Which hubs in the Midwest are most exposed to w
+          inter disruption?"
+      26  uv run wra chat            # a conversation in the terminal, fo
+          llow-ups included
+      27  uv run wra eval            # all fourteen cases through the rea
+          l agent; 0.53 USD at list price on 2026-11-24
+      28  ```
+      29 
+      29 -The model and its effort level are in `config/agent.toml`; `WRA
+         -_MODEL` and `WRA_EFFORT` override them.                        
+      30 +The model and its effort level are in `config/agent.toml`; `WRA
+         +_MODEL` and `WRA_EFFORT` override them. One question gets at mo
+         +st 90 seconds, all model calls included.                       
+      31 
+      32 +`wra serve` listens on this machine only (127.0.0.1, port 8000)
+         +; `--host` and `--port` change that. The page sends `POST /api/
+         +chat` with `{"session_id": null, "message": "..."}` and gets ba
+         +ck the validated reply; sending that reply's `session_id` with 
+         +the next message makes it a follow-up. Every reply has the same
+         + shape. Its HTTP status is 200 unless it is an error: 409 while
+         + the conversation's last question is still being answered, 404 
+         +for a conversation the server no longer holds (after a restart)
+         +, 502 when the model could not give a validated answer. A malfo
+         +rmed request gets 422. `GET /api/hubs` lists the hubs and `GET 
+         +/healthz` checks the server; neither calls the model. FastAPI's
+         + generated reference for the API is at `/docs`.                
+      33 +                                                               
+      34  `wra rank` takes `overall`, `winter`, `flood`, `severe_storm` o
+          r `hurricane`, an optional `--region` (`midwest`, `south`, `wes
+          t`) and `--top N`. None of these commands uses the network. The
+           scoring rules (weights, warning types, bands, confidence thres
+          holds) are in `config/scoring.toml`.
+      35 
+      36  `uv run wra ingest --refresh` fetches everything again from the
+           public services first (48 requests, about 90 seconds). It is n
+          ot needed to run the project: the responses fetched on 2026-11-
+          24 are stored under `data/raw/`.
+
+⏺ Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      2 
+      3  An agent that helps a logistics company's analysts decide which
+         distribution hubs are most exposed to weather disruption.
+      4 
+      5 -**Status: the agent answers questions from the command line (mil
+        -estone 3 of 5).** Twelve hubs are loaded from three public sourc
+        -es into a local database and ranked by expected disruption days 
+        -a year, with code-computed confidence. An agent on Claude Opus 5
+        -.5 answers questions by calling six tools; code validates every 
+        -answer, checks each number against the tool results and builds t
+        -he tables. The first evaluation run passed 12 of 14 cases; two c
+        -hecks that failed right answers were corrected, a review tighten
+        -ed the answer checks, and the run on commit `097adfb` passed 14 
+        -of 14 with no repairs (see [docs/ASSUMPTIONS.md](docs/ASSUMPTION
+        -S.md)). Later commits changed the prompt and the client settings
+        -; no paid run has been made on them yet. The API and the chat pa
+        -ge are not built yet. The design is in [docs/PLAN.md](docs/PLAN.
+        -md); what the data showed and what was decided along the way are
+        - in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIO
+        -NS.md](docs/DECISIONS.md).                                      
+      5 +**Status: the chat page and its API are built (milestone 4 of 5)
+        +; their live check with real questions is pending.** Twelve hubs
+        + are loaded from three public sources into a local database and 
+        +ranked by expected disruption days a year, with code-computed co
+        +nfidence. An agent on Claude Opus 5.5 answers questions by calli
+        +ng six tools; code validates every answer, checks each number ag
+        +ainst the tool results and builds the tables. The first evaluati
+        +on run passed 12 of 14 cases; two checks that failed right answe
+        +rs were corrected, a review tightened the answer checks, and the
+        + run on commit `097adfb` passed 14 of 14 with no repairs (see [d
+        +ocs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)). Later commits changed
+        + the prompt and the client settings; no paid run has been made o
+        +n them yet. The API and the chat page are not built yet. The des
+        +ign is in [docs/PLAN.md](docs/PLAN.md); what the data showed and
+        + what was decided along the way are in [docs/ASSUMPTIONS.md](doc
+        +s/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).   
+      6 
+      7  ## Run it
+      8 
+
+⏺ Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      2 
+      3  An agent that helps a logistics company's analysts decide which
+         distribution hubs are most exposed to weather disruption.
+      4 
+      5 -**Status: the chat page and its API are built (milestone 4 of 5)
+        -; their live check with real questions is pending.** Twelve hubs
+        - are loaded from three public sources into a local database and 
+        -ranked by expected disruption days a year, with code-computed co
+        -nfidence. An agent on Claude Opus 5.5 answers questions by calli
+        -ng six tools; code validates every answer, checks each number ag
+        -ainst the tool results and builds the tables. The first evaluati
+        -on run passed 12 of 14 cases; two checks that failed right answe
+        -rs were corrected, a review tightened the answer checks, and the
+        - run on commit `097adfb` passed 14 of 14 with no repairs (see [d
+        -ocs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)). Later commits changed
+        - the prompt and the client settings; no paid run has been made o
+        -n them yet. The API and the chat page are not built yet. The des
+        -ign is in [docs/PLAN.md](docs/PLAN.md); what the data showed and
+        - what was decided along the way are in [docs/ASSUMPTIONS.md](doc
+        -s/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).   
+      5 +**Status: the chat page and its API are built (milestone 4 of 5)
+        +; their live check with real questions is pending.** Twelve hubs
+        + are loaded from three public sources into a local database and 
+        +ranked by expected disruption days a year, with code-computed co
+        +nfidence. An agent on Claude Opus 5.5 answers questions by calli
+        +ng six tools; code validates every answer, checks each number ag
+        +ainst the tool results and builds the tables. The first evaluati
+        +on run passed 12 of 14 cases; two checks that failed right answe
+        +rs were corrected, a review tightened the answer checks, and the
+        + run on commit `097adfb` passed 14 of 14 with no repairs (see [d
+        +ocs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)). Later commits changed
+        + the prompt and the client settings; no paid run has been made o
+        +n them yet. The API and the page are tested on a scripted stand-
+        +in for the model, which makes no paid call. The design is in [do
+        +cs/PLAN.md](docs/PLAN.md); what the data showed and what was dec
+        +ided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS
+        +.md) and [docs/DECISIONS.md](docs/DECISIONS.md).                
+      6 
+      7  ## Run it
+      8 
+
+⏺ Now the assumptions points for the API and page, the FEMA open point (the
+  footer now carries the notice), the decision entry for the HTTP codes, and the
+  rest of the Deviations entry:
+
+⏺ Update(docs/ASSUMPTIONS.md)
+  ⎿  Added 3 lines
+      78 
+      79  1. **A conversation the server does not hold is refused (owner)
+          .** After a restart the open page still holds its old conversat
+          ion id. The agent refuses that id without a model call, and the
+           page keeps the question in the box so one click sends it in a
+          new conversation. Rejected: starting a fresh conversation silen
+          tly under the old id (as built in milestone 3), or under a new
+          id with a notice; both let a follow-up reach the model without
+          its context.
+      80  2. **One message has 90 seconds, all model calls and retries in
+          cluded (owner; O13).** Each call still waits at most 60 seconds
+           and gets one retry, but no attempt waits longer than the time
+          left in the message, and no call starts after the limit. The re
+          try moved from the SDK into the agent loop, because SDK 2.13.0
+          sleeps as long as a `retry-after` header asks, with no upper bo
+          und (`anthropic/_base_client.py`, `_calculate_retry_timeout`),
+          and the Claude API's rate-limit replies may carry that header (
+          platform.claude.com/docs/en/api/rate-limits, read 2026-11-24).
+          A requested wait that does not fit in the time left ends the me
+          ssage at once with a plain error. In the two saved evaluation r
+          uns (19 replies each) messages took a median of 5.1 and 5.5 sec
+          onds and at most 7.5 and 8.7.
+      81 +3. **HTTP status: 409 for a busy conversation, 502 for any othe
+         +r failure (owner).** Every reply the agent gives has the same b
+         +ody; it is sent as 200 unless its status is `error`. A conversa
+         +tion the server does not hold is 404 (point 1), and a malformed
+         + request is 422 and reaches no model. Rejected: 200 for every r
+         +eply, failures included (the server log and `curl --fail` would
+         + not show a failure); one status for every failure (busy and mo
+         +del-down would look the same).                                 
+      82 +4. **The page shows bold and no other Markdown (owner).** In th
+         +e two saved evaluation runs, bold was the only Markdown the mod
+         +el wrote (13 and 15 of 19 verdicts; no lists, links, italics or
+         + line breaks; six verdicts read by hand agreed). The page escap
+         +es all text and then turns `**...**` into bold, in the verdict 
+         +and the caveats; anything else shows as typed, and the system p
+         +rompt says so. Rejected: HTML built by a Python Markdown packag
+         +e and a cleaner on the server (two dependencies and a second ve
+         +rdict field); plain text with the asterisks stripped.          
+      83 +5. **Choices Claude made in milestone 4, reported to the owner 
+         +and open to change.** `wra serve` listens on 127.0.0.1, port 80
+         +00, so only this machine can spend the API credit; `--host` and
+         + `--port` change it. A message is 1 to 2,000 characters after t
+         +rimming. The API sends table cells as text by the command line'
+         +s rule (2.9 as 2.90, FEMA's 0.0115 as given) and sources by nam
+         +e, because the page cannot tell 26 from 2.0 once the JSON is pa
+         +rsed; the page then formats no figure. "New conversation" clear
+         +s the page; reloading it also starts a new conversation. FastAP
+         +I's generated API reference stays at `/docs`.                  
+      84 
+      85  ## Assumptions
+      86 
+
+⏺ Update(docs/ASSUMPTIONS.md)
+  ⎿  Added 1 line, removed 1 line
+      104  | # | Open point | Settled in |
+      105  |---|---|---|
+      106  | O1 | The NOAA station service (ACIS) publishes no usage term
+           s on the two documentation pages read on 2026-11-24. The owner
+            accepted committing its raw responses to this repository on 2
+           026-11-24. The terms themselves remain unconfirmed. | Accepted
+            by owner; terms still open |
+      107 -| O2 | Whether FEMA's data may be used for a company's plannin
+          -g, and what FEMA requires in return. Read on 2026-11-24 in the
+          - licence on the map service the ingest calls (ArcGIS item `394
+          -85e8035d446a5bff03259508ae355`, owner FEMA_NationalRiskIndex):
+          - "Data accessed through the National Risk Index dataset API or
+          - downloadable datasets do not include controls over its end us
+          -e", and "The National Risk Index data are meant for planning p
+          -urposes only." Users must state: "This product uses the Federa
+          -l Emergency Management Agency's National Risk Index dataset AP
+          -I or downloadable datasets but is not endorsed by FEMA. The Fe
+          -deral Government or FEMA cannot vouch for the data or analyses
+          - derived from these data after the data have been retrieved fr
+          -om the Agency's website(s)." They should also cite the endpoin
+          -t, the dataset version and the retrieval date. The README now 
+          -carries all of it; the chat page footer in milestone 4 must ca
+          -rry the notice too. The FAQ sentence a checker reported ("may 
+          -be used for commercial purposes") is still unread: FEMA's serv
+          -er refused the download (HTTP 403). | Settled 2026-11-24 for t
+          -he licence; the page footer is M4 |                           
+      107 +| O2 | Whether FEMA's data may be used for a company's plannin
+          +g, and what FEMA requires in return. Read on 2026-11-24 in the
+          + licence on the map service the ingest calls (ArcGIS item `394
+          +85e8035d446a5bff03259508ae355`, owner FEMA_NationalRiskIndex):
+          + "Data accessed through the National Risk Index dataset API or
+          + downloadable datasets do not include controls over its end us
+          +e", and "The National Risk Index data are meant for planning p
+          +urposes only." Users must state: "This product uses the Federa
+          +l Emergency Management Agency's National Risk Index dataset AP
+          +I or downloadable datasets but is not endorsed by FEMA. The Fe
+          +deral Government or FEMA cannot vouch for the data or analyses
+          + derived from these data after the data have been retrieved fr
+          +om the Agency's website(s)." They should also cite the endpoin
+          +t, the dataset version and the retrieval date. The README carr
+          +ies all of it, and the chat page's footer carries the notice w
+          +ord for word (a test compares the two). The FAQ sentence a che
+          +cker reported ("may be used for commercial purposes") is still
+          + unread: FEMA's server refused the download (HTTP 403). | Sett
+          +led 2026-11-24 |                                              
+      108  | O3 | Whether FEMA's hurricane event count includes weaker tr
+           opical storms. It does (point 3 of the milestone 1 section). T
+           he 5.0 weight reads as days per tropical storm or hurricane (A
+           5). | Settled in M1 |
+      109  | O4 | Whether tool calls and a structured final answer combin
+           e in one request the way the Claude API reference describes. T
+           hey do, on `claude-opus-5-5` with SDK 2.13.0, and so does the
+           server-side refusal fallback: the spike on 2026-11-24 made a s
+           trict `rank_hubs` call, then returned a schema-valid final ans
+           wer, in two model calls, 11.3 seconds and 3,717 input and 723
+           output tokens. It also showed the model inventing an evidence
+           id it could not see, which the loop's design now prevents (dec
+           ision log). | Settled in M3 |
+      110  | O5 | The size of the committed raw responses. Measured: 7.9
+           MB on disk; the whole repository is 2.15 MiB in git (point 10)
+           . Kept in full. | Settled in M1 |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 4 lines
+      654  - *The reply names its failure (section 8.5).* A reply with st
+           atus `error` carries `error_code` (busy, unknown_conversation,
+            model_call_failed, time_limit, declined, cut_off, invalid_twi
+           ce, too_many_calls) beside its plain message, so the API can c
+           hoose an HTTP status without reading the text.
+      655  - *The API does not create a conversation for an id it does no
+           t hold (section 7.1, step 2: "finds or creates the session").*
+            A null id starts a conversation; an unknown id is refused wit
+           hout a model call (owner). `docs/ASSUMPTIONS.md`, milestone 4
+           section, point 1.
+      656  - *A time limit per message, and the retry moved from the SDK
+           into the loop (section 8.4, "other limits").* 90 seconds per m
+           essage, all calls included (owner). Decision log, same date.
+      657 +- *HTTP status (section 8.5 named none).* 200 for an answer, 4
+          +09 busy, 404 unknown conversation, 502 any other failure, 422 
+          +a malformed request; the body is the reply in every case (owne
+          +r). Decision log, same date.                                  
+      658 +- *The page's figures are formatted by the server (section 8.5
+          +).* The API sends table cells as text by the command line's ru
+          +le and sources by name, so the page formats nothing; the reply
+          + the agent returns to the command line and the evaluation keep
+          +s its numbers. The plan's example already showed cells as text
+          +.                                                             
+      659 +- *Bold is the only Markdown the page shows (section 8.3 said 
+          +"Markdown").* The system prompt now says so. `docs/ASSUMPTIONS
+          +.md`, milestone 4 section, point 4.                           
+      660 +- *No `api/sessions.py` (section 11).* The conversations alrea
+          +dy live in the agent (milestone 3), so `src/wra/api/` holds `a
+          +pp.py` and `static/index.html` only.                          
+      661 
+      662  ---
+      663 
+
+⏺ The decision entry describes failures in "the final end-to-end script," but
+  that script isn't built yet (it's milestone 5), so I'm reworking it as planned
+  use rather than a current fact. · summary
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ My commit message wrongly claims 284 passing tests and credits the server
+  check to this commit; I'll stash the uncommitted changes, rerun the suite on
+  this commit alone, and restore them. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+⏺ The 284 holds on this exact commit, so the count is accurate now. I'm moving
+  the server check to the next commit, and since this one was never pushed,
+  amending it is safe. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Three commits are in and the 285 tests pass, but the suite ran with the next
+  commit's files still uncommitted, which is why the rule-6 wording in CLAUDE.md
+  needs tightening; I won't edit it without your go. Next I'm starting the
+  independent Opus review of the milestone's commits against the plan. · summary
+
+⏺ Agent(Review milestone 4 diff)
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ The review is running in the background. While it works, I'll set up the paid
+  check. To estimate its cost from data rather than memory, here's what the
+  saved evaluation runs actually spent:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Those match the README's figure: 0.53 USD for 19 replies, about 0.03 USD per
+  reply, at most 0.05.
+
+  One approval needed (a paid call, rule 12). The milestone's second check uses
+  the real model: one question by curl, then a follow-up on the same
+  conversation. It shows the second answer builds on the first. That's 2
+  messages, about 0.06 USD at list price, at most about 0.10. API spend so far
+  is about 1.13 USD.
+
+  I'd run it after the review comes back, so any fixes land first and the paid
+  check runs once on the final code. Okay to make those two calls then?
+
+  Meanwhile, the review is still running, and I'll report what it finds once
+  I've checked each finding against the files.
+
+✻ Churned for 19m 29s · done 4:43 PM
+
+› Message from general-purpose
+  Review of 717e04b..HEAD (ac1912e, 427909f, 3dbabd5). `uv run pytest -q`: 285
+  passed. Nothing was edited, committed or pushed. No paid call was made.
+  Scratch scripts are in /private/tmp/claude-501/-Users-doronreiffman-Projects-w
+  eather-risk-agent/8995057d-27f5-43ec-8bed-0076734487ea/scratchpad/ (scen.py,
+  scen2.py). They use the tests' fake model and fake clock.
+
+  Summary: no security hole, and the owner's status mapping is implemented as
+  decided. There are three real bugs. The most important is that reaching the
+  90-second limit almost never produces the `time_limit` reply, and one path
+  tells the user something false.
+
+  ## Bugs, most severe first
+
+  **1. Hitting the 90 s limit gives a false message and the wrong code.
+  `time_limit` is practically unreachable.**
+  - Where: src/wra/agent/loop.py:221-227, together with `_retry_wait` at
+  loop.py:260-261.
+  - Why: each attempt's timeout is cut to the time left. So a message reaches
+  the limit by having a call time out at the deadline.
+  - Case A, a call times out with less than 0.5 s left (or a connection error
+  does). `_retry_wait` returns the loop's own 0.5 s pause, and `_call` raises
+  `_Stop("The model could not be reached in time: its API asked to wait 0.5
+  seconds before a retry, longer than this question has left.",
+  "model_call_failed")`. The API asked for nothing.
+    - Confirmed by running: a tool call taking 85 s, then a call with
+  timeout=5.0 that times out, gives exactly that text with code
+  `model_call_failed`.
+  - Case B, the retry itself times out at the deadline. The reply is "could not
+  be reached (APITimeoutError)", also `model_call_failed`.
+  - `time_limit` comes out only when a call succeeds at or after the deadline. A
+  client that honours its timeout does not do that.
+  - The test `test_no_model_call_starts_after_the_message_time_limit`
+  (tests/test_agent_loop.py) reaches `time_limit` only because its fake takes 45
+  s on a call whose timeout was 40 s.
+  - Effects:
+    - The user reads a false reason.
+    - The eval files these under "API or network", never under the new "time
+  limit" kind (src/wra/evals/run.py:27-28).
+    - The HTTP status is 502 either way, so the owner's mapping is unaffected.
+  - How sure: confirmed by running.
+
+  **2. "New conversation" during a pending question silently restores the old
+  conversation.**
+  - Where: src/wra/api/static/index.html:274-278 against 246-255.
+  - Scenario: ask Q1, then click "New conversation" while "Working" shows. The
+  click sets `sessionId = null` and clears the log. Q1's reply then lands in the
+  cleared log, and `sessionId = reply.session_id` puts the old id back.
+  - Result: the next question is sent as a follow-up in the old conversation,
+  while the page looks new. On an error reply, Q1 also goes back into the box.
+  - The button is not disabled while working.
+  - How sure: by reading.
+
+  **3. An unexpected exception in the agent gives 500, not 502, and the failed
+  turn stays in the conversation.**
+  - Where: src/wra/api/app.py:61-63 has no catch-all. In loop.py, `fail()` runs
+  only on the paths it names.
+  - What can raise: a bug in `check_answer` or `render`, code in `_run` outside
+  its try, or a response with no `usage`.
+  - Confirmed by running: forcing `check_answer` to raise gives HTTP 500 with
+  body "Internal Server Error". The session keeps
+  `['user','assistant','user','assistant']` and R1. The lock is released.
+  - The unvalidated answer then stays in the history the model sees on a
+  follow-up. The page shows "The server did not accept the question (HTTP 500)".
+  - Worse case, by reading: an exception after the assistant's tool_use is
+  appended but before its tool_result would leave a conversation the API rejects
+  on every later message (400, not retried, so 502 for good). I found no
+  current trigger for that.
+  - How sure: confirmed for the 500 and the kept turn. Low likelihood, because
+  it needs a code bug.
+
+  **4. The 90 s limit is approximate: one attempt can run past the time left.**
+  - Where: loop.py:219 passes a float `timeout`. httpx2 applies it to each phase
+  (connect, write, read, pool) and to each read, not as a total
+  (httpx2/_config.py, `Timeout`).
+  - Effect: an attempt given `left` seconds can spend connect time plus read
+  time, each up to `left`. In practice the overrun is about the connection setup
+  time.
+  - These texts claim a hard bound: ASSUMPTIONS milestone 4 point 2 ("no attempt
+  waits longer than the time left"), the README ("at most 90 seconds"), and the
+  ac1912e message.
+  - How sure: by reading. Low severity.
+
+  ## Nits
+
+  **Retry rule (`_retry_wait`, loop.py:268-274):**
+  - The docstring says it follows the SDK's rule, but it differs in one case.
+  The SDK takes `retry-after-ms` whenever it parses, even when it is 0 or less,
+  and then uses its back-off (_base_client.py:890-894, 923). The loop skips it
+  and reads `retry-after`.
+    - Confirmed: `retry-after-ms: 0` with `retry-after: 30` makes the loop sleep
+  30 s, where the SDK would wait about 0.4-0.5 s.
+  - A retry is made with any time left. Confirmed: a 500 at 89.4 s, then the 0.5
+  s pause, then a retry with timeout=0.1, which is reported as APITimeoutError
+  instead of the 500.
+
+  **Records:**
+  - PLAN.md:657 says "the body is the reply in every case". That is false for
+  422: FastAPI sends `{"detail": ...}`, and the page relies on that
+  (index.html:239, `!reply.trace`).
+  - ASSUMPTIONS milestone 4 point 5: "the page cannot tell 26 from 2.0 once the
+  JSON is parsed" is false as written. It presumably means 26 from 26.0, or 2
+  from 2.0.
+  - "with no upper bound" (loop.py:54, ASSUMPTIONS point 2, DECISIONS): the SDK
+  caps the wait at 4,294,967 s (_base_client.py:926). That is about 49.7 days,
+  so the point holds and only the wording is off.
+  - The `_Stop` docstring (loop.py:77) says "without an error from the model's
+  API". The retry-after stop is raised on an API error (429).
+  - index.html:92-93 says trace values are written "exactly as the server sends
+  them". Tool inputs go through `JSON.stringify`, so a what-if value 2.0 shows
+  as 2. The value is equal; the text differs.
+  - ASSUMPTIONS points 2 and 4 cite "the two saved evaluation runs" without
+  naming them, and both are git-ignored (.gitignore:21). The .gitignore says a
+  run that a results document cites is added on purpose. The figures themselves
+  are right; I recomputed them:
+
+  | Run | Replies | Median | Max | Verdicts with bold |
+  |---|---|---|---|---|
+  | 20261124T125737Z-claude | 19 | 5.53 s | 8.74 s | 13 |
+  | 20261124T133703Z-claude | 19 | 5.11 s | 7.48 s | 15 |
+
+    My scan found no other Markdown in either run's verdicts or caveats.
+  - PLAN.md:660: src/wra/api/ also holds `__init__.py`.
+
+  **API:**
+  - `session_id: ""` starts a new conversation (200), not 404. Confirmed.
+  - An unknown id of any length is echoed back. Confirmed: a 100,000-character
+  id came back whole.
+  - The page says "did not accept" for a 500.
+
+  ## Tests
+
+  - **No test for most of `_retry_wait`'s branches.** Untested: an SDK
+  400/401/404 not retried, `x-should-retry` true or false, a 5xx retried,
+  `retry-after-ms`. The only SDK errors tested are APITimeoutError and a 429
+  with `retry-after`. `test_an_api_failure_is_an_error_naming_only_its_kind`
+  raises the builtin ConnectionError, so its "no retry" goes through the
+  not-an-SDK-error branch.
+  - **`test_no_model_call_starts_after_the_message_time_limit`** uses a fake
+  call that runs past its own timeout (bug 1).
+  - **`test_the_real_client_uses_the_configured_timeout_and_retries`:** the name
+  is stale. It now asserts max_retries=0 whatever the config says (config has
+  1).
+  - **Untested behaviour:** the bold renderer and its escaping (the commit says
+  it was checked by hand in Node); the page's session handling (404 reset, "New
+  conversation"); an agent exception through the API.
+  - The other new tests assert what their names say.
+
+  ## Checked and fine
+
+  - **Status mapping:** 200, 409, 404, 502 and 422 behave as the owner decided
+  (app.py:28, 38). `for_page` sends cells by the command line's rule
+  (`cell_text`) and sources by name.
+  - **XSS:** none found. The only `innerHTML` is `rich()`, which escapes `& < >
+  " '` first, then wraps `**…**`. Everything else is set as plain text.
+  - **Thread safety:** ToolContext is read-only after it is built, the sessions
+  dict is under its lock, and each conversation has its own lock. On every
+  `fail()` and `_Stop` path the turn is removed and the lock released.
+  - **Unknown id:** refused with no model call and no session created.
+  - **Page on errors:** it handles 404, 409, 422, 502 and a server that is down
+  as designed. A 409 cannot arise from one tab.
+  - **Commit claims:**
+    - Test counts: 259 on ac1912e, 284 on 427909f, 285 on HEAD. I ran each
+  commit from `git archive` into the scratchpad with its own venv.
+    - Versions: fastapi 0.165.0 and uvicorn 0.54.0 are in uv.lock.
+    - SDK facts: 2.13.0, its retry statuses, INITIAL_RETRY_DELAY 0.5.
+    - The rate-limit page (platform.claude.com/docs/en/api/rate-limits, read
+  today) says a 429 may carry `retry-after` in seconds, though not every 429
+  does.
+  - **Not checkable from the repository:** the local `wra serve` curl run
+  (3dbabd5) and the Node run of the bold renderer (427909f).
+  - **Milestone 4 is not finished.** The plan's check still needs the paid
+  parts: a curl question and follow-up against the real model, and the owner
+  asking the four questions in the page. The README says this is pending.
+
+⏺ The review is back. It found three real bugs, one overstated limit and a set
+  of smaller slips, and no security hole. Before acting on any of it, I'm
+  checking each claim against the files. Three I can confirm straight from code
+  I wrote this session:
+
+  - Bug 1 is real (loop.py, _call). When a call times out right at the 90 s
+    mark, the code reports that "the API asked to wait 0.5 seconds". That 0.5 s
+    is our own pause, so the message is false, and it carries the wrong code.
+    The test only reached the time-limit code because its fake model ran past
+    its own timeout, which a real client never does.
+  - Bug 2 is real (page). "New conversation" isn't disabled while a question is
+    pending. If you click it mid-answer, the late reply quietly puts the old
+    conversation id back.
+  - Bug 3 is real. A bug in our own code mid-answer gives a bare HTTP 500 and
+    leaves the half-finished turn in the conversation's history.
+
+  The fourth claim is about the HTTP library's timeouts. Checking it in the
+  library itself:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Agent "Review milestone 4 diff" finished · 10m 11s
+
+⏺ A single number for a timeout in httpx2/_config.py applies to each stage
+  separately, so "at most 90 s" is only approximate and the records need softer
+  wording. I'm fixing the smaller findings now, tests first. One choice goes
+  beyond your status mapping: internal bugs will return 500 rather than 502, and
+  I can switch that back to 502 if you prefer. · summary
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 8 lines, removed 2 lines
+      410 
+      411 
+      412  class Timed(Scripted):
+      413 -    """Each call takes the given number of seconds on the fake
+          - clock."""                                                    
+      413 +    """Each call takes the given number of seconds on the fake
+          + clock. Like a real client it gives up at its                 
+      414 +    timeout: a call scripted to take longer raises a timeout t
+          +hen, and its response stays for the retry."""                 
+      415 
+      416      def __init__(self, clock, seconds, *responses):
+      417          super().__init__(*responses)
+      418          self.clock, self.seconds = clock, list(seconds)
+      419 
+      420      def create(self, **request):
+      420 -        self.clock.now += self.seconds.pop(0)                 
+      421 +        seconds = self.seconds.pop(0)                         
+      422 +        if seconds > request["timeout"]:                      
+      423 +            self.clock.now += request["timeout"]              
+      424 +            self.requests.append({**request, "messages": list(
+          +request["messages"])})                                        
+      425 +            raise timeout_error()                             
+      426 +        self.clock.now += seconds                             
+      427          return super().create(**request)
+      428 
+      429 
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 1 line, removed 1 line
+      335  # --- milestone 4 readiness: timeouts and two messages at once
+            --------------------------------
+      336 
+      337 
+      338 -def test_the_real_client_uses_the_configured_timeout_and_retri
+          -es(monkeypatch):                                              
+      338 +def test_the_real_client_uses_the_configured_timeout_and_leave
+          +s_retries_to_the_loop(monkeypatch):                           
+      339      import anthropic
+      340      import dotenv
+      341 
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 64 lines, removed 3 lines
+      458      assert [r["timeout"] for r in client.requests] == [60, 40]
+             # 60 s per call, but only 40 s of the 90 were left
+      459 
+      460 
+      461 +def assert_time_limit(a, reply):                              
+      462 +    assert reply.status == "error" and reply.error_code == "ti
+          +me_limit" and "90-second limit" in reply.error                
+      463 +    assert "asked to wait" not in reply.error                 
+      464 +    session = a.sessions[reply.session_id]                    
+      465 +    assert session.messages == [] and session.results == {} an
+          +d not session.busy.locked()                                   
+      466 +                                                              
+      467 +                                                              
+      468 +def test_a_call_cut_off_by_the_time_limit_ends_the_message_as_
+          +the_time_limit(ctx, clock):                                   
+      469 +    a, client = timed(ctx, clock, [50, 45], tool("rank_hubs", 
+          +WINTER_MIDWEST), final())                                     
+      470 +    reply = a.answer(None, "Which hubs in the Midwest are most
+          + exposed?")  # the second call times out at 90 s              
+      471 +    assert_time_limit(a, reply)                               
+      472 +    assert [r["timeout"] for r in client.requests] == [60, 40]
+          + and clock.now == 90                                          
+      473 +                                                              
+      474 +                                                              
+      475  def test_no_model_call_starts_after_the_message_time_limit(ctx
+           , clock):
+      462 -    a, client = timed(ctx, clock, [50, 45, 1], tool("list_hubs
+          -", {"region": "all"}, "toolu_1"),                             
+      476 +    a, client = timed(ctx, clock, [50, 40], tool("list_hubs", 
+          +{"region": "all"}, "toolu_1"),                                
+      477                        tool("list_hubs", {"region": "all"}, "to
+           olu_2"), final())  # fmt: skip
+      464 -    reply = a.answer(None, "Which hubs are there?")           
+      465 -    assert reply.status == "error" and reply.error_code == "ti
+          -me_limit" and "90-second limit" in reply.error                
+      478 +    reply = a.answer(None, "Which hubs are there?")  # the sec
+          +ond call answers just as the 90 s run out                     
+      479 +    assert_time_limit(a, reply)                               
+      480      assert len(client.requests) == 2
+      481 +                                                              
+      482 +                                                              
+      483 +def test_a_failure_with_less_time_left_than_the_pause_is_the_t
+          +ime_limit(ctx, clock):                                        
+      484 +    import anthropic                                          
+      485 +                                                              
+      486 +    a, client = timed(ctx, clock, [89.8], anthropic.APIConnect
+          +ionError(request=_request()), final())                        
+      487 +    reply = a.answer(None, "Which hubs are most exposed?")  # 
+          +0.2 s left: no room for the 0.5 s pause                       
+      488 +    assert_time_limit(a, reply)                               
+      489 +    assert clock.slept == [] and len(client.requests) == 1    
+      490 +                                                              
+      491 +                                                              
+      492 +def test_a_bug_in_our_own_code_is_an_error_that_leaves_the_con
+          +versation_as_it_was(ctx, monkeypatch):                        
+      493 +    import wra.agent.loop                                     
+      494 +                                                              
+      495 +    def broken(*args, **kwargs):                              
+      496 +        raise KeyError("a bug")                               
+      497 +                                                              
+      498 +    a, client = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), 
+          +final())                                                      
+      499 +    monkeypatch.setattr(wra.agent.loop, "check_answer", broken
+          +)                                                             
+      500 +    reply = a.answer(None, "Which hubs in the Midwest are most
+          + exposed?")                                                   
+      501 +    assert reply.status == "error" and reply.error_code == "in
+          +ternal_error" and "KeyError" in reply.error                   
+      502      session = a.sessions[reply.session_id]
+      503      assert session.messages == [] and session.results == {} an
+           d not session.busy.locked()
+      504 
+      505 
+      506 +def status_error(code, headers=None):                         
+      507 +    import anthropic                                          
+      508 +    import httpx2                                             
+      509 +                                                              
+      510 +    reply = httpx2.Response(code, headers=headers or {}, reque
+          +st=_request())                                                
+      511 +    return anthropic.APIStatusError("failed", response=reply, 
+          +body=None)                                                    
+      512 +                                                              
+      513 +                                                              
+      514 +@pytest.mark.parametrize("error, wait", [                     
+      515 +    (status_error(400), None), (status_error(401), None), (sta
+          +tus_error(404), None),                                        
+      516 +    (status_error(408), (0.5, False)), (status_error(409), (0.
+          +5, False)), (status_error(429), (0.5, False)),                
+      517 +    (status_error(500), (0.5, False)), (status_error(529), (0.
+          +5, False)),                                                   
+      518 +    (status_error(400, {"x-should-retry": "true"}), (0.5, Fals
+          +e)),                                                          
+      519 +    (status_error(500, {"x-should-retry": "false"}), None),   
+      520 +    (status_error(429, {"retry-after": "2"}), (2.0, True)),   
+      521 +    (status_error(429, {"retry-after-ms": "1500", "retry-after
+          +": "30"}), (1.5, True)),                                      
+      522 +    (status_error(429, {"retry-after-ms": "0", "retry-after": 
+          +"30"}), (0.5, False)),  # the SDK's rule                      
+      523 +    (status_error(429, {"retry-after": "Wed, 21 Oct 2026 07:28
+          +:00 GMT"}), (0.5, False)),                                    
+      524 +    (timeout_error(), (0.5, False)), (ConnectionError("not an 
+          +SDK error"), None), (KeyError("a bug"), None),                
+      525 +])  # fmt: skip                                               
+      526 +def test_which_failures_are_retried_and_after_what_wait(error,
+          + wait):                                                       
+      527 +    from wra.agent.loop import _retry_wait                    
+      528 +                                                              
+      529 +    assert _retry_wait(error) == wait                         
+      530 +                                                              
+      531 +                                                              
+      532  def test_a_timed_out_call_is_retried_once_within_the_time_left
+           (ctx, clock):
+      533      a, client = timed(ctx, clock, [60, 5, 5], timeout_error(),
+            tool("rank_hubs", WINTER_MIDWEST), final())
+      534      reply = a.answer(None, "Which hubs in the Midwest are most
+            exposed?")
+
+⏺ Update(tests/test_agent_loop.py)
+  ⎿  Added 4 lines, removed 3 lines
+      483  def test_a_failure_with_less_time_left_than_the_pause_is_the_t
+           ime_limit(ctx, clock):
+      484      import anthropic
+      485 
+      486 -    a, client = timed(ctx, clock, [89.8], anthropic.APIConnect
+          -ionError(request=_request()), final())                        
+      487 -    reply = a.answer(None, "Which hubs are most exposed?")  # 
+          -0.2 s left: no room for the 0.5 s pause                       
+      486 +    a, client = timed(ctx, clock, [60, 29.8], tool("rank_hubs"
+          +, WINTER_MIDWEST),                                            
+      487 +                      anthropic.APIConnectionError(request=_re
+          +quest()), final())  # fmt: skip                               
+      488 +    reply = a.answer(None, "Which hubs are most exposed?")  # 
+          +fails with 0.2 s left: no room for the 0.5 s pause            
+      489      assert_time_limit(a, reply)
+      489 -    assert clock.slept == [] and len(client.requests) == 1    
+      490 +    assert clock.slept == [] and len(client.requests) == 2    
+      491 
+      492 
+      493  def test_a_bug_in_our_own_code_is_an_error_that_leaves_the_con
+           versation_as_it_was(ctx, monkeypatch):
+
+⏺ Writing the tests for the review's fixes. Now the API side of the tests: the
+  500 for our own bugs, and stricter conversation ids.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All 19 failures are the new tests, failing for the expected reasons. Now the
+  fixes in the agent loop:
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 3 lines, removed 2 lines
+       5  answer in code (checks.py). One repair attempt if anything fail
+          s, then a clear error. At most
+       6  `max_model_calls` model calls per message, and all of them with
+          in `message_time_limit_seconds`: each
+       7  call waits at most its own timeout or the time left, and the lo
+          op, not the SDK, makes the one retry,
+       8 -so a wait the API asks for cannot run past the limit. A refused
+         - or cut-off reply becomes an error.                            
+       9 -Nothing unverified is shown.                                   
+       8 +so a wait the API asks for cannot run past the limit. The HTTP 
+         +library applies a timeout to each stage                        
+       9 +of a call (connect, send, each read), so the limit is close to 
+         +a ceiling, not an exact one. A refused                         
+      10 +or cut-off reply becomes an error. Nothing unverified is shown.
+      11 
+      12  The conversation is kept append-only, which Opus 5.5's thinking
+           blocks require, with two exceptions
+      13  set by the API or by us:
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 2 lines, removed 2 lines
+      52 
+      53  class AnthropicClient:
+      54      """The real client. The key comes from the environment, whi
+          ch `.env` fills via python-dotenv.
+      55 -    The SDK's own retries are off: SDK 2.13.0 waits as long as 
+         -a `retry-after` header asks, with no upper                     
+      56 -    bound (anthropic/_base_client.py, _calculate_retry_timeout)
+         -, so the loop retries instead (_call)."""                      
+      55 +    The SDK's own retries are off: SDK 2.13.0 waits as long as 
+         +a `retry-after` header asks, capped only at                    
+      56 +    4,294,967 seconds (anthropic/_base_client.py, _calculate_re
+         +try_timeout), so the loop retries instead."""                  
+      57 
+      58      def __init__(self, settings: AgentSettings) -> None:
+      59          import anthropic
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 2 lines, removed 1 line
+      75 
+      76 
+      77  class _Stop(Exception):
+      78 -    """A model call ended the message without an error from the
+         - model's API itself."""                                        
+      78 +    """A model call ends the message for a reason of the loop's
+         + own: the time limit, or a wait the API asks                   
+      79 +    for that does not fit in the time left. `text` is the plain
+         + message, `code` the reply's error code."""                    
+      80 
+      81      def __init__(self, text: str, code: str) -> None:
+      82          super().__init__(text)
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 8 lines, removed 3 lines
+      131              if session_id:
+      132                  session = self.sessions.get(session_id)
+      133                  if session is None:
+      134 -                    return self._refused(session_id, UNKNOWN, 
+          -"unknown_conversation")                                       
+      134 +                    return self._error_reply(session_id, UNKNO
+          +WN, "unknown_conversation")                                   
+      135              else:
+      136                  session = Session(id=uuid.uuid4().hex)
+      137                  self.sessions[session.id] = session
+      138          if not session.busy.acquire(blocking=False):
+      139 -            return self._refused(session.id, BUSY, "busy")    
+      139 +            return self._error_reply(session.id, BUSY, "busy")
+      140 +        kept = len(session.messages), set(session.results)    
+      141          try:
+      142              return self._answer(session, message)
+      143 +        except Exception as error:  # a bug in our own code: t
+          +he turn goes, as after any failure                            
+      144 +            _roll_back(session, *kept)                        
+      145 +            return self._error_reply(session.id, f"Something w
+          +ent wrong in the agent's own code ({type(error).__name__}"    
+      146 +                                     "). The question was not 
+          +answered; try again.", "internal_error")  # fmt: skip         
+      147          finally:
+      148              session.busy.release()
+      149 
+      145 -    def _refused(self, session_id: str, text: str, code: str) 
+          --> AgentReply:                                                
+      150 +    def _error_reply(self, session_id: str, text: str, code: s
+          +tr) -> AgentReply:                                            
+      151          return AgentReply(session_id=session_id, status="error
+           ", verdict="", error=text, error_code=code,
+      152                            trace=Trace(model=self.settings.mode
+           l))  # fmt: skip
+      153 
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 1 line, removed 3 lines
+      170                           usage={**usage, "cost_usd": None if c
+           ost is None else round(cost, 6)})  # fmt: skip
+      171 
+      172          def fail(text: str, code: str) -> AgentReply:
+      173 -            del session.messages[kept_messages:]  # the failed
+          - turn leaves no trace in the conversation                     
+      174 -            for result_id in [r for r in session.results if r 
+          -not in kept_results]:                                         
+      175 -                del session.results[result_id]                
+      173 +            _roll_back(session, kept_messages, kept_results)  
+          +# the failed turn leaves no trace                             
+      174              return AgentReply(session_id=session.id, status="e
+           rror", verdict="", error=text, error_code=code,
+      175                                trace=trace())  # fmt: skip
+      176 
+
+⏺ Update(src/wra/agent/loop.py)
+  ⎿  Added 16 lines, removed 6 lines
+      213      def _call(self, request: dict[str, Any], deadline: float)
+           -> Any:
+      214          """One model call. Each attempt waits at most the per-
+           call timeout or the time left in the message,
+      215          whichever is shorter. A failure the SDK would retry is
+            retried `max_retries` times, after the wait
+      216 -        the API asks for when it fits in the time left; a long
+          -er wait ends the message at once."""                          
+      216 +        the API asks for when it fits in the time left; a long
+          +er wait ends the message at once. When the                    
+      217 +        time runs out, during an attempt or before the pause, 
+          +the reply says so (time_limit)."""                            
+      218          s = self.settings
+      219 +        out_of_time = _Stop(f"No answer within the {s.message_
+          +time_limit_seconds:g}-second limit for one question. "        
+      220 +                            "Try again in a moment.", "time_li
+          +mit")  # fmt: skip                                            
+      221          for attempt in range(s.max_retries + 1):
+      222              left = deadline - time.monotonic()
+      223              if left <= 0:
+      221 -                raise _Stop(f"No answer within the {s.message_
+          -time_limit_seconds:g}-second limit for one question. "        
+      222 -                            "Try again in a moment.", "time_li
+          -mit")  # fmt: skip                                            
+      224 +                raise out_of_time                             
+      225              try:
+      226                  return self.client.create(timeout=min(s.timeou
+           t_seconds, left), **request)
+      227              except Exception as error:
+      226 -                wait = _retry_wait(error)                     
+      227 -                if wait is None or attempt == s.max_retries:  
+      228 +                retry = _retry_wait(error)                    
+      229 +                if retry is None:                             
+      230                      raise
+      229 -                if wait >= deadline - time.monotonic():       
+      231 +                left = deadline - time.monotonic()            
+      232 +                if left <= 0:  # the attempt failed because th
+          +e limit cut its wait short                                    
+      233 +                    raise out_of_time from error              
+      234 +                if attempt == s.max_retries:                  
+      235 +                    raise                                     
+      236 +                wait, asked_by_api = retry                    
+      237 +                if wait >= left:                              
+      238 +                    if not asked_by_api:                      
+      239 +                        raise out_of_time from error          
+      240                      raise _Stop(f"The model could not be reach
+           ed in time: its API asked to wait {wait:g} seconds "
+      241                                  "before a retry, longer than t
+           his question has left. Try again shortly.",
+      242                                  "model_call_failed") from erro
+           r  # fmt: skip
+
+⏺ Update(src/wra/agent/loop.py)  ⎿  Added 18 lines, removed 10 lines
+      264          return answer, check_answer(answer, session.results, s
+           elf.facts, self.hub_names)
+      265 
+      266 
+      267 -def _retry_wait(error: Exception) -> float | None:            
+      268 -    """Seconds to wait before retrying a failed call, or None 
+          -when it is not retried. The SDK's own rule                    
+      269 -    (anthropic/_base_client.py, _should_retry and _calculate_r
+          -etry_timeout): connection errors and timeouts,                
+      270 -    and HTTP 408, 409, 429 and 5xx unless the `x-should-retry`
+          - header says otherwise; the wait the API asks                 
+      271 -    for in `retry-after-ms` or `retry-after` (seconds) is kept
+          -. A `retry-after` given as a date, which the                  
+      272 -    SDK also reads, gets the first back-off instead."""       
+      267 +def _retry_wait(error: Exception) -> tuple[float, bool] | None
+          +:                                                             
+      268 +    """How long to wait before retrying a failed call, and whe
+          +ther the API asked for that wait; None when it                
+      269 +    is not retried. The SDK's own rule (anthropic/_base_client
+          +.py, _should_retry and                                        
+      270 +    _calculate_retry_timeout): connection errors and timeouts,
+          + and HTTP 408, 409, 429 and 5xx unless the                    
+      271 +    `x-should-retry` header says otherwise. The first of `retr
+          +y-after-ms` and `retry-after` (seconds) that                  
+      272 +    reads as a number is kept when above zero; otherwise the f
+          +irst back-off. A `retry-after` given as a                     
+      273 +    date, which the SDK also reads, gets the back-off instead.
+          +"""                                                           
+      274      import anthropic
+      275 
+      276 +    pause = (FIRST_RETRY_PAUSE, False)                        
+      277      if isinstance(error, anthropic.APIConnectionError):  # inc
+           ludes APITimeoutError
+      276 -        return FIRST_RETRY_PAUSE                              
+      278 +        return pause                                          
+      279      if not isinstance(error, anthropic.APIStatusError):
+      280          return None
+      281      headers = error.response.headers
+     ...
+      287              seconds = float(headers.get(name)) / per_second
+      288          except (TypeError, ValueError):
+      289              continue
+      288 -        if seconds > 0:                                       
+      289 -            return seconds                                    
+      290 -    return FIRST_RETRY_PAUSE                                  
+      290 +        return (seconds, True) if seconds > 0 else pause      
+      291 +    return pause                                              
+      292 
+      293 
+      294 +def _roll_back(session: Session, kept_messages: int, kept_resu
+          +lts: set[str]) -> None:                                       
+      295 +    """Remove a failed turn: its messages and the results it a
+          +dded."""                                                      
+      296 +    del session.messages[kept_messages:]                      
+      297 +    for result_id in [r for r in session.results if r not in k
+          +ept_results]:                                                 
+      298 +        del session.results[result_id]                        
+      299 +                                                              
+      300 +                                                              
+      301  def _last_fallback(content: list) -> int:
+      302      return max((i for i, b in enumerate(content) if b.type ==
+           "fallback"), default=-1)
+      303 
+
+⏺ Now the schema, the API and the page:
+
+⏺ Update(src/wra/agent/schemas.py)
+  ⎿  Added 4 lines, removed 3 lines
+      13  from wra.tools.envelope import Display
+      14 
+      15  Status = Literal["answered", "out_of_scope", "no_data", "needs_
+          clarification", "error"]
+      16 -# Why a reply is an error. The API sends busy as 409, unknown_c
+         -onversation as 404 and the rest as 502                         
+      17 -# (owner, milestone 4); the message in `error` is for people, t
+         -he code for programs.                                          
+      16 +# Why a reply is an error. The API sends busy as 409, unknown_c
+         +onversation as 404 and the model-side                          
+      17 +# failures as 502 (owner, milestone 4), and internal_error, a b
+         +ug in our own code, as 500. The message in                     
+      18 +# `error` is for people, the code for programs.                
+      19  ErrorCode = Literal["busy", "unknown_conversation", "model_call
+          _failed", "time_limit", "declined", "cut_off",
+      19 -                    "invalid_twice", "too_many_calls"]  # fmt: 
+         -skip                                                           
+      20 +                    "invalid_twice", "too_many_calls", "interna
+         +l_error"]  # fmt: skip                                         
+      21 
+      22 
+      23  class FinalAnswer(BaseModel):
+
+⏺ Update(src/wra/api/app.py)
+  ⎿  Added 3 lines, removed 2 lines
+       6  lock per conversation keeps two messages on one conversation ap
+          art.
+       7 
+       8  HTTP status (owner, milestone 4): every reply the agent gives i
+          s sent with the same body, as 200 unless it
+       9 -is an error; busy is 409, a conversation the server does not ho
+         -ld is 404, and every other failure is on the                   
+      10 -model's side, 502. A malformed request is FastAPI's 422 and rea
+         -ches no model.                                                 
+       9 +is an error; busy is 409, a conversation the server does not ho
+         +ld is 404, and the failures on the model's                     
+      10 +side are 502. A bug in our own code is 500, with the same body 
+         +(Claude, after the milestone 4 review). A                      
+      11 +malformed request gets FastAPI's 422 and its validation message
+         +, not a reply, and reaches no model.                           
+      12  """
+      13 
+      14  from pathlib import Path
+
+⏺ Update(src/wra/api/app.py)
+  ⎿  Added 3 lines, removed 2 lines
+      26 
+      27  PAGE = Path(__file__).parent / "static" / "index.html"
+      28  MAX_MESSAGE = 2000  # characters; a question to this agent runs
+           to a few hundred
+      29 -ERROR_STATUS = {"busy": 409, "unknown_conversation": 404}  # an
+         -y other error code: 502                                        
+      29 +ERROR_STATUS = {"busy": 409, "unknown_conversation": 404, "inte
+         +rnal_error": 500}  # any other error code: 502                 
+      30 
+      31 
+      32  class ChatRequest(BaseModel):
+      33      model_config = ConfigDict(extra="forbid")
+      34 -    session_id: str | None = None  # null starts a new conversa
+         -tion                                                           
+      34 +    # null starts a new conversation; the ids the agent gives a
+         +re 32 characters                                               
+      35 +    session_id: Annotated[str, StringConstraints(min_length=1, 
+         +max_length=64)] | None = None                                  
+      36      message: Annotated[str, StringConstraints(strip_whitespace=
+          True, min_length=1, max_length=MAX_MESSAGE)]
+      37 
+      38 
+
+⏺ Update(src/wra/api/app.py)
+  ⎿  Couldn't edit file
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 2 lines, removed 2 lines
+      89 
+      90  <script>
+      91  "use strict";
+      92 -// The page shows only what the API's reply holds. It computes 
+         -no figure: tables, footnotes and trace                         
+      93 -// values are written exactly as the server sends them.        
+      92 +// The page shows only what the API's reply holds. It computes 
+         +no figure: tables and footnotes are written                    
+      93 +// exactly as the server sends them; tool inputs in the trace a
+         +re re-printed as JSON, so 2.0 shows as 2.                      
+      94 
+      95  const log = document.getElementById("log");
+      96  const form = document.getElementById("ask");
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 1 line
+       97  const box = document.getElementById("message");
+       98  const send = document.getElementById("send");
+       99  const working = document.getElementById("working");
+      100 +const fresh = document.getElementById("new");                 
+      101  let sessionId = null;
+      102 
+      103  const LABELS = { out_of_scope: "Out of scope", no_data: "No da
+           ta for that period",
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 1 line
+      218 
+      219  function setWorking(on) {
+      220    send.disabled = on;
+      221 +  fresh.disabled = on;  // a new conversation mid-answer would
+          + be undone when the answer arrives                            
+      222    working.hidden = !on;
+      223  }
+      224 
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 1 line, removed 1 line
+      240 
+      241    if (!reply || !reply.trace) {  // not a reply from the agent
+           : the server is down, or the request was refused
+      242      box.value = message;
+      243 -    showNotice(response ? "The server did not accept the quest
+          -ion (HTTP " + response.status + "). It is back in the box."   
+      243 +    showNotice(response ? "The server could not answer (HTTP "
+          + + response.status + "). The question is back in the box."    
+      244                          : "The server could not be reached. Th
+           e question is back in the box.");
+      245      return;
+      246    }
+
+⏺ Update(src/wra/api/static/index.html)
+  ⎿  Added 1 line, removed 1 line
+      273    }
+      274  });
+      275 
+      276 -document.getElementById("new").addEventListener("click", () =>
+          - {                                                            
+      276 +fresh.addEventListener("click", () => {                       
+      277    sessionId = null;
+      278    log.replaceChildren();
+      279    box.focus();
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 309 pass. One edit didn't apply: the 500 entry in the API's generated
+  reference. My quoted text was off by one bracket. Retrying:
+
+⏺ Update(src/wra/api/app.py)
+  ⎿  Added 1 line
+      57          (404, "The conversation is no longer on the server; not
+          hing was sent to the model."),
+      58          (409, "The conversation's last question is still being 
+          answered."),
+      59          (502, "The model could not give a validated answer: unr
+          eachable, too slow, declined, or invalid twice."),
+      60 +        (500, "A bug in the agent's own code; the question was 
+         +not answered and the conversation is unchanged."),             
+      61      ]}  # fmt: skip
+      62 
+      63      @app.post("/api/chat", response_model=AgentReply, responses
+          =errors)
+
+⏺ Now the records. The assumptions file first: the softer wording on the limit
+  and the SDK cap, the two evaluation runs named, the "26 from 26.0" slip, and
+  the new choices.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 309 tests pass. I added the corrections as a new decision entry instead of
+  editing the earlier two, and I'm committing the folder now. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I acted on every finding from the review, after checking each one against the
+  files. The fixes are committed as 772b0d6, and all 309 tests pass. No paid
+  call has been made.
+
+  What was wrong and is now fixed:
+  - The 90 s limit gave a false reason. When a call was cut off at the limit,
+    the error said "the API asked to wait 0.5 seconds", but that wait was our
+    own pause. It now says the question ran out of its 90 seconds. The old test
+    had only passed because its fake model ran past its own timeout. The fake
+    now gives up at its timeout, as a real client does.
+  - A bug in our own code broke the conversation. It gave a bare 500 and left
+    the half-finished turn in the history the model reads. Now the turn is
+    removed and you get a normal error reply, sent as HTTP 500 (the choice
+    flagged above).
+  - "New conversation" could undo itself. Clicked while an answer was pending,
+    the late reply brought the old conversation back. The button is now off
+    while an answer is being worked on.
+  - Smaller fixes:
+    - One retry header is now read the same way the SDK reads it.
+    - Empty or oversized conversation ids are refused as malformed (422).
+    - Every branch of the retry rule now has a test.
+    - Five places in the records said more than was true. They now name the
+      evaluation runs they cite, and they say the 90 s is close to a ceiling,
+      not exact.
+
+  Still open:
+  - The page's own logic (bold rendering, the conversation reset) has no
+    automated test. I checked the bold renderer by hand in Node, and the reset
+    by reading the code.
+  - The two evaluation runs the records cite live only on this machine, because
+    git ignores run records. Committing them could be milestone 5's call, when
+    the results document cites runs.
+  - The proposed rule 6 wording in CLAUDE.md (above) is waiting for your go.
+
+  Waiting on you. May I make the paid check now? It's one question by curl, then
+  a follow-up on the same conversation. That's 2 messages, about 0.06 USD at
+  list price, at most about 0.10. After that, I'll give you the steps for asking
+  the four assignment questions in the page yourself.
+
+✻ Worked for 38m 57s · done 4:58 PM
+
+❯ Yes, go ahead.                                                                
+
+⏺ Running it now: start the server, send the question, then the follow-up with
+  the same conversation id, then stop the server.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Both paid checks returned 200: the Midwest winter ranking cost 0.0366 USD, and
+  the follow-up naming Columbus as least exposed (0.66 days a year) reused that
+  earlier ranking without a new tool call, bringing total API spend to about
+  1.18 USD. Next I'll pull the four assignment questions from the evaluation
+  cases for your browser check. · summary
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ Your check in the page. Run the server in a terminal of your own, not in this
+  session, because it keeps running until you stop it:
+
+  cd ~/Projects/weather-risk-agent && uv run wra serve
+
+  Then open http://127.0.0.1:8000/ and ask these four, clicking New conversation
+  between them:
+
+  1. Which hubs in the Midwest are most exposed to winter disruption?
+  2. Compare Miami and Houston in terms of hurricane and flood exposure.
+  3. What percentage of days in Denver last year had snowfall?
+  4. Why is the Dallas hub's weather disruption risk high?
+
+  On every answer, look for:
+  - "Working: the agent is looking up the figures..." while it thinks. Ask and
+    New conversation are greyed out during that time.
+  - A short verdict with a few words in bold, and no stray asterisks.
+  - One or more tables, each with a "what counts" line under it, and sometimes
+    "Note:" lines.
+  - Two grey lines at the bottom: "Data: ... Period: ... Data as of ..." and
+    "Confidence: ...".
+  - A "How this was computed" link that opens the tool calls, the time taken and
+    the cost.
+  - FEMA's two-sentence notice in the page footer.
+
+  What the earlier runs found, so you can spot a wrong answer:
+  - Q1: Minneapolis first, at 2.71 days a year.
+  - Q2: Miami higher on hurricanes, Houston higher on floods.
+  - Q3: Denver in 2025, 7.1% (26 of 364 observed days), with trace days
+    mentioned separately.
+  - Q4: Dallas in the High band at 2.02, only just above the cut-off.
+
+  Optional, and free: the restart path. Stop the server with Ctrl-C and start it
+  again, without reloading the page. Then type a follow-up such as "And which
+  is the least exposed?". You should see a pink error card saying the
+  conversation is no longer on the server, your question back in the box, and a
+  "New conversation" note. Nothing is sent to the model.
+
+  The four questions cost about 0.15 USD at list price, at most about 0.20. Stop
+  the server with Ctrl-C when you're done.
+
+  Then tell me what you saw, including anything odd. If it all looks right, I'll
+  close the milestone: mark it done in the queue with its proof, update the
+  README's status line, and add the session index line. That's also when I'll
+  remind you to /export this session as docs/ai-session/04-api.txt.
+
+✻ Crunched for 1m 6s · done 5:05 PM
+
+❯ How much does the next session rely on this one? Can you start the next one   
+  while I test the app?                                                         
+
+⏺ How much the next session relies on this one: very little, except for one open
+  step.
+
+  - The code doesn't depend on this session. Everything milestone 5 builds on is
+    committed: the API, the page, and the agent changes. The API's behaviour is
+    settled and recorded, and the next session reads the queue, the plan and
+    the records, not this conversation.
+  - The open step is closing milestone 4. Marking it done, updating the README
+    status and adding the session index line all wait on your page check. The
+    next session can do that whenever you report back.
+  - The real dependency is on your test result, not on this session. Milestone
+    5's main costs are paid runs: three evaluation repetitions (about 1.6 USD at
+    today's 0.53 per run), the cheaper-model comparison, and the final
+    end-to-end script, which runs the evaluation again. If your page check turns
+    up a problem in the agent, any run made before the fix is money wasted. So
+    the paid runs should wait for your report.
+
+  Yes, the next session can start while you test. It would begin with the free
+  parts:
+
+  - the end-to-end script;
+  - the setting that lets that script find your .env from a fresh clone
+    (WRA_ENV_FILE, not built yet);
+  - first drafts of the architecture and summary documents.
+
+  None of that touches what you're testing. Your running server doesn't reload
+  code, so edits elsewhere can't change it under you. The one exception is the
+  optional restart test: a restart would pick up any half-finished edit. Do that
+  test first, or skip it.
+
+  My recommendation: a fresh session, not more work in this one. This session is
+  long, and milestone 5 is a big one. Also, each session's transcript is a
+  numbered deliverable, so 04 is cleaner if it covers milestone 4 only. The
+  order would be:
+
+  1. I write the handoff now. It carries the pending page check, the 0.046 USD
+     spent today, the rule-6 wording waiting for your go, and an instruction
+     that paid runs wait for your report.
+  2. You run /export into docs/ai-session/04-api.txt, then /clear. Your server
+     can keep running in its other terminal.
+  3. The new session starts on the free parts. When you report the page check,
+     it closes milestone 4 first.
+
+  The main session can stay on Opus for milestone 5. The plan puts the final
+  whole-diff review on a Fable subagent.
+
+  Shall I write the handoff now?
+
+✻ Cogitated for 46s · done 5:19 PM
+❯ Okay, ran the tests. everything looks okay - one thing to note, let's make    
+  sure the agent doesn't speak in jargon without explaining it. for example,    
+  what a "trace day" is - this is just one example from the tests I ran.        
+
+⏺ Good to hear the page check passed. That's the last check milestone 4 needed.
+
+  Your point about jargon goes into the work queue. Per your queue rule, the
+  item in hand finishes first, so I'll close milestone 4 first. To record the
+  jargon item accurately, I'm checking where "trace" comes from. It could be the
+  model's own words, or the table text our code writes.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The Denver table our code writes uses "trace" without ever defining it, and
+  the model repeats that jargon in its verdict, so I'll fix both the table text
+  and the system prompt before milestone 5's paid evaluation runs. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ One gap: the earlier sessions each had a queue line for committing their
+  transcript once exported. Adding that line for this session's:
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 1 line
+       6 
+       7  ## Queue
+       8 
+       9 +- [q14] Commit the session 04 transcript once the owner has exp
+         +orted it as `docs/ai-session/04-api.txt`. → `docs/ai-session/RE
+         +ADME.md`                                                       
+      10  - [q13] Answers use terms without explaining them, such as "tra
+          ce day" (owner, milestone 4 page check). Settle it before miles
+          tone 5's paid runs, so they measure the final wording. → `docs/
+          ASSUMPTIONS.md` O15
+      11  - [q6] Milestone 5: results, documents, fresh-context review, f
+          inal end-to-end check. Measures verdict length. → `docs/PLAN.md
+          ` section 13, `docs/ASSUMPTIONS.md` O14
+      12  - [q10] Deployment to a public URL, ask first. The assignment c
+          alls it preferred, so it stands apart from the bonuses. → `docs
+          /PLAN.md` section 13
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Milestone 4 is closed (commit 3081392), and the working tree is clean. Three
+  things went into the queue:
+
+  - The jargon fix is at the top as q13. Its details are in the assumptions file
+    as open point O15. It covers both the table text our code writes and the
+    model's own sentences, and it's set to land before milestone 5's paid runs.
+    Nobody has yet checked which terms besides "trace" need explaining, so the
+    next session starts by listing them.
+  - Committing this session's transcript is q14.
+  - Milestone 4 is marked done, with its proof: the commits, the test count, the
+    paid check, and your page check.
+
+  A quick quiz on what changed, per your post-merge rule. Answer in your own
+  words:
+
+  1. A slow API could have kept a message going for about 12 minutes. Why
+     couldn't we keep the SDK's built-in retry and just give it a shorter
+     timeout to fit inside 90 seconds?
+  2. The server restarts, and the open page sends a follow-up with its old
+     conversation id. What do you see, and why is that better than the server
+     quietly starting a fresh conversation?
+  3. Why does the server turn 2.9 into "2.90" before sending a table, instead of
+     the page doing it?
+
+  Next steps:
+
+  - Export this session. Run /export into docs/ai-session/04-api.txt before you
+    /clear. The next session commits it (q14).
+  - Handoff. Say the word and I'll write it. The next session then starts on
+    q13, the jargon fix, before any paid runs.
+  - Still waiting for your go: the rule 6 wording for the project's CLAUDE.md.
+    With other changes still uncommitted, stash them before the test run, or
+    name the tree the run covered.
+
+✻ Brewed for 1m 27s · done 10:45 PM
+
+❯ write the handoff                                                             
+
+⏺ Skill(handoff)
+  ⎿  Loaded skill
+
+⏺ Writing the handoff. Step one is checking for anything still running: agents,
+  background shells, local servers.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The only leftover process from this session is a wra serve from about 6
+  minutes ago, which I'm leaving running in your terminal for you to stop with
+  Ctrl-C. Next I'll write the diff from the session's start (dc00c01) for the
+  review gate, since the usual branch diff finds nothing on main with no remote.
+  · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The review diff is 91 KB across 1,450 lines; since the repo has no git hooks,
+  I'm checking elsewhere for the guard that stops commits from dropping queue
+  items. · summary
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ The source repo's guard runs through the pre-commit framework, which this
+  project doesn't use, so I'm copying the guard script into a plain git hook.
+  I'm also starting the review gate in the background, since it takes a while. 
+  · summary
+
+⏺ feature-dev:code-reviewer(Handoff gate: review session diff) Fable 5.2
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ Now installing the queue guard. The guard script is tracked in the repository,
+  and a small git hook calls it:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The queue guard now refuses commits when q14 is missing, though its hook in
+  .git/hooks isn't tracked by git. Next I'll log your pending rule 6 decision
+  and note that CLAUDE.md rule 12 should cover wra serve, since every question
+  to it spends API credit. · summary
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 1 line
+       8 
+       9  - [q14] Commit the session 04 transcript once the owner has exp
+          orted it as `docs/ai-session/04-api.txt`. → `docs/ai-session/RE
+          ADME.md`
+      10  - [q13] Answers use terms without explaining them, such as "tra
+          ce day" (owner, milestone 4 page check). Settle it before miles
+          tone 5's paid runs, so they measure the final wording. → `docs/
+          ASSUMPTIONS.md` O15
+      11 +- [q15] Owner decision: extend CLAUDE.md rule 6 to "...claims o
+         +nly what was actually run, on the tree being committed: with ot
+         +her changes still uncommitted, stash them before the run or nam
+         +e the tree the run covered." Proposed after a commit message in
+         + session 04 claimed a test count run on a tree holding the next
+         + commit's changes. → `CLAUDE.md` rule 6                        
+      12  - [q6] Milestone 5: results, documents, fresh-context review, f
+          inal end-to-end check. Measures verdict length. → `docs/PLAN.md
+          ` section 13, `docs/ASSUMPTIONS.md` O14
+      13  - [q10] Deployment to a public URL, ask first. The assignment c
+          alls it preferred, so it stands apart from the bonuses. → `docs
+          /PLAN.md` section 13
+      14  - [q8] Bonuses, ask first: score-change alert, voice. → `docs/P
+          LAN.md` section 13
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      24  9. **Match the model to the task** and say which was picked and
+           why: Fable for open design questions and the final whole-diff
+          review, Opus for implementation and per-milestone review, Sonne
+          t for small, fully specified tasks. The main session's model an
+          d effort level are the owner's to switch, so say when they shou
+          ld change.
+      25  10. **Bonuses** (deployment, score-change alert, voice, in that
+           order) start only after the final end-to-end check passes, and
+           only after asking.
+      26  11. **Measure before proposing.** Before proposing a number, ch
+          eck whether data already in hand can measure it. A number that
+          confirms the expected answer gets checked hardest. A measuring
+          script is checked against a hand count of a few cases before it
+          s number is reported.
+      27 -12. **Paid calls are the owner's to approve.** `wra ask`, `wra 
+         -chat` and `wra eval` (unless `--agent stub`) spend the owner's 
+         -API credit. Ask before each full `wra eval` run and report its 
+         -measured cost. Tests use a scripted fake model and never call t
+         -he API.                                                        
+      27 +12. **Paid calls are the owner's to approve.** `wra ask`, `wra 
+         +chat`, `wra eval` (unless `--agent stub`) and every question se
+         +nt to `wra serve` spend the owner's API credit. Ask before each
+         + full `wra eval` run and report its measured cost. Tests use a 
+         +scripted fake model and never call the API.                    
+      28 
+      29  ## Gotchas and settled points
+      30 
+
+⏺ I'm checking whether the grounding check reads the table's explanatory text,
+  since the jargon fix may need a number-based definition in the next session's
+  brief. · summary
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+⏺ The grounding check reads digits inside cited text, so a number in our table
+  definitions could let the model pass a fabricated term; I'm noting that for
+  the brief while the review finishes, then I'll finalize the next-session
+  prompt. · summary
+
+  Made 1 scratchpad edit +49, ran 1 shell command (ctrl+o to expand)
+
+⏺ I'm checking whether the 21 hits in the loop tests are just the reply's trace
+  field rather than table wording, since my earlier claim about two test files
+  needs verifying. · summary
+
+  Searched for 2 patterns (ctrl+o to expand)
+
+⏺ Only tests/test_tools.py checks table wording, and only partly (the snowfall
+  explanation must contain "0.1 inch"). The loop tests' hits came from the
+  reply's trace field, and some notes come from config/scoring.toml rather than
+  the tools' code. I'll confirm that before correcting the draft. · summary
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+⏺ The draft is ready at 6,150 bytes, under the 8,000-byte limit. The handoff is
+  blocked until the independent review finishes. I'll act on its findings, or
+  bring them to you, before saving the prompt and committing. I'll pick it back
+  up as soon as the review reports.
+
+✻ Brewed for 3m 24s · done 10:49 PM
+
+› Message from feature-dev:code-reviewer
+  Review of the session diff dc00c01..HEAD (milestone 4: API, chat page, `wra
+  serve`, time limit and retry in the agent loop, records). I read the whole
+  diff and the files it touches, plus the installed SDK source and the two saved
+  evaluation runs. I could not run anything (no shell), so test counts, the
+  curl check and commit messages are unchecked.
+
+  **Nothing serious is wrong.** No high-severity finding. One medium, three low,
+  and a few small doc errors.
+
+  ## 1. Findings
+
+  **F1. A bug in our own code now leaves no traceback anywhere. Medium severity,
+  high confidence (by reading).**
+  `/Users/doronreiffman/Projects/weather-risk-agent/src/wra/agent/loop.py` lines
+  143 to 146. The new `except Exception` in `answer()` rolls the turn back
+  correctly, but keeps only the exception's class name. Nothing is logged: a
+  grep of `src/wra` finds no `logging` or `traceback` use.
+  - Case: `check_answer` raises a `KeyError` during the demo. The page shows
+  "Something went wrong in the agent's own code (KeyError)" and the uvicorn log
+  shows only `POST /api/chat 500`. Before commit 772b0d6, uvicorn printed the
+  traceback.
+  - Same in `wra eval`: the handler in
+  `/Users/doronreiffman/Projects/weather-risk-agent/src/wra/evals/run.py` line
+  82, which recorded the class and the message, can no longer be reached for the
+  real agent. A bug that shows only in a paid run would need a second paid run
+  to locate.
+  - The reply also carries an empty trace, so tokens and cost spent before the
+  bug are dropped from the eval's cost total.
+  - Fix: one line in that `except` branch, `traceback.print_exc()` or
+  `logging.exception(...)`. Optionally pass the turn's usage into the reply.
+
+  **F2. The page shows the model's rejected first answer word for word. Low
+  severity; high confidence on the fact, the owner's call whether it matters.**
+  `/Users/doronreiffman/Projects/weather-risk-agent/src/wra/api/static/index.htm
+  l` lines 174 to 178. After a repair, the "How this was computed" panel prints
+  `trace.rejected_answer`, including the numbers that failed the grounding
+  check. It is labelled "First answer" and sits in a collapsed panel. It still
+  conflicts with the loop's own promise ("Nothing unverified is shown",
+  `loop.py` line 10; plan section 8.4). It is not among the Claude choices
+  listed in `docs/ASSUMPTIONS.md` milestone 4 point 5. Either list it there or
+  drop that block from the page (the API trace can keep it).
+
+  **F3. An error reply overwrites what the user typed while waiting. Low
+  severity, high confidence (by reading).**
+  Same file, lines 242, 252 and 256. `setWorking` (line 219) disables the two
+  buttons but not the text box. Case: the user types the next question during a
+  slow answer, the reply is a 502, and `box.value = message` replaces the new
+  text with the old question. Fix: restore only when the box is empty, or
+  disable the box while working.
+
+  **F4. The page's logic has no automated check. Low severity, high confidence
+  (by reading `tests/test_api.py`).**
+  The only page test checks static content (FEMA notice, no outside code). The
+  bold-only escaping and the restart path (404, question back in the box) rest
+  on the owner's manual pass; the record does not say the restart path was
+  tried. I read both paths and found no bug. Acceptable at demo grade; worth a
+  manual restart test before the demo.
+
+  **The fixes in 772b0d6 are correct, as far as reading shows.**
+  - Roll-back on an internal error uses the state captured before the turn, and
+  releases the lock.
+  - A call cut short by the limit, or a failure with less time left than the
+  pause, reports `time_limit`. The check order in `_call` is right.
+  - `_retry_wait` matches the SDK's `_should_retry` and
+  `_parse_retry_after_header` (anthropic 2.13.0, `_base_client.py` lines 879 to
+  972), including `retry-after-ms: 0` falling back to the back-off.
+  - Empty and oversized ids get 422. "New conversation" is disabled while
+  working.
+  - `evals/run.py` and `wra chat` start with a null id, so refusing unknown ids
+  does not break them.
+
+  ## 2. Verdict
+
+  - **Fulfils the task: yes.** Every named deliverable is present, and the four
+  owner choices are built as chosen (409 busy, 404 unknown without a model call,
+  502 others, 200 for answers; bold only after escaping; 90 s per message). The
+  agreed mid-session items are there too: error codes, SDK retries off with one
+  loop retry inside the limit, 500 with the reply as body.
+  - **In scope: yes.** q13 (jargon) is queued, not built. No bonus work.
+  - **Demo grade: yes, with one piece on the heavy side.** `_retry_wait` mirrors
+  the SDK's full retry policy with a 17-case test. It is about 25 lines and
+  follows from the agreed retry move, so I would keep it. The `/docs` error
+  descriptions and the dark-mode styles are small extras.
+
+  ## 3. Doc claims the code or repository contradicts
+
+  - **`docs/PLAN.md` line 654:** lists eight error codes; the code has nine.
+  `internal_error` is missing (`src/wra/agent/schemas.py` lines 19 to 20).
+  - **`docs/ASSUMPTIONS.md` line 80:** the latency figures are paired with the
+  wrong runs. I sorted the 19 `latency_ms` values in each file by hand:
+
+    | Run | Median | Max |
+    |---|---|---|
+    | `20261124T125737Z-claude` | 5.5 s | 8.7 s |
+    | `20261124T133703Z-claude` | 5.1 s | 7.5 s |
+
+    The text names the runs in that order but gives "5.1 and 5.5" and "7.5 and
+  8.7". The bold counts in point 4 (13 and 15 of 19) are in the right order and
+  match my count.
+  - **`docs/ASSUMPTIONS.md` O15:** cites lines 96 to 107 of
+  `daily_weather_stats.py` for "Days with a trace only"; that label is on line
+  115. Trivial.
+  - **`docs/ai-session/README.md` and the q5 proof line:** both point at
+  `04-api.txt`, which is not in `docs/ai-session/` yet. q14 tracks it; the
+  pointers are dangling until then.
+
+  Checked and found right:
+  - the 4,294,967-second cap (`_base_client.py` line 926) and the 0.5 s first
+  back-off;
+  - per-stage timeouts in `httpx2/_config.py`;
+  - the FEMA notice is identical in README line 51 and the page;
+  - commits 170d557 and ac1912e to 772b0d6 exist in the reflog;
+  - DECISIONS.md was only appended to;
+  - no work-address domain, key or session link in the diff.
+
+  Not checked:
+  - "309 passed", the 0.046 USD curl check and the commit messages (no shell);
+  - the rate-limits page on platform.claude.com.
+
+  One note: the working copy of
+  `/Users/doronreiffman/Projects/weather-risk-agent/.claude/QUEUE.md` has a
+  [q15] line that is not in the diff I was given, so the file has changed since
+  the diff was made. q15 itself records that a commit message this session
+  claimed a test count from a tree holding the next commit's changes, which is a
+  breach of rule 6 already on the queue.
+
+⏺ The final review is back. Nothing serious: one medium finding, three low ones,
+  and four slips in the records. Before acting, I'm checking the two claims I
+  can't see from memory: where "Days with a trace only" sits in the code, and
+  how my latency figures pair with the runs.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Agent "Handoff gate: review session diff" finished · 8m 5s
+
+⏺ All four claims checked out, so I'm fixing the three issues now, tests first:
+  the traceback will print to the server log, the page will stop showing the
+  rejected first answer, and an error reply will no longer overwrite a question
+  you're still typing. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The two new checks fail as they should. The renderer test passes, because it
+  guards behaviour that was already right. Now the fixes:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ 310 tests pass now, including the new renderer test. I'm committing the fixes
+  and running the suite on just this commit, setting aside the handoff's own
+  edits in the folder. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The commit failed because the git hook couldn't find the untracked guard
+  script, which my stash had set aside. I'm retrying with only the edited
+  tracked files stashed, leaving the guard script in place. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Fixes committed as 914fe8c, with 310 tests passing on exactly that tree.
+
+  The review gate needs one acknowledgement from you before I save the handoff.
+  One finding can't be fixed within the project's rules. Testing the page's own
+  behaviour automatically would need a JavaScript test package, and the project
+  bans those. That behaviour is:
+
+  - the conversation-lost path after a server restart (the error card, your
+    question back in the box, the fresh conversation);
+  - the "New conversation" button.
+
+  The bold renderer is now tested by running it in Node. The rest has only been
+  checked by reading the code. The optional restart step in your page check
+  would have covered it.
+
+  Did you try that restart step? And do you accept the rest staying a manual
+  check before the demo? If you accept, I'll log it in a new
+  .claude/OPEN_ISSUES.md, the project's first. Then I'll save the prompt and
+  make the handoff commit.
+
+  Already fixed, so nothing for you to decide:
+
+  - A bug in our own code now prints its full traceback to the log.
+  - The page no longer shows a rejected first answer's text, only what it
+    failed.
+  - A question you type while waiting is no longer overwritten by an error
+    reply.
+  - Four slips in the records are corrected.
+
+  What let the latency slip through. Your global CLAUDE.md line "Recheck
+  assumptions before every revision" names "a proposal, a plan or a draft". When
+  I added the run names to the assumptions file, I didn't treat that edit as a
+  revision, so I never rechecked which figure went with which run. Proposed fix:
+  add "or a record" to that list.
+
+✻ Cooked for 11m 26s · done 10:57 PM
+
+❯ yes, I tried the restart. let's handle the rest next session                  
+
+⏺ Got it. The restart path is confirmed by your hand test, and the rest moves to
+  the next session. Recording that:
+
+  - A new .claude/OPEN_ISSUES.md holds the remaining gap: "New conversation" and
+    the restore-to-box behaviour still have no automated check.
+  - A new queue item, q16, points to it.
+  - Queue item q15 now carries both proposed instruction wordings, so the next
+    session can ask you about them together: rule 6 in the project's CLAUDE.md,
+    and "or a record" in your global CLAUDE.md.
+  - Milestone 4's proof in the queue now includes your restart test.
+
+⏺ Write(.claude/OPEN_ISSUES.md)
+  ⎿  Wrote 7 lines to .claude/OPEN_ISSUES.md
+      1 # Open issues
+      2 
+      3 The living list of what is open now: blockers, deferred findings,
+         "fix someday". Each entry holds its current state; it is replace
+        d when the state changes and deleted when resolved (git keeps the
+         history). Open facts and assumptions about the data stay in `doc
+        s/ASSUMPTIONS.md`.
+      4 
+      5 ## The chat page
+      6 
+     … +1 line (ctrl+o to expand)
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ The prompt is finalized at 6,586 bytes, under the limit and free of the
+  end-marker word. Next I'll commit the handoff: the queue guard, the
+  open-issues list, and the two CLAUDE.md lines. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Committed (c739ec1), and the guard let it through. Now saving the prompt where
+  the next session loads it automatically:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Task: Make the agent's answers explain the terms they use (queue item q13), 
+  then start milestone 5 (q6) with its free parts. Paid runs wait until q13 has 
+  landed and the owner approves each one.
+
+  Where to work: /Users/doronreiffman/Projects/weather-risk-agent (one Python 
+  package, src/wra, managed with uv). Branch main, no remote.
+
+  Read first, in this order:
+  1. CLAUDE.md (rule 12 now names `wra serve`: every question sent to it is 
+  paid)
+  2. .claude/QUEUE.md
+  3. docs/ASSUMPTIONS.md: open points O15 (the jargon) and O14 (verdict length),
+  then the section "Settled 2026-11-24 in milestone 4"
+  4. docs/PLAN.md: section 13 (M5 and the final end-to-end check), section 9 
+  (the model comparison), section 10.3, and the milestone 4 entry under 
+  Deviations
+  5. src/wra/agent/prompt.py, the display text in src/wra/tools/ (titles, 
+  columns, what_counts, notes; for example daily_weather_stats.py lines 90 to 
+  120), and the [notes] section of config/scoring.toml (known_limits and the 
+  other fixed notes)
+  6. docs/DECISIONS.md, the last three entries
+
+  Two checks before the main work:
+
+  A. Session 04 transcript (q14). Check: ls docs/ai-session/04-api.txt
+    Present → run the work-address check from CLAUDE.md on it, and `grep -c -E 
+  'claude\.ai/code/session_[A-Za-z0-9]' docs/ai-session/04-api.txt` must print 0
+  (the pattern needs a character after "session_": the plain text also appears 
+  where a handoff quotes the search itself). Commit it alone ("Add session 04 
+  transcript") and move q14 to Done.
+    Absent → tell the owner the export did not happen and leave q14 open. Its 
+  index line in docs/ai-session/README.md is already written.
+
+  B. This prompt's delivery. Check: the session-start text shows this prompt 
+  under "=== LAST HANDOFF ===".
+    Shown → say so in one line.
+    Not shown (the owner pasted it) → tell the owner the automatic load failed; 
+  look at .remember/remember.md and .remember/last-handoff.md.
+
+  q13, the jargon (owner, at the milestone 4 page check: "make sure the agent 
+  doesn't speak in jargon without explaining it", e.g. "trace day"):
+  - Survey before proposing (CLAUDE.md rule 11). List every term an analyst 
+  would not know in the text code writes (src/wra/tools/: titles, column names, 
+  what_counts, notes; config/scoring.toml [notes]) and in the model's verdicts 
+  and caveats in the two saved evaluation runs 
+  (evals/runs/20261124T125737Z-claude and evals/runs/20261124T133703Z-claude; 
+  local only, git ignores them). Hand-check a few before reporting a count. 
+  "Trace" is the one confirmed example: the Denver table says "Days with a trace
+  only" and "Trace days are counted apart" and never says what a trace is.
+  - Then ask the owner one question on the approach, with what an analyst would 
+  see under each option (for example: each term explained where it first 
+  appears, in code-written text and through a prompt rule; or a short glossary 
+  on the page).
+  - Build test-first. Parts of the code-written wording are asserted in 
+  tests/test_tools.py (for example that the snowfall what_counts holds "0.1 
+  inch"); write the tests for the new wording first.
+  - The grounding check reads every number in a cited result, digits inside its 
+  display text included (src/wra/agent/grounding.py, source_numbers), so a 
+  definition with a figure that code writes ("0.1 inch") can be repeated by the 
+  model.
+  - Record the outcome in docs/ASSUMPTIONS.md O15 in the same commit.
+
+  q15: two proposed instruction wordings, both in the queue line: project 
+  CLAUDE.md rule 6, and one line of the owner's global ~/.claude/CLAUDE.md. Ask 
+  the owner once about both; edit either file only on the owner's word.
+
+  q16: the page's own logic ("New conversation", the question kept in the box, 
+  the reset after a 404) has no automated test; state in .claude/OPEN_ISSUES.md.
+  The owner chose to settle it in this session: offer the options (a written 
+  manual check before the demo, or another approach that adds no JavaScript 
+  package) and record the choice there.
+
+  q6, milestone 5, free parts (no API call): scripts/e2e.sh and the WRA_ENV_FILE
+  setting it needs (plan section 13, final check, step 1: the cloned app finds 
+  the original repository's .env through it; the key is never copied or 
+  printed); drafts of docs/ARCHITECTURE.md and docs/SUMMARY.md; README updates. 
+  Paid parts, each asked for first with its cost reported: `wra eval --reps 3` 
+  (one run cost 0.53 USD at list price on commit 097adfb), the model comparison 
+  of section 9, and the final run of scripts/e2e.sh (it runs `wra eval --reps 3`
+  again). The three-repetition run also measures verdict length (O14).
+
+  Constraints (do not reopen): the scoring rule and weights; the bands; the 
+  confidence rules; the evaluation's grading rules; the answer checks; the 
+  milestone 4 behaviour (HTTP 200 for answers, 409 busy, 404 unknown 
+  conversation, 502 model-side failure, 500 a bug in our code, 422 malformed; 
+  unknown conversations refused; bold only on the page; 90 s per message with 
+  the loop making the one retry). No agent framework, no JavaScript packages. 
+  .env stays unread. Commits carry the repo-local personal address; run the 
+  work-address check before every commit. A commit message claims only what was 
+  run, on the tree being committed. Do not drive the owner's browser. 
+  docs/DECISIONS.md is append-only.
+
+  Verify, pasting each command and its output:
+  1. uv run pytest -q → all pass (310 at the start of this session), the new q13
+  tests included
+  2. The owner reads one answer that uses a former jargon term, through `wra 
+  ask` or the page (paid: ask first)
+  3. git status clean; small commits
+
+  Background:
+  - Milestone 4 is done (commits ac1912e to 3081392, review fixes in 914fe8c): 
+  FastAPI app in src/wra/api/app.py, the page in src/wra/api/static/index.html, 
+  `wra serve`. The paid check of a question and its follow-up cost 0.046 USD; 
+  API spend so far is about 1.18 USD.
+  - No evaluation run has been made on the current prompt and agent: the last, 
+  on 097adfb, passed 14 of 14 with no repairs.
+  - A bug in the agent's own code is HTTP 500: Claude's choice after the 
+  milestone 4 review, flagged to the owner, recorded in ASSUMPTIONS milestone 4 
+  point 5 and the decision log, open to change.
+  - The post-merge quiz on milestone 4 (three questions at the end of session 
+  04) went unanswered. Offer it once; do not block on it.
+  - Queue guard: .git/hooks/pre-commit (not tracked by git) runs 
+  .claude/hooks/queue-guard.py, which refuses a commit that loses an open queue 
+  id.
+  - If port 8000 is busy, it is probably the owner's own `wra serve`; ask before
+  stopping it.
+  - The main session runs on Opus. Plan section 14 puts the final whole-diff 
+  review on a Fable subagent.
+
+  The handoff is done, and the next session will load this prompt by itself.
+
+  - Saved. The plugin reported "Wrote handoff to:
+    /Users/doronreiffman/Projects/weather-risk-agent/.remember/remember.md". An
+    identical copy is in .remember/last-handoff.md, and git ignores both. The
+    next session shows the prompt as information only, so open it with a short
+    message such as "continue from the handoff".
+  - Committed.
+    - 914fe8c fixes what the final review found. It passed the review gate with
+      your acknowledgement, and 310 tests pass on exactly that tree.
+    - c739ec1 is the handoff commit. The working tree is clean.
+  - CLAUDE.md. Rule 12 now names wra serve among the paid commands, and there's
+    a one-line pointer to the new open-issues list.
+  - Decision log. No new entry at handoff. The session added three during the
+    work: the retry moved into the loop, the HTTP statuses, and the 500 for our
+    own bugs.
+  - Open issues. I created .claude/OPEN_ISSUES.md with one entry: the page's own
+    logic has no automated test, and the next session settles it as q16.
+  - Queue guard. It's now installed in this project, and it let the handoff
+    commit through.
+
+  Before you /clear:
+
+  1. Run /export into docs/ai-session/04-api.txt. The next session commits it
+     (q14).
+  2. Stop your wra serve with Ctrl-C if it's still running.
+
+  Want any part of the prompt changed?
+
+✻ Cogitated for 1m 44s · done 11:26 PM
