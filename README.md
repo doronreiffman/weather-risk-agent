@@ -17,6 +17,13 @@ uv run pytest -q
 
 `uv run wra ingest --refresh` fetches everything again from the public services first (48 requests, about 90 seconds). It is not needed to run the project: the responses fetched on 2026-11-24 are stored under `data/raw/`.
 
+## How the build sessions were run
+
+The full Claude Code sessions are in [docs/ai-session/](docs/ai-session/). Two of the owner's own tools carried context from one session to the next. Neither is part of this repository.
+
+- **`handoff` skill:** closes a session. A fresh reviewer checks the session's changes, the work queue in `.claude/QUEUE.md` is re-sorted, and Claude writes a ready-to-paste prompt for the next session.
+- **`remember` plugin:** keeps running notes of each session in a local `.remember/` folder, which git ignores, and loads them into the next session when it starts.
+
 ## Data sources
 
 - Iowa Environmental Mesonet warning archive: past National Weather Service warnings for each hub's location.
