@@ -6,14 +6,14 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. A public URL spends the owner's API credit on every message, so it needs an access guard. → `docs/PLAN.md` section 13
-- [q21] Run the README's page check by hand before a demo (owner; one paid question, under a cent on Haiku). → `.claude/OPEN_ISSUES.md`, "The page's own logic has no automated test"
-- [q19] Owner decision: the queue guard also refuses a line under Done / Dropped without "Done <date>" or "dropped" (an open item was filed under Done in session 05 and the guard let it through). → `.claude/hooks/queue-guard.py`
-- [q20] Owner decision on two global `~/.claude/CLAUDE.md` lines from session 05: (a) a subagent cannot write .md files, so it returns the text and the main session saves it; (b) before a commit, every file the message names is staged (a README change was left out of a commit whose message claimed it, amended before push). Edit only on the owner's word. → `~/.claude/CLAUDE.md`
-- [q8] Bonuses, ask first: score-change alert, voice. → `docs/PLAN.md` section 13
+- [q21] Run the README's page check by hand (owner; one paid question, under a cent on Haiku). Owner 2026-11-25: running it now, on the local server. → `.claude/OPEN_ISSUES.md`, "The page's own logic has no automated test"
+- [q10] Deployment to a public URL. Owner 2026-11-25: go, design first, for the owner's approval before anything is built. The assignment calls it preferred, so it stands apart from the bonuses. A public URL spends the owner's API credit on every message, so it needs an access guard. → `docs/PLAN.md` section 13
+- [q8] Bonuses, ask first: score-change alert, voice. Owner 2026-11-25: not now; the public URL comes first. → `docs/PLAN.md` section 13
 
 ## Done / Dropped
 
+- [q19] The queue guard refuses a line under Done / Dropped without "Done <date>" or "dropped" (owner's go 2026-11-25). Done 2026-11-25. Proof: the commit that moves this line, with the guard's first tests (`tests/test_queue_guard.py`, 7 tests; the two for the new rule failed before the change); `uv run pytest -q` 367 passed on that tree, and the guard checked this file with the new rule when the commit was made.
+- [q20] Two global `~/.claude/CLAUDE.md` lines from session 05 (owner's go 2026-11-25). Done 2026-11-25. Proof: (a) "A subagent returns a document as text", after the `gh` line under Working habits; (b) folded into Safety's "Before any commit": stage every file the commit message names. That folder's own auto-sync commits it.
 - [q18] Final end-to-end check re-run on the shipped code. Done 2026-11-25. Proof: `scripts/e2e.sh --paid` passed on `27c5b6d` (360 tests in a fresh clone, 6 of 6 API questions, `wra eval --reps 3` 42 of 42, none refused or repaired, target met; 0.043 USD for the evaluation from its run record plus about 0.01 for the API questions); the owner ran it with `!` after the auto-mode permission check refused it again. Run record `20261124T234915Z-claude` and the doc updates are in the commit that moves this line.
 - [q17] Session 05 transcript committed. Done 2026-11-25. Proof: commit `3339d36`; the work-address check, the session-link search (`claude\.ai/code/session_[A-Za-z0-9]`) and a search for key-like text (`sk-ant-`) all printed 0 on the file before it was committed.
 - [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. Done 2026-11-25. Proof: `scripts/e2e.sh --paid` passed on `1b455ab` (354 tests in a fresh clone, 6 of 6 API questions, `wra eval --reps 3` 42 of 42, target met, about 0.05 USD; run `20261124T232102Z-claude`), and again on `27c5b6d` after the hazard order field (q18); `docs/EVAL_RESULTS.md`, `docs/ARCHITECTURE.md`, `docs/SUMMARY.md`; the Fable review's eight findings fixed in `1b455ab`; the owner chose Haiku 5.5 (decision log).

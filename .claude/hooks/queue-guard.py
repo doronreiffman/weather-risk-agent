@@ -5,7 +5,9 @@ The queue is the ordered list of work for this project. Its one guarantee is tha
 is lost between sessions: a handoff may re-sort, add or move items, but every `[qN]` id
 that is open in HEAD must still be present in the staged file, in any section. Ids under a
 `## Done` / `## Dropped` heading in HEAD are history and may be pruned. Duplicate ids in
-the staged file are refused too, so an id is never reused.
+the staged file are refused too, so an id is never reused. A line under Done / Dropped must
+say "Done <date>" or "dropped": the heading alone let an open item filed there by mistake
+pass as finished (session 05, 2026-11-25).
 
 WHY compare HEAD against the index rather than scan added lines: the failure this guards
 against is an omission, and omissions leave no added line to scan.
@@ -22,6 +24,7 @@ from dataclasses import dataclass
 QUEUE_PATH = ".claude/QUEUE.md"
 ID_PATTERN = re.compile(r"^\s*-\s*\[q(\d+)\]")
 HEADING_PATTERN = re.compile(r"^##\s+(.*)$")
+CLOSED_PATTERN = re.compile(r"\b(done \d{4}-\d{2}-\d{2}|dropped)\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -57,6 +60,12 @@ def check(head_text: str, staged_text: str) -> list[str]:
     for item_id, count in sorted(staged_ids.items()):
         if count > 1:
             problems.append(f"[q{item_id}] appears {count} times; ids are never reused")
+    for item in staged_items:
+        if not item.is_open and not CLOSED_PATTERN.search(item.text):
+            problems.append(
+                f"[q{item.id}] sits under Done / Dropped without 'Done <date>' or 'dropped': {item.text}\n"
+                f"      if it is still open, move it back under '## Queue'"
+            )
     for item in head_items:
         if item.is_open and item.id not in staged_ids:
             problems.append(
