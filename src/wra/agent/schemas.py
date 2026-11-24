@@ -23,6 +23,7 @@ class FinalAnswer(BaseModel):
     verdict: str  # one to four sentences of Markdown, no tables
     evidence: list[str]  # result ids (R1, R2, ...) whose tables the page shows, in order
     hubs_ranked: list[str]  # the order the verdict asserts, most exposed first; empty if none
+    hubs_from: Literal["top", "bottom"]  # which end of the cited order those hubs come from
     is_what_if: bool
     caveats: list[str]  # zero to three short sentences
 
@@ -40,6 +41,7 @@ class Trace(BaseModel):
     tool_calls: list[ToolCallRecord] = []
     repaired: bool = False
     repair_problems: list[str] = []  # what the first answer failed, when it was repaired
+    rejected_answer: str | None = None  # that first answer, as the model wrote it
     latency_ms: int = 0
     usage: dict[str, Any] = {}
 
@@ -63,6 +65,7 @@ class AgentReply(BaseModel):
     caveats: list[str] = []
     hubs_ranked: list[str] = []
     is_what_if: bool = False
+    evidence: list[str] = []  # the result ids the answer cites; their tables are `tables`
     error: str | None = None  # a plain message when status is "error"
     trace: Trace
 

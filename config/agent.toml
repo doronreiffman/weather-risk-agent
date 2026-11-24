@@ -28,3 +28,5 @@ cache_read = 0.10
 [prices.claude-haiku-5-5]
 input = 0.10
 output = 0.50
+# The reference gives no cache-read price for Haiku 5.5, so cache reads are charged at
+# the input price here: an overstatement, never an understatement.

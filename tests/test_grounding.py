@@ -48,5 +48,14 @@ def test_an_argument_counts_as_a_source():
     assert ungrounded("With hurricanes counted 2 times", [RESULT], [{"value": 2}]) == []
 
 
+def test_a_decimal_without_a_leading_zero_is_read():
+    assert numbers_in_text("a ratio of .93") == [(".93", 0.93, 2)]
+    assert ungrounded("a ratio of .93", [RESULT], []) == [".93"]
+
+
+def test_result_ids_are_not_figures():
+    assert numbers_in_text("see R1 and R12") == []
+
+
 def test_text_without_digits_has_nothing_to_check():
     assert ungrounded("Roughly twice as exposed.", [RESULT], []) == []

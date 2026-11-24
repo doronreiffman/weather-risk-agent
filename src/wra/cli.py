@@ -1,7 +1,7 @@
 """Command-line entry point.
 
 Subcommands are added one milestone at a time (docs/PLAN.md, section 13).
-So far: ingest, data-report, rank, ask, eval. To come: serve.
+So far: ingest, data-report, rank, ask, chat, eval. To come: serve.
 """
 
 import argparse
@@ -45,6 +45,11 @@ def main(argv: list[str] | None = None) -> int:
         "data, period and confidence lines. Needs ANTHROPIC_API_KEY in .env.",
     )
     ask.add_argument("question")
+    commands.add_parser(
+        "chat",
+        help="a conversation with the agent in the terminal, follow-ups included (paid API calls)",
+        description="Type questions; each answer is validated before it is printed. An empty line or Ctrl-D ends.",
+    )
 
     evaluate = commands.add_parser(
         "eval",
@@ -66,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
             return _rank(args.hazard, args.region, args.top)
         if args.command == "ask":
             return _ask(args.question)
+        if args.command == "chat":
+            return _chat()
         if args.command == "eval":
             return _eval(args.agent, args.reps)
     except (SourceError, NoDatabase) as error:
@@ -148,9 +155,34 @@ def _eval(agent_name: str, reps: int) -> int:
 def _ask(question: str) -> int:
     from wra.agent.loop import ClaudeAgent
     from wra.tools.context import load_context
-    from wra.tools.text import display_text, footnote_text
 
     reply = ClaudeAgent(load_context()).answer(None, question)
+    _print_reply(reply)
+    return 1 if reply.status == "error" else 0
+
+
+def _chat() -> int:
+    from wra.agent.loop import ClaudeAgent
+    from wra.tools.context import load_context
+
+    agent, session = ClaudeAgent(load_context()), None
+    print("Ask about the hubs' weather exposure. An empty line ends.")
+    while True:
+        try:
+            question = input("\n> ").strip()
+        except EOFError:
+            break
+        if not question:
+            break
+        reply = agent.answer(session, question)
+        session = reply.session_id
+        _print_reply(reply)
+    return 0
+
+
+def _print_reply(reply) -> None:
+    from wra.tools.text import display_text, footnote_text
+
     t = reply.trace
     if reply.status == "error":
         print(f"error: {reply.error}", file=sys.stderr)
@@ -168,7 +200,6 @@ def _ask(question: str) -> int:
           f"{t.latency_ms / 1000:.1f} s; tokens {_input_tokens(t.usage)} in "
           f"({t.usage.get('cache_read_input_tokens', 0)} from cache), {t.usage.get('output_tokens', 0)} out"
           + (f"; cost ${cost:.4f} at list price" if cost is not None else "") + ")")
-    return 1 if reply.status == "error" else 0
 
 
 def _input_tokens(usage: dict) -> int:

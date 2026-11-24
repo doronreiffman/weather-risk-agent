@@ -16,8 +16,8 @@ import re
 from dataclasses import dataclass
 
 from wra.agent.schemas import AgentReply
+from wra.agent.checks import first_band
 from wra.evals.cases import Case, expected_band
-from wra.scoring.config import BAND_LABELS
 from wra.tools.context import ToolContext
 from wra.tools.registry import run_tool
 
@@ -120,7 +120,7 @@ def _mentions(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
         # The first band the verdict names is its claim; a later or caveated mention of a neighbouring
         # band ("one quieter year could drop it to Moderate") is allowed (owner, 2026-11-24).
         want = expected_band(ctx, case.band_of)
-        first = _first_band(last.verdict)
+        first = first_band(last.verdict)
         required.append(want)
         if first is None:
             problems.append(f"the verdict names no band; expected {want!r}")
@@ -132,20 +132,6 @@ def _mentions(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
 def _has(text: str, word: str) -> bool:
     """A whole word, or a whole number: "7.1" is not found in "17.1" or "7.15"."""
     return re.search(rf"(?<![\w.]){re.escape(word)}(?!\w|\.\d)", text, flags=re.IGNORECASE) is not None
-
-
-def _first_band(text: str) -> str | None:
-    """The first band label in the text, written as the tools write it, capitalised. "High" inside
-    "Very high" is not High; "Low confidence" is the confidence label, not a band."""
-    first = None
-    for label in BAND_LABELS:
-        pattern = rf"(?<![\w])(?<!Very ){re.escape(label)}(?![\w])"
-        if label == "Low":
-            pattern += r"(?! confidence)"
-        match = re.search(pattern, text)
-        if match and (first is None or match.start() < first[0]):
-            first = (match.start(), label)
-    return first[1] if first else None
 
 
 def _in_order(got: list[str], expected: list[str]) -> bool:

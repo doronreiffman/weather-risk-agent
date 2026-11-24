@@ -1,7 +1,15 @@
 """The system prompt. Built from the stored hubs and the config, so it is the same on every
 request and the API can cache it; nothing in it changes per question or per day."""
 
+from wra.agent.grounding import numbers_in_text
 from wra.tools.context import ToolContext
+
+
+def prompt_facts(ctx: ToolContext) -> list[float]:
+    """The figures the prompt states, which an answer may use without citing a tool (owner, 2026-11-24):
+    the period, FEMA's record years and the number of hubs. Code produces them, as it does tool results."""
+    cfg = ctx.config
+    return [cfg.first_year, cfg.last_year, len(ctx.data.hubs), *(n for _, n, _ in numbers_in_text(cfg.fema_period))]
 
 
 def system_prompt(ctx: ToolContext) -> str:
@@ -11,11 +19,11 @@ def system_prompt(ctx: ToolContext) -> str:
 investment this year. You rank hubs by weather exposure, explain the ranking, and say plainly what the data \
 cannot tell them. Exposure means weather at the hub's location only.
 
-The hubs: {hubs}. There are no others.
+The {len(ctx.data.hubs)} hubs: {hubs}. There are no others.
 
 What the data covers: National Weather Service warnings at each hub for {cfg.first_year} to {cfg.last_year}, \
-FEMA's long-run hurricane frequency, and daily snowfall and precipitation at each hub's airport station for \
-{cfg.first_year} to {cfg.last_year}. Four hazards are scored: winter weather, flooding, severe storms, hurricanes.
+FEMA's long-run hurricane frequency (its record runs {cfg.fema_period.replace("-", " to ")}), and daily snowfall \
+and precipitation at each hub's airport station for {cfg.first_year} to {cfg.last_year}. Four hazards are scored: winter weather, flooding, severe storms, hurricanes.
 
 How to answer:
 - Use the tools for every figure. Write a number only if it appears in a tool result you cite, or in its \
@@ -40,6 +48,8 @@ cited results' tables with their notes, sources, period and confidence beside yo
 when status is "answered".
 - hubs_ranked: the hubs your verdict puts in order, most exposed first, matching the cited ranking or \
 comparison. Empty if the verdict asserts no order.
+- hubs_from: "top" when those hubs are the most exposed end of the cited order; "bottom" when the verdict is \
+about the least exposed end (then hubs_ranked ends with the least exposed hub).
 - is_what_if: true exactly when you cite a what-if result.
 - caveats: zero to three short sentences, only what neither the verdict nor the tables' notes already say.
 - For "no_data", cite the result that reported the missing period and give the covered range it states.

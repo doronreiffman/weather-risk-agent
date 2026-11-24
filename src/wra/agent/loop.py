@@ -2,12 +2,18 @@
 
 One user message: call Claude with the system prompt, the conversation, six strict tools and the
 final-answer schema; run the tools it calls and send the results back; when it answers, validate the
-answer in code. One repair attempt if anything fails, then a clear error. At most `max_model_calls`
-model calls per message. A refused or cut-off reply becomes an error. Nothing unverified is shown.
+answer in code (checks.py). One repair attempt if anything fails, then a clear error. At most
+`max_model_calls` model calls per message. A refused or cut-off reply becomes an error. Nothing
+unverified is shown.
 
-Every response is appended to the conversation unchanged, thinking blocks included, which is what
-Opus 5.5 requires. Each tool result is stamped with a short result id (R1, R2, ...) that the final
-answer cites as evidence; the milestone 3 spike showed the model invents ids it cannot see.
+The conversation is kept append-only, which Opus 5.5's thinking blocks require, with two exceptions
+set by the API or by us:
+- after a server-side fallback, the thinking and tool-call blocks before the response's final
+  `fallback` block are left out when the turn is sent back, as the API's fallback rules say;
+- a turn that ends in an error is removed whole, so the next question does not inherit a rejected
+  answer or a repair message.
+Each tool result is stamped with a short result id (R1, R2, ...) that the final answer cites as
+evidence; the milestone 3 spike showed the model invents ids it cannot see.
 """
 
 import json
@@ -19,12 +25,13 @@ from typing import Any, Protocol
 from pydantic import ValidationError
 
 from wra.agent.checks import CitedResult, check_answer
-from wra.agent.prompt import system_prompt
+from wra.agent.prompt import prompt_facts, system_prompt
 from wra.agent.render import render
 from wra.agent.schemas import AgentReply, FinalAnswer, ToolCallRecord, Trace
 from wra.agent.settings import AgentSettings, load_settings
 from wra.agent.tooldefs import final_answer_schema, tool_definitions
 from wra.tools.context import ToolContext
+from wra.tools.envelope import failure
 from wra.tools.registry import run_tool
 
 REPAIR = (
@@ -32,6 +39,7 @@ REPAIR = (
     "You may call tools first if you need a result to cite."
 )
 USAGE_FIELDS = ("input_tokens", "output_tokens", "cache_read_input_tokens", "cache_creation_input_tokens")
+_BEFORE_FALLBACK_LEFT_OUT = {"thinking", "redacted_thinking", "tool_use", "server_tool_use"}
 
 
 class ModelClient(Protocol):
@@ -73,6 +81,8 @@ class ClaudeAgent:
         self.tools = tool_definitions(hub_ids)
         self.answer_schema = final_answer_schema(hub_ids)
         self.system = system_prompt(ctx)
+        self.facts = prompt_facts(ctx)
+        self.hub_names = {h: rec.city for h, rec in ctx.data.hubs.items()}
 
     def request(self, messages: list[dict]) -> dict[str, Any]:
         s = self.settings
@@ -94,21 +104,26 @@ class ClaudeAgent:
         if session is None:
             session = Session(id=session_id or uuid.uuid4().hex)
             self.sessions[session.id] = session
+        kept_messages, kept_results = len(session.messages), set(session.results)
         session.messages.append({"role": "user", "content": message})
         started = time.monotonic()
         usage = dict.fromkeys(USAGE_FIELDS, 0)
+        cost: float | None = 0.0
         calls: list[ToolCallRecord] = []
         model = self.settings.model
-        repaired = False
         repair_problems: list[str] = []
+        rejected: str | None = None
 
         def trace() -> Trace:
-            cost = self.settings.cost(model, usage)
-            return Trace(model=model, tool_calls=calls, repaired=repaired, repair_problems=repair_problems,
+            return Trace(model=model, tool_calls=calls, repaired=bool(repair_problems),
+                         repair_problems=repair_problems, rejected_answer=rejected,
                          latency_ms=int(1000 * (time.monotonic() - started)),
                          usage={**usage, "cost_usd": None if cost is None else round(cost, 6)})  # fmt: skip
 
         def fail(text: str) -> AgentReply:
+            del session.messages[kept_messages:]  # the failed turn leaves no trace in the conversation
+            for result_id in [r for r in session.results if r not in kept_results]:
+                del session.results[result_id]
             return AgentReply(session_id=session.id, status="error", verdict="", error=text, trace=trace())
 
         for _ in range(self.settings.max_model_calls):
@@ -117,28 +132,31 @@ class ClaudeAgent:
             except Exception as error:  # the SDK's typed errors; reported by class, never with request contents
                 return fail(f"The model could not be reached ({type(error).__name__}).")
             model = getattr(response, "model", model)
+            this = {key: getattr(response.usage, key, 0) or 0 for key in USAGE_FIELDS}
             for key in USAGE_FIELDS:
-                usage[key] += getattr(response.usage, key, 0) or 0
+                usage[key] += this[key]
+            priced = self.settings.cost(model, this)  # each response at its own model's price
+            cost = None if cost is None or priced is None else cost + priced
 
             if response.stop_reason == "refusal":
                 return fail("The model declined to answer this request.")
             if response.stop_reason == "max_tokens":
                 return fail("The model's reply was cut off at its length limit.")
-            session.messages.append({"role": "assistant", "content": response.content})
+            session.messages.append({"role": "assistant", "content": _echo(response.content)})
 
-            uses = [b for b in response.content if b.type == "tool_use"]
+            live = _after_fallback(response.content)
+            uses = [b for b in live if b.type == "tool_use"]
             if uses:
                 session.messages.append({"role": "user", "content": [self._run(session, b, calls) for b in uses]})
                 continue
 
-            text = "".join(b.text for b in response.content if b.type == "text")
+            text = "".join(b.text for b in live if b.type == "text")
             answer, problems = self._parse(text, session)
             if not problems:
                 return render(session.id, answer, session.results, trace())
-            if repaired:
+            if repair_problems:
                 return fail("The answer failed validation twice: " + "; ".join(problems))
-            repaired = True
-            repair_problems = problems
+            repair_problems, rejected = problems, text
             session.messages.append({"role": "user", "content": REPAIR.format(problems="\n- ".join(problems))})
         return fail(f"No final answer within {self.settings.max_model_calls} model calls.")
 
@@ -146,7 +164,10 @@ class ClaudeAgent:
         result_id = f"R{len(session.results) + 1}"
         args = block.input if isinstance(block.input, dict) else {}
         record = ToolCallRecord(id=result_id, name=block.name, input=args)
-        result = run_tool(self.ctx, block.name, args)
+        try:
+            result = run_tool(self.ctx, block.name, args)
+        except Exception as error:  # a tool bug must not leave a tool call without its result
+            result = failure(block.name, "tool_failed", f"The tool failed ({type(error).__name__}).")
         session.results[result_id] = CitedResult(result_id, record, result)
         calls.append(record)
         content = json.dumps({"result_id": result_id, **result.model_dump()})
@@ -157,4 +178,19 @@ class ClaudeAgent:
             answer = FinalAnswer.model_validate_json(text)
         except ValidationError as error:
             return None, [f"the final answer is not a valid answer object: {error.errors()[0]['msg']}"]
-        return answer, check_answer(answer, session.results)
+        return answer, check_answer(answer, session.results, self.facts, self.hub_names)
+
+
+def _last_fallback(content: list) -> int:
+    return max((i for i, b in enumerate(content) if b.type == "fallback"), default=-1)
+
+
+def _echo(content: list) -> list:
+    """The assistant turn as it is sent back: unchanged, except the API's rule after a fallback."""
+    boundary = _last_fallback(content)
+    return [b for i, b in enumerate(content) if i >= boundary or b.type not in _BEFORE_FALLBACK_LEFT_OUT]
+
+
+def _after_fallback(content: list) -> list:
+    """The blocks the serving model produced: after the final fallback block, or all of them."""
+    return content[_last_fallback(content) + 1 :]

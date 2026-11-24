@@ -67,7 +67,7 @@ class Provenance(BaseModel):
 
 class ToolError(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    code: Literal["invalid_arguments", "unknown_hub", "no_data_for_period", "unknown_tool"]
+    code: Literal["invalid_arguments", "unknown_hub", "no_data_for_period", "unknown_tool", "tool_failed"]
     message: str
 
 

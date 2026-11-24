@@ -11,16 +11,17 @@ import re
 from collections.abc import Iterable
 from typing import Any
 
-# A number: digits with optional thousands commas and an optional decimal part. A hyphen between
-# two numbers ("2016-2025") separates them; nothing here reads a minus sign.
-_NUMBER = re.compile(r"(?<![\w.])(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?")
+# A number: digits with optional thousands commas and an optional decimal part, or a decimal part
+# alone (".93"). A hyphen between two numbers ("2016-2025") separates them; nothing here reads a
+# minus sign. Digits stuck to letters ("R1", "x7") are not read: result ids and codes are not figures.
+_NUMBER = re.compile(r"(?<![\w.])(?:(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d+))?|\.(\d+))")
 
 
 def numbers_in_text(text: str) -> list[tuple[str, float, int]]:
     """Each number written in digits: (as written, value, decimals written)."""
     found = []
     for match in _NUMBER.finditer(text):
-        whole, fraction = match.group(1), match.group(2)
+        whole, fraction = match.group(1) or "0", match.group(2) or match.group(3)
         written = match.group(0)
         value = float(whole.replace(",", "") + (f".{fraction}" if fraction else ""))
         found.append((written, value, len(fraction) if fraction else 0))

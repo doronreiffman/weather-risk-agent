@@ -37,9 +37,9 @@ class Scripted:
         return item
 
 
-def response(stop_reason, *blocks):
+def response(stop_reason, *blocks, model="claude-opus-5-5"):
     usage = SimpleNamespace(input_tokens=100, output_tokens=50, cache_read_input_tokens=0, cache_creation_input_tokens=0)
-    return SimpleNamespace(stop_reason=stop_reason, content=list(blocks), usage=usage, model="claude-opus-5-5")
+    return SimpleNamespace(stop_reason=stop_reason, content=list(blocks), usage=usage, model=model)
 
 
 def tool(name, args, call_id="toolu_1"):
@@ -48,9 +48,9 @@ def tool(name, args, call_id="toolu_1"):
 
 
 def final(verdict="Minneapolis is clearly the most exposed, at 2.71 days a year.", evidence=("R1",),
-          hubs=("MSP", "MCI"), status="answered", what_if=False, caveats=()):  # fmt: skip
+          hubs=("MSP", "MCI"), status="answered", what_if=False, caveats=(), hubs_from="top"):  # fmt: skip
     body = {"status": status, "verdict": verdict, "evidence": list(evidence), "hubs_ranked": list(hubs),
-            "is_what_if": what_if, "caveats": list(caveats)}  # fmt: skip
+            "hubs_from": hubs_from, "is_what_if": what_if, "caveats": list(caveats)}  # fmt: skip
     return response("end_turn", SimpleNamespace(type="text", text=json.dumps(body)))
 
 
@@ -122,7 +122,7 @@ def test_text_that_is_not_an_answer_object_is_repaired(ctx):
 def test_hubs_out_of_the_cited_order_are_repaired(ctx):
     a, client = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final(hubs=["MCI", "MSP"]), final())
     assert a.answer(None, "Which hubs in the Midwest are most exposed?").trace.repaired
-    assert "does not follow the order" in client.requests[2]["messages"][-1]["content"]
+    assert "is not the top of any cited order" in client.requests[2]["messages"][-1]["content"]
 
 
 def test_a_what_if_must_be_flagged(ctx):
@@ -152,7 +152,7 @@ def test_an_api_failure_is_an_error_naming_only_its_kind(ctx):
 
 def test_a_follow_up_can_cite_a_result_from_an_earlier_turn(ctx):
     a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final(),
-                 final(verdict="Columbus is the least exposed.", hubs=["CMH"]))  # fmt: skip
+                 final(verdict="Columbus is the least exposed.", hubs=["CMH"], hubs_from="bottom"))  # fmt: skip
     first = a.answer(None, "Which hubs in the Midwest are most exposed to winter disruption?")
     second = a.answer(first.session_id, "And which is the least exposed?")
     assert second.status == "answered" and second.session_id == first.session_id
@@ -190,3 +190,108 @@ def test_the_request_uses_strict_tools_and_the_answer_schema_and_never_forces_a_
     assert first["fallbacks"] == "default" and first["betas"] == ["server-side-fallback-2026-07-01"]
     assert "tool_choice" not in first and "temperature" not in first
     assert first["system"] == second["system"] and first["tools"] == second["tools"]
+
+
+# --- the owner's additions after the milestone 3 review --------------------------------------
+
+
+def repaired_because(ctx, first, *, calls=(tool("rank_hubs", WINTER_MIDWEST),), question="Which hubs?"):
+    """Run a script whose first final answer is `first`, followed by a valid one; return the repair reasons."""
+    a, _ = agent(ctx, *calls, first, final())
+    reply = a.answer(None, question)
+    assert reply.status == "answered"
+    return " ".join(reply.trace.repair_problems)
+
+
+def test_the_wrong_end_of_the_ranking_is_repaired(ctx):
+    assert "top of any cited order" in repaired_because(
+        ctx, final(verdict="Columbus is the most exposed Midwest hub.", hubs=["CMH"]))
+    assert "top of any cited order" in repaired_because(
+        ctx, final(verdict="The two most exposed are Minneapolis and Columbus.", hubs=["MSP", "CMH"]))
+
+
+def test_a_wrong_band_word_is_repaired(ctx):
+    explain = tool("explain_hub", {"hub_id": "DAL"})
+    wrong = final(verdict="Dallas is in the Very high band at 2.02.", hubs=[])
+    a, client = agent(ctx, explain, wrong, final(verdict="Dallas is High, at 2.02.", hubs=[]))
+    reply = a.answer(None, "Why is the Dallas hub's risk high?")
+    assert reply.status == "answered" and "cited band is 'High'" in reply.trace.repair_problems[0]
+    assert reply.trace.rejected_answer and "Very high" in reply.trace.rejected_answer
+
+
+def test_the_prompts_own_facts_need_no_citation(ctx):
+    answer = final(status="out_of_scope", evidence=[], hubs=[],
+                   verdict="We have no Seattle hub; our data covers 2016 to 2025 at our 12 hubs.")  # fmt: skip
+    a, _ = agent(ctx, answer)
+    reply = a.answer(None, "How exposed is our Seattle hub?")
+    assert reply.status == "out_of_scope" and not reply.trace.repaired
+
+
+def test_a_table_in_the_verdict_or_too_many_caveats_is_repaired(ctx):
+    table = final(verdict="| Hub | Days |\n|---|---|\n| MSP | 2.71 |")
+    assert "contains a table" in repaired_because(ctx, table)
+    assert "4 caveats" in repaired_because(ctx, final(caveats=["One.", "Two.", "Three.", "Four."]))
+
+
+def test_answered_must_cite_a_result_that_succeeded(ctx):
+    args = {"hub_id": "DEN", "metric": "snowfall", "start_year": 2010, "end_year": 2010, "threshold": "measurable"}
+    first = final(verdict="Station data covers 2016 to 2025.", hubs=[])
+    a, _ = agent(ctx, tool("daily_weather_stats", args), first,
+                 final(verdict="Station data covers 2016 to 2025.", hubs=[], status="no_data"))  # fmt: skip
+    reply = a.answer(None, "Snow in Denver in 2010?")
+    assert reply.status == "no_data" and "no cited result succeeded" in reply.trace.repair_problems[0]
+
+
+def test_several_tool_calls_in_one_response_each_get_a_result(ctx):
+    two = response("tool_use",
+                   SimpleNamespace(type="tool_use", id="toolu_a", name="rank_hubs", input=WINTER_MIDWEST),
+                   SimpleNamespace(type="tool_use", id="toolu_b", name="explain_hub", input={"hub_id": "MSP"}))  # fmt: skip
+    a, client = agent(ctx, two, final(evidence=["R1", "R2"]))
+    reply = a.answer(None, "Which Midwest hub is most exposed to winter, and why?")
+    results = client.requests[1]["messages"][-1]["content"]
+    assert [(r["tool_use_id"], json.loads(r["content"])["result_id"]) for r in results] == [("toolu_a", "R1"),
+                                                                                           ("toolu_b", "R2")]
+    assert reply.status == "answered" and len(reply.tables) == 2 and reply.evidence == ["R1", "R2"]
+
+
+def test_a_tool_that_raises_becomes_an_error_result(ctx, monkeypatch):
+    import wra.agent.loop as loop
+
+    def broken(*args, **kwargs):
+        raise RuntimeError("bug")
+
+    monkeypatch.setattr(loop, "run_tool", broken)
+    a, client = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final())
+    a.answer(None, "Which hubs?")
+    sent = client.requests[1]["messages"][-1]["content"][0]
+    assert sent["is_error"] and json.loads(sent["content"])["error"]["code"] == "tool_failed"
+
+
+def test_a_failed_turn_leaves_no_trace_for_the_next_question(ctx):
+    a, client = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), response("refusal"),
+                      tool("rank_hubs", WINTER_MIDWEST, "toolu_2"), final())  # fmt: skip
+    first = a.answer(None, "Which hubs in the Midwest are most exposed?")
+    assert first.status == "error"
+    second = a.answer(first.session_id, "Which hubs in the Midwest are most exposed to winter?")
+    assert second.status == "answered" and second.evidence == ["R1"]
+    assert [m["role"] for m in client.requests[2]["messages"]] == ["user"]
+
+
+def test_after_a_fallback_the_blocks_before_it_are_left_out_and_not_run(ctx):
+    cut = SimpleNamespace(type="tool_use", id="toolu_cut", name="explain_hub", input={"hub_id": "DAL"})
+    boundary = SimpleNamespace(type="fallback")
+    served = response("tool_use", SimpleNamespace(type="thinking", thinking=""), cut, boundary,
+                      SimpleNamespace(type="tool_use", id="toolu_ok", name="rank_hubs", input=WINTER_MIDWEST),
+                      model="claude-opus-4-8")  # fmt: skip
+    a, client = agent(ctx, served, final())
+    reply = a.answer(None, "Which hubs in the Midwest are most exposed?")
+    echoed = client.requests[1]["messages"][1]["content"]
+    assert [b.type for b in echoed] == ["fallback", "tool_use"] and echoed[1].id == "toolu_ok"
+    assert [c.name for c in reply.trace.tool_calls] == ["rank_hubs"]
+
+
+def test_cost_is_priced_per_response_at_its_own_model(ctx):
+    a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final())
+    reply = a.answer(None, "Which hubs?")
+    # Two responses of 100 input and 50 output tokens at Opus 5.5's 4 and 20 dollars per million.
+    assert reply.trace.usage["cost_usd"] == round(2 * (100 * 4 + 50 * 20) / 1e6, 6)

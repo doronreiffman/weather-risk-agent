@@ -22,6 +22,23 @@ from wra.tools.context import ToolContext
 EVAL_TODAY = date(2026, 11, 24)
 CHECKS = ("status", "tool", "hubs", "numbers", "mentions")
 
+# Plan section 10.3: errors are reported by kind, apart from wrong answers, and the report says how
+# often each check forced a repair. Both are read from the agent's own messages.
+ERROR_KINDS = {"could not be reached": "API or network", "declined": "declined", "cut off": "cut off",
+               "failed validation twice": "failed validation twice", "No final answer within": "call limit",
+               "has no model": "no model (stub)"}  # fmt: skip
+REPAIR_CAUSES = {"numbers are not in the cited": "grounding", "evidence": "evidence", "hubs_ranked": "hub order",
+                 "is_what_if": "what-if flag", "band": "band", "not a valid answer object": "answer shape",
+                 "table": "answer shape", "caveats": "answer shape"}  # fmt: skip
+
+
+def _kinds(messages: list[str], kinds: dict[str, str]) -> str:
+    counts: dict[str, int] = {}
+    for message in messages:
+        kind = next((name for key, name in kinds.items() if key in message), "other")
+        counts[kind] = counts.get(kind, 0) + 1
+    return ", ".join(f"{name} {n}" for name, n in sorted(counts.items(), key=lambda kv: -kv[1]))
+
 
 class StubAgent:
     """Answers nothing. Proves the runner and graders work end to end before any model is connected."""
@@ -123,7 +140,11 @@ def report(runs: list[CaseRun], n_cases: int, reps: int) -> str:
         "",
         f"Score: {passed} of {len(runs)} case runs passed ({n_cases} cases x {reps} repetition"
         f"{'s' if reps != 1 else ''}).",
-        f"Errors (no answer): {errors} of {len(runs)}. Repaired answers: {repaired} of {len(replies)}.",
+        f"Errors (no answer): {errors} of {len(runs)}"
+        + (f" ({_kinds([r.error or '' for r in replies if r.status == 'error'], ERROR_KINDS)})" if errors else "")
+        + f". Repaired answers: {repaired} of {len(replies)}"
+        + (f" (causes: {_kinds([p for r in replies for p in r.trace.repair_problems], REPAIR_CAUSES)})" if repaired else "")
+        + ".",
         f"Time per case: {seconds:.2f} s. Tokens: {tokens_in} in, {tokens_out} out."
         + (f" Cost at list price: ${sum(costs):.2f}." if costs else ""),
     ]
