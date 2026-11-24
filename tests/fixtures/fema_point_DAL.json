@@ -69,14 +69,6 @@
    "defaultValue": null
   },
   {
-   "name": "HRCN_EVNTS",
-   "type": "esriFieldTypeDouble",
-   "alias": "Hurricane - Number of Events",
-   "sqlType": "sqlTypeOther",
-   "domain": null,
-   "defaultValue": null
-  },
-  {
    "name": "WNTW_AFREQ",
    "type": "esriFieldTypeDouble",
    "alias": "Winter Weather - Annualized Frequency",
@@ -142,7 +134,6 @@
     "STATEABBRV": "TX",
     "NRI_VER": "December 2025",
     "HRCN_AFREQ": 0.011526913696094829,
-    "HRCN_EVNTS": 2,
     "WNTW_AFREQ": 4.052631578947395,
     "ISTM_AFREQ": 1.2260731300071142,
     "IFLD_AFREQ": 4.607142857142857,

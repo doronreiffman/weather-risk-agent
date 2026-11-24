@@ -181,7 +181,6 @@ def test_fema_county_figures_are_read_with_the_release_name():
     assert county.county_name == "Dallas"
     assert county.state == "TX"
     assert county.release == "December 2025"
-    assert county.hurricane_events == 2
     assert county.frequencies["HRCN_AFREQ"] == pytest.approx(0.0115269, abs=1e-7)
     # FEMA gives no coastal flooding figure for an inland county.
     assert county.frequencies["CFLD_AFREQ"] is None

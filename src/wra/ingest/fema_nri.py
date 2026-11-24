@@ -4,6 +4,13 @@ Only frequencies are read. FEMA's headline scores and ratings are left out on
 purpose (docs/PLAN.md, section 4.3). The hurricane frequency feeds the score;
 the others are kept as an independent cross-check and are not scored.
 
+What the hurricane frequency is, from FEMA's technical documentation (December
+2025, sections 13 and 13.5): storms per year whose modelled wind area reaches
+the 49 km grid cell around a place, counted over 1851 to 2024, tropical storms
+included. The county figure is an area-weighted average over the county. A
+place FEMA considers reachable but with no recorded storm gets a floor of 0.01
+a year.
+
 The service answers a bad query with HTTP 200 and an error in the body, so the
 body is checked before anything is read from it.
 """
@@ -20,7 +27,7 @@ QUERY_URL = (
 
 # Events per year, by FEMA's hazard code. Names as in the layer's field list.
 FREQUENCY_FIELDS = (
-    "HRCN_AFREQ",  # hurricane (FEMA's data also includes tropical storms)
+    "HRCN_AFREQ",  # hurricane, tropical storms included
     "WNTW_AFREQ",  # winter weather
     "ISTM_AFREQ",  # ice storm
     "IFLD_AFREQ",  # inland flooding
@@ -29,7 +36,7 @@ FREQUENCY_FIELDS = (
     "HAIL_AFREQ",  # hail
     "SWND_AFREQ",  # strong wind
 )
-OUT_FIELDS = ("STCOFIPS", "COUNTY", "STATE", "STATEABBRV", "NRI_VER", "HRCN_EVNTS", *FREQUENCY_FIELDS)
+OUT_FIELDS = ("STCOFIPS", "COUNTY", "STATE", "STATEABBRV", "NRI_VER", *FREQUENCY_FIELDS)
 
 
 @dataclass(frozen=True)
@@ -39,7 +46,6 @@ class NriCounty:
     state_name: str
     state: str  # two-letter code
     release: str  # FEMA's name for the data release, for example "December 2025"
-    hurricane_events: float | None  # FEMA's count behind the hurricane frequency
     frequencies: dict[str, float | None]  # None where FEMA gives no figure for the county
 
     @property
@@ -79,6 +85,5 @@ def parse_county(payload: dict) -> NriCounty:
         state_name=row["STATE"],
         state=row["STATEABBRV"],
         release=row["NRI_VER"],
-        hurricane_events=row["HRCN_EVNTS"],
         frequencies={field: row[field] for field in FREQUENCY_FIELDS},
     )

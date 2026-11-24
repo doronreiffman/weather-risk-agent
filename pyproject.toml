@@ -3,7 +3,9 @@ name = "wra"
 version = "0.1.0"
 description = "Weather Risk Intelligence Agent: ranks distribution hubs by exposure to weather disruption and explains the ranking."
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1",
+]
 
 [project.scripts]
 wra = "wra.cli:main"
