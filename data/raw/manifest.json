@@ -4,7 +4,7 @@
    "source": "acis",
    "hub_id": "ATL",
    "url": "https://data.rcc-acis.org/StnData?sid=ATL&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "acb793b8800c673281110fdaac1deab3a918e1fd5e4a6e72850cc0614152be6f",
    "size_bytes": 104886
   },
@@ -12,7 +12,7 @@
    "source": "acis",
    "hub_id": "CMH",
    "url": "https://data.rcc-acis.org/StnData?sid=CMH&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "79da61a68e92fbd5191466b12cd2a0f0af32a5c3db4777a8259cc43b409063f8",
    "size_bytes": 104015
   },
@@ -20,7 +20,7 @@
    "source": "acis",
    "hub_id": "DAL",
    "url": "https://data.rcc-acis.org/StnData?sid=DAL&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "0372d098c99fd4f07965dd1cb04c1b94e6b5f6681e052673df6c3f8ecb4d74e8",
    "size_bytes": 105003
   },
@@ -28,7 +28,7 @@
    "source": "acis",
    "hub_id": "DEN",
    "url": "https://data.rcc-acis.org/StnData?sid=DEN&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "3929af9744b727f441d19844fe672aba4a8327262ed0460ef949187adaa7e44e",
    "size_bytes": 104041
   },
@@ -36,7 +36,7 @@
    "source": "acis",
    "hub_id": "IAH",
    "url": "https://data.rcc-acis.org/StnData?sid=IAH&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "69cd1ca9f5a006e3ebbf95ed4d6c26229b8f13fd28a350fd26498a2519bd2359",
    "size_bytes": 104763
   },
@@ -44,7 +44,7 @@
    "source": "acis",
    "hub_id": "IND",
    "url": "https://data.rcc-acis.org/StnData?sid=IND&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "40bb8c5feb9724f6637f1d575965f4f1bea7142ae1367aed854521231892681f",
    "size_bytes": 104015
   },
@@ -52,7 +52,7 @@
    "source": "acis",
    "hub_id": "MCI",
    "url": "https://data.rcc-acis.org/StnData?sid=MCI&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "31460162f9e3cec6f6d4ee6cd03ec2f1c09633ea7e82c10415d5efc513b79f25",
    "size_bytes": 104681
   },
@@ -60,7 +60,7 @@
    "source": "acis",
    "hub_id": "MEM",
    "url": "https://data.rcc-acis.org/StnData?sid=MEM&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "d64122857e9984e558d8647f6f179165403e4f7241dbdfb4a0e60b0dedbb540a",
    "size_bytes": 104955
   },
@@ -68,7 +68,7 @@
    "source": "acis",
    "hub_id": "MIA",
    "url": "https://data.rcc-acis.org/StnData?sid=MIA&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "692c191c5c2509906cd41b047226faffe0ae2c0f006f582701ca50ed94fdc268",
    "size_bytes": 104512
   },
@@ -76,7 +76,7 @@
    "source": "acis",
    "hub_id": "MSP",
    "url": "https://data.rcc-acis.org/StnData?sid=MSP&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "6e7f4f69c9e0dd6b2b36644076dc52e35048f4012fc689de6c1571d91b514968",
    "size_bytes": 103956
   },
@@ -84,7 +84,7 @@
    "source": "acis",
    "hub_id": "ORD",
    "url": "https://data.rcc-acis.org/StnData?sid=ORD&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "be8fc285fb484cebafb3a52280219b8870fb71ef521c04f5b2e86ac5db3581b8",
    "size_bytes": 103991
   },
@@ -92,7 +92,7 @@
    "source": "acis",
    "hub_id": "PHX",
    "url": "https://data.rcc-acis.org/StnData?sid=PHX&sdate=2016-01-01&edate=2025-12-31&elems=snow%2Cpcpn&meta=name%2Cstate%2Csids%2Cll%2Ccounty%2Ctzo&output=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "0501efb6e420f72b0b4dc80e781003da8c26d83acf70f11631e55ae16a37f85b",
    "size_bytes": 105581
   },
@@ -100,7 +100,7 @@
    "source": "fema_nri",
    "hub_id": "ATL",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-84.44224%2C33.62972&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "ac6e09b0ed5013bab7c42b0193b926bd719d32443cce81a2996e445acf913318",
    "size_bytes": 2620
   },
@@ -108,7 +108,7 @@
    "source": "fema_nri",
    "hub_id": "CMH",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-82.87703%2C39.99068&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "863cbac199ce6581373af54619b713fe63e2b6b2adb5d9dbeea332066ae1abe9",
    "size_bytes": 2620
   },
@@ -116,7 +116,7 @@
    "source": "fema_nri",
    "hub_id": "DAL",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-96.83583%2C32.83839&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "f2fc03db159c6a97e7a0a3a87f2dd9198c64d094c1f22ec49a3b19cddb593ba6",
    "size_bytes": 2633
   },
@@ -124,7 +124,7 @@
    "source": "fema_nri",
    "hub_id": "DEN",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-104.65623%2C39.84657&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "d25d6729801abe10411bb0b5950e049f5ec028d2c2ba2b14b47cae952443fa8e",
    "size_bytes": 2623
   },
@@ -132,7 +132,7 @@
    "source": "fema_nri",
    "hub_id": "IAH",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-95.36072%2C29.98438&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "208ef50da9ecd079347345de1ea035f1394ff56ebef6e751ddd2f85024e162a1",
    "size_bytes": 2646
   },
@@ -140,7 +140,7 @@
    "source": "fema_nri",
    "hub_id": "IND",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-86.2816%2C39.72515&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "4e1cf15181fe78c9a35fb37966e2b7b7522356de049730c3f2f16a568df68234",
    "size_bytes": 2636
   },
@@ -148,7 +148,7 @@
    "source": "fema_nri",
    "hub_id": "MCI",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-94.73087%2C39.29747&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "6d95949559ff22fc7347282faf06868992f5d973341edf727257358d78cf2ede",
    "size_bytes": 2617
   },
@@ -156,7 +156,7 @@
    "source": "fema_nri",
    "hub_id": "MEM",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-89.9864%2C35.05639&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "b76ec99cb3b39a5c57e6813482b68ba71740f0ec81e926d2f6654552929e4e35",
    "size_bytes": 2639
   },
@@ -164,7 +164,7 @@
    "source": "fema_nri",
    "hub_id": "MIA",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-80.31694%2C25.78805&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "efe3b1ecf56cbc9037144cc57e1aee7a0b885ee933f9047fd681fa5b32b9c51a",
    "size_bytes": 2607
   },
@@ -172,7 +172,7 @@
    "source": "fema_nri",
    "hub_id": "MSP",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-93.23133%2C44.88523&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "2501ea9d1428bb7f9b3492029bdc2e8ad1d7750ad922f58640767b33d0466744",
    "size_bytes": 2626
   },
@@ -180,7 +180,7 @@
    "source": "fema_nri",
    "hub_id": "ORD",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-87.93164%2C41.96017&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "103585e76bbd414255cd696376509eb80887cc3c7a1c8d5fbd637560d6cf500f",
    "size_bytes": 2635
   },
@@ -188,201 +188,201 @@
    "source": "fema_nri",
    "hub_id": "PHX",
    "url": "https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Risk_Index_Counties/FeatureServer/0/query?geometry=-112.00365%2C33.4278&geometryType=esriGeometryPoint&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=STCOFIPS%2CCOUNTY%2CSTATE%2CSTATEABBRV%2CNRI_VER%2CHRCN_AFREQ%2CWNTW_AFREQ%2CISTM_AFREQ%2CIFLD_AFREQ%2CCFLD_AFREQ%2CTRND_AFREQ%2CHAIL_AFREQ%2CSWND_AFREQ&returnGeometry=false&f=json",
-   "fetched_at": "2026-11-24T10:18:39Z",
+   "fetched_at": "2026-11-24T10:42:45Z",
    "sha256": "be2f47bc5f5a886355248f3c0500776d35401eff3e81bf1f6e8109a41c3b84b9",
    "size_bytes": 2625
   },
   {
    "source": "iem_polygon",
    "hub_id": "ATL",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=33.62972&lon=-84.44224&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "f5c4a1420b3162416078f8fbd39dcc010cf2cc80693bc22bbd1fbf06b3b37d25",
-   "size_bytes": 55231
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=33.62972&lon=-84.44224&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "443495994dc73dbc8d1d73c46b3aa359cecd32fb2def6c23cb314858e42ff8a3",
+   "size_bytes": 55751
   },
   {
    "source": "iem_polygon",
    "hub_id": "CMH",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.99068&lon=-82.87703&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "4bb2bef3ad72e129c9ca26f89680a52ff30a366901eacc1487c3d13982ab7a1f",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.99068&lon=-82.87703&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "a38988855a457941a2177d116111b01b86699f306dae11809db0561d9e4eb66f",
    "size_bytes": 86714
   },
   {
    "source": "iem_polygon",
    "hub_id": "DAL",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=32.83839&lon=-96.83583&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "954ae04aea0b796ee30007c0492699f8318921e2e5b5ef23212360043b27bfe3",
-   "size_bytes": 168906
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=32.83839&lon=-96.83583&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "766466e6818f4e9bdf19be6117d5d3d254025882058e2799992843911f87ff1a",
+   "size_bytes": 171508
   },
   {
    "source": "iem_polygon",
    "hub_id": "DEN",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.84657&lon=-104.65623&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "f4211c43c51bd53d984bcae5efab2f77a1a8cd002fc7df935ba22e6a5731d7c2",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.84657&lon=-104.65623&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "d2aecf10505da484cb95c434d9c50f33566c07e0809eacd929eafc9b1edf26e3",
    "size_bytes": 32513
   },
   {
    "source": "iem_polygon",
    "hub_id": "IAH",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=29.98438&lon=-95.36072&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "ab0bc6fd7359494d6afa13992f7b075d8fce2cd6791b6f35dcb70e8d89d5866a",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=29.98438&lon=-95.36072&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "0f84d1ce63b5d52b184aa17245a2b29df557eead8b00c4c9024aba87903d58f1",
    "size_bytes": 138361
   },
   {
    "source": "iem_polygon",
    "hub_id": "IND",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.72515&lon=-86.2816&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "891fa05d40b00018bff8c1bec2c91d62bb262bb8ec7f7fb97d8a450747183354",
-   "size_bytes": 90400
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.72515&lon=-86.2816&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "71002bc85fe926cba6e22e956696ba6455a6b89d3c22924cda1eeeebbeb23330",
+   "size_bytes": 91416
   },
   {
    "source": "iem_polygon",
    "hub_id": "MCI",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.29747&lon=-94.73087&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "3030e83ab8c7730e0e9d6bae27ecf70ee72447b977c390b3f3fa87c326839544",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=39.29747&lon=-94.73087&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "d8782ff726d5692f0b1080829357b44f49f795ec4a40560bb8086eaea5b97182",
    "size_bytes": 103625
   },
   {
    "source": "iem_polygon",
    "hub_id": "MEM",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=35.05639&lon=-89.9864&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "5230bd13c1fc6f6daa10c00c915698b64d30b68c43e997832e5438d71fc54a51",
-   "size_bytes": 172703
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=35.05639&lon=-89.9864&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "e91b6859d4aaac6bf78727dde34e24211f95b81fb01a9ec54d546ac144ac68e2",
+   "size_bytes": 173238
   },
   {
    "source": "iem_polygon",
    "hub_id": "MIA",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=25.78805&lon=-80.31694&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "6d32de3e323d22ac0db073ca4c3aa3fec2641ae75c1ede1f206e3a60748c4a8a",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=25.78805&lon=-80.31694&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "25d4233e8ccdebf9fc0021fe0759f1228294c00a52353bc5d2fd3a2de5846756",
    "size_bytes": 119930
   },
   {
    "source": "iem_polygon",
    "hub_id": "MSP",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=44.88523&lon=-93.23133&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "8ece77339e7d4108ab4f508af639a9f72a3f13a0ce31a3e2be3439da594d5adf",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=44.88523&lon=-93.23133&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "e6fa99fa630ac6bc1279ae33ed72b846f5eafe8030644b25e3e5010d5ae9e44d",
    "size_bytes": 40423
   },
   {
    "source": "iem_polygon",
    "hub_id": "ORD",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=41.96017&lon=-87.93164&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "896fd19fce468479f1a8b89e43634eb874f9844c19d7720f07cfea8dd424e0e0",
-   "size_bytes": 100975
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=41.96017&lon=-87.93164&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "92b1f887afd33877362eb99d44413d6723fdee9a9c71001c990a0abd26534b4d",
+   "size_bytes": 101485
   },
   {
    "source": "iem_polygon",
    "hub_id": "PHX",
-   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=33.4278&lon=-112.00365&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "a380a4081c58621b3a9ec4ae9a8e98adfa960877c5c75e5c9ef2e975a4f8b4a9",
+   "url": "https://mesonet.agron.iastate.edu/json/sbw_by_point.py?lat=33.4278&lon=-112.00365&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "011122aef3cbc9c61d924fd7092b7cffc8d8b889ddf025ff38b49d9f9d4cc4cb",
    "size_bytes": 108163
   },
   {
    "source": "iem_zone",
    "hub_id": "ATL",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=33.62972&lon=-84.44224&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "7f12d966ff68e3b2c9972beece6545e823fa6b4e28582c254701466c45a1d7af",
-   "size_bytes": 243906
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=33.62972&lon=-84.44224&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "efe5e52a5400153019b10401687e4371a4428b3a3637f150f3129f66b193549d",
+   "size_bytes": 245536
   },
   {
    "source": "iem_zone",
    "hub_id": "CMH",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.99068&lon=-82.87703&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "6139988ccfb7313224a3bff588865c33d7008c25522b8f90ef824a21c43031f0",
-   "size_bytes": 300464
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.99068&lon=-82.87703&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "ceddf417b93e3782a8eb31afcc125ceb21374021c173bfa6a43316ebec4024a0",
+   "size_bytes": 301448
   },
   {
    "source": "iem_zone",
    "hub_id": "DAL",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=32.83839&lon=-96.83583&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "c4b860a44e9fe39145eefa774ecbb453b05618bea8d4567fd62a709f0ef85ab9",
-   "size_bytes": 459123
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=32.83839&lon=-96.83583&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "d61b8368228f19c1bff795bec6a0bf02270fee08363c6d801b59b0ba2d596f64",
+   "size_bytes": 463717
   },
   {
    "source": "iem_zone",
    "hub_id": "DEN",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.84657&lon=-104.65623&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "93a37571a47a2c42cf7b8e2aa2a5d48cd6ef65364fad9b7e926e48bea1c00295",
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.84657&lon=-104.65623&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "3efdf23c85c78dcc7200a83ec869407af39bcced2c54986eaab112f650427e6f",
    "size_bytes": 230255
   },
   {
    "source": "iem_zone",
    "hub_id": "IAH",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=29.98438&lon=-95.36072&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "e3aae4b10b876199f2c0b26cdaab806a55e9803dc8af0491872f1c4e1c069e63",
-   "size_bytes": 847507
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=29.98438&lon=-95.36072&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "b64d04f30116484a3424cf2e8ae0f88866e4d8daff6a6aa06c69187ebfd4e686",
+   "size_bytes": 848809
   },
   {
    "source": "iem_zone",
    "hub_id": "IND",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.72515&lon=-86.2816&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "9ebf5243a3f317e15804610ad908828f9cdde2a6317275597d6be8b2a131bdb9",
-   "size_bytes": 324995
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.72515&lon=-86.2816&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "15f8af8094ffff3c06129165fbb365be33b088c6adc8c11c20e974a4268ee4b9",
+   "size_bytes": 327274
   },
   {
    "source": "iem_zone",
    "hub_id": "MCI",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.29747&lon=-94.73087&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "9887abc4e3c8f5205fa8a0fff7b01fcebfd51ea0b5a812dccb5b9090519ff586",
-   "size_bytes": 432022
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=39.29747&lon=-94.73087&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "fe5bc6acc6a99926b89996dd569dec578d684ce2a6e0dc818c2d90c4edf07f2c",
+   "size_bytes": 433027
   },
   {
    "source": "iem_zone",
    "hub_id": "MEM",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=35.05639&lon=-89.9864&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "07dd143292f2dd37abeca07eee6ffc647474653653b3df582f23a407dee4c622",
-   "size_bytes": 501375
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=35.05639&lon=-89.9864&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "ee12377911fe8777aabafa136e89f78dda02a78dd4a199654c003bc69f2bb5c5",
+   "size_bytes": 503040
   },
   {
    "source": "iem_zone",
    "hub_id": "MIA",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=25.78805&lon=-80.31694&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "4e5dbcb1b1bcbdae8e9c510c4108462e0c7a97d5a9d9d5f7e391de49370baab6",
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=25.78805&lon=-80.31694&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "a634617a533014044845e0163f679d7b0abac5fc114d3b73574e8dbef502efa2",
    "size_bytes": 449114
   },
   {
    "source": "iem_zone",
    "hub_id": "MSP",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=44.88523&lon=-93.23133&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "58fa5e8ca082d5f5e55f1584cb929cf55721403dcb7bd9a0d9e4f82f48c588bb",
-   "size_bytes": 259257
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=44.88523&lon=-93.23133&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "0c8122186c3e1969fd55254c5e3bf1531598d67fa4a0f7cea85865e974b14dea",
+   "size_bytes": 260262
   },
   {
    "source": "iem_zone",
    "hub_id": "ORD",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=41.96017&lon=-87.93164&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "b44c8235a7f44ae7d497cd7654ee3873e55f2bba04b6bb30b37df114be56c03b",
-   "size_bytes": 318162
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=41.96017&lon=-87.93164&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "658848a9ef3c7fe613530465b880d6141989eef62e169e6c07f09234985e5671",
+   "size_bytes": 319476
   },
   {
    "source": "iem_zone",
    "hub_id": "PHX",
-   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=33.4278&lon=-112.00365&sdate=2016-01-01&edate=2025-12-31",
-   "fetched_at": "2026-11-24T10:18:39Z",
-   "sha256": "ee50c548f56420d9cd377376aec72db72e068bc859aed7690b49fcca358d3ea8",
-   "size_bytes": 948598
+   "url": "https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?lat=33.4278&lon=-112.00365&sdate=2015-12-25&edate=2026-01-02",
+   "fetched_at": "2026-11-24T10:42:45Z",
+   "sha256": "5586efc82ffc66f9c4686d4178af127865b2892394789e693eaf7029ae0eb9f1",
+   "size_bytes": 949239
   }
  ]
 }
