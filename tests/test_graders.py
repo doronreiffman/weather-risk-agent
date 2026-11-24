@@ -195,6 +195,11 @@ def test_the_first_run_s_methodology_answer_passes_and_without_the_figures_fails
     assert failing(ctx, 10, [reply(ctx, "answered", vague, [("get_methodology", {})])]) == {"mentions"}
 
 
+def test_weights_written_with_decimals_satisfy_case_10(ctx):
+    verdict = "Winter, flood and storms weigh 1.0 per day under warning; hurricanes weigh 5.0 days per event."
+    assert failing(ctx, 10, [reply(ctx, "answered", verdict, [("get_methodology", {})])]) == set()
+
+
 def test_low_confidence_is_not_a_band(ctx):
     answer = reply(ctx, "answered", "Dallas is High, but only just. Low confidence: its neighbours are close.",
                    [("explain_hub", {"hub_id": "DAL"})])  # fmt: skip

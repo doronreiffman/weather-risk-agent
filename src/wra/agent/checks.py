@@ -8,7 +8,8 @@ additions of 2026-11-24 after the milestone 3 review).
 3. is_what_if is true exactly when a cited result is a what-if.
 4. Grounding: every number in digits in the verdict and caveats is in the cited results, their
    arguments, or the facts the system prompt states (the period, FEMA's record, the number of hubs).
-5. If the verdict names a band, the first band it names is the cited band of the first hub it names.
+5. Bands: in each sentence of the verdict, the first band named after a hub, before the next hub is
+   named, must be that hub's cited band (owner, 2026-11-24, replacing "first band, first hub").
 6. Shape: no Markdown table in the verdict (tables come from code), at most three caveats.
 """
 
@@ -48,11 +49,10 @@ def check_answer(
 
     if answer.hubs_ranked:
         orders = _orders(cited)
-        fits = _is_top if answer.hubs_from == "top" else _is_bottom
-        if not any(fits(answer.hubs_ranked, order) for order in orders):
+        if not any(_fits(answer.hubs_ranked, answer.hubs_from, o) for o in orders):
             problems.append(
                 f"hubs_ranked {answer.hubs_ranked} is not the {answer.hubs_from} of any cited order "
-                f"({orders or 'none of the cited results ranks hubs'})"
+                f"({[o.hubs for o in orders] or 'none of the cited results ranks hubs'})"
             )
 
     what_if = any(r.result.ok and r.result.provenance.is_what_if for r in cited)
@@ -77,43 +77,53 @@ def check_answer(
     return problems
 
 
-def first_band(text: str) -> str | None:
-    """The first band label in the text, written as the tools write it, capitalised. "High" inside
+def band_mentions(text: str) -> list[tuple[int, str]]:
+    """Band labels in the text, in order, written as the tools write them, capitalised. "High" inside
     "Very high" is not High; "Low confidence" is the confidence label, not a band."""
-    first = None
+    found = []
     for label in BAND_LABELS:
         pattern = rf"(?<![\w])(?<!Very ){re.escape(label)}(?![\w])"
         if label == "Low":
             pattern += r"(?! confidence)"
-        match = re.search(pattern, text)
-        if match and (first is None or match.start() < first[0]):
-            first = (match.start(), label)
-    return first[1] if first else None
+        found += [(m.start(), label) for m in re.finditer(pattern, text)]
+    return sorted(found)
+
+
+def first_band(text: str) -> str | None:
+    mentions = band_mentions(text)
+    return mentions[0][1] if mentions else None
 
 
 def _band_problems(verdict: str, cited: list[CitedResult], hub_names: Mapping[str, str]) -> list[str]:
-    named = first_band(verdict)
-    if named is None:
-        return []
-    hub = _first_hub(verdict, hub_names)
-    if hub is None:
-        return []
-    bands = _cited_bands(cited)
-    if hub not in bands:
-        return [f"the verdict calls {hub_names[hub]} {named!r}, but no cited result gives its band; cite one that does"]
-    if bands[hub] != named:
-        return [f"the verdict calls {hub_names[hub]} {named!r}, but the cited band is {bands[hub]!r}"]
-    return []
+    bands, problems = _cited_bands(cited), []
+    for sentence in re.split(r"(?<=[.!?])\s+", verdict):
+        hubs = _hub_mentions(sentence, hub_names)
+        labels = band_mentions(sentence)
+        for i, (start, hub) in enumerate(hubs):
+            end = hubs[i + 1][0] if i + 1 < len(hubs) else len(sentence)
+            named = next((label for pos, label in labels if start < pos < end), None)
+            if named is None:
+                continue
+            if hub not in bands:
+                problems.append(f"the verdict calls {hub_names[hub]} {named!r}, but no cited result gives its band; "
+                                "cite one that does")  # fmt: skip
+            elif bands[hub] != named:
+                problems.append(f"the verdict calls {hub_names[hub]} {named!r}, but the cited band is {bands[hub]!r}")
+    return problems
 
 
-def _first_hub(text: str, hub_names: Mapping[str, str]) -> str | None:
-    first = None
+def _hub_mentions(text: str, hub_names: Mapping[str, str]) -> list[tuple[int, str]]:
+    """Each place a hub is named, by city or id, in order. "Minneapolis (MSP)" counts once."""
+    found = []
     for hub, city in hub_names.items():
         for word in (city, hub):
-            match = re.search(rf"(?<![\w]){re.escape(word)}(?![\w])", text)
-            if match and (first is None or match.start() < first[0]):
-                first = (match.start(), hub)
-    return first[1] if first else None
+            found += [(m.start(), hub) for m in re.finditer(rf"(?<![\w]){re.escape(word)}(?![\w])", text)]
+    found.sort()
+    merged = []
+    for pos, hub in found:
+        if not merged or merged[-1][1] != hub:
+            merged.append((pos, hub))
+    return merged
 
 
 def _cited_bands(cited: list[CitedResult]) -> dict[str, str]:
@@ -131,25 +141,33 @@ def _cited_bands(cited: list[CitedResult]) -> dict[str, str]:
     return bands
 
 
-def _orders(cited: list[CitedResult]) -> list[list[str]]:
+@dataclass(frozen=True)
+class _Order:
+    hubs: list[str]
+    has_bottom: bool  # False when the ranking was cut at top_n: its last row is not the least exposed
+    must_include: str | None = None  # an explanation's order is about this hub
+
+
+def _orders(cited: list[CitedResult]) -> list[_Order]:
     orders = []
     for r in cited:
         if not r.result.ok:
             continue
         data = r.result.data
         if r.call.name == "rank_hubs":
-            orders.append([row["hub_id"] for row in data["rows"]])
+            orders.append(_Order([row["hub_id"] for row in data["rows"]], has_bottom=data["top_n"] is None))
         elif r.call.name == "compare_hubs":
-            orders += [[row["hub_id"] for row in rows] for rows in data["results"].values()]
+            orders += [_Order([row["hub_id"] for row in rows], True) for rows in data["results"].values()]
         elif r.call.name == "explain_hub":
-            orders.append([h for h in (data["above"] and data["above"]["hub_id"], data["hub_id"],
-                                       data["below"] and data["below"]["hub_id"]) if h])  # fmt: skip
+            hubs = [h for h in (data["above"] and data["above"]["hub_id"], data["hub_id"],
+                                data["below"] and data["below"]["hub_id"]) if h]  # fmt: skip
+            orders.append(_Order(hubs, True, must_include=data["hub_id"]))
     return orders
 
 
-def _is_top(hubs: list[str], order: list[str]) -> bool:
-    return order[: len(hubs)] == hubs
-
-
-def _is_bottom(hubs: list[str], order: list[str]) -> bool:
-    return len(hubs) <= len(order) and order[len(order) - len(hubs) :] == hubs
+def _fits(hubs: list[str], end: str, order: _Order) -> bool:
+    if order.must_include and order.must_include not in hubs:
+        return False
+    if end == "top":
+        return order.hubs[: len(hubs)] == hubs
+    return order.has_bottom and len(hubs) <= len(order.hubs) and order.hubs[len(order.hubs) - len(hubs) :] == hubs

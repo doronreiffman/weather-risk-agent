@@ -12,11 +12,13 @@ case passes when every check that applies passes.
 - mentions: required words are present and forbidden ones absent, in the verdict and caveats.
 """
 
+import math
 import re
 from dataclasses import dataclass
 
 from wra.agent.schemas import AgentReply
 from wra.agent.checks import first_band
+from wra.agent.grounding import numbers_in_text
 from wra.evals.cases import Case, expected_band
 from wra.tools.context import ToolContext
 from wra.tools.registry import run_tool
@@ -130,8 +132,13 @@ def _mentions(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
 
 
 def _has(text: str, word: str) -> bool:
-    """A whole word, or a whole number: "7.1" is not found in "17.1" or "7.15"."""
-    return re.search(rf"(?<![\w.]){re.escape(word)}(?!\w|\.\d)", text, flags=re.IGNORECASE) is not None
+    """A whole word, or a number of that value: "7.1" is not found in "17.1" or "7.15", and "1" is
+    found in "1.0", since a figure may be written with trailing zeros."""
+    try:
+        value = float(word)
+    except ValueError:
+        return re.search(rf"(?<![\w.]){re.escape(word)}(?!\w)", text, flags=re.IGNORECASE) is not None
+    return any(math.isclose(n, value) for _, n, _ in numbers_in_text(text))
 
 
 def _in_order(got: list[str], expected: list[str]) -> bool:

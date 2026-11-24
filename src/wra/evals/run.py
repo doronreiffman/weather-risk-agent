@@ -137,6 +137,7 @@ def report(runs: list[CaseRun], n_cases: int, reps: int) -> str:
     )  # the API reports uncached, cache-read and cache-write input separately
     tokens_out = sum(reply.trace.usage.get("output_tokens", 0) for reply in replies)
     costs = [reply.trace.usage.get("cost_usd") for reply in replies if reply.trace.usage.get("cost_usd") is not None]
+    unpriced = sum(1 for reply in replies if reply.trace.usage.get("input_tokens") and reply.trace.usage.get("cost_usd") is None)
     lines += [
         "",
         f"Score: {passed} of {len(runs)} case runs passed ({n_cases} cases x {reps} repetition"
@@ -147,7 +148,8 @@ def report(runs: list[CaseRun], n_cases: int, reps: int) -> str:
         + (f" (causes: {_kinds([p for r in replies for p in r.trace.repair_problems], REPAIR_CAUSES)})" if repaired else "")
         + ".",
         f"Time per case: {seconds:.2f} s. Tokens: {tokens_in} in, {tokens_out} out."
-        + (f" Cost at list price: ${sum(costs):.2f}." if costs else ""),
+        + (f" Cost at list price: ${sum(costs):.2f}." if costs else "")
+        + (f" {unpriced} replies ran on a model with no configured price and are not in that total." if unpriced else ""),
     ]
     return "\n".join(lines)
 

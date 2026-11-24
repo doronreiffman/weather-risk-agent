@@ -219,6 +219,20 @@ def test_a_wrong_band_word_is_repaired(ctx):
     assert reply.trace.rejected_answer and "Very high" in reply.trace.rejected_answer
 
 
+@pytest.mark.parametrize(
+    "verdict",
+    [
+        "No hub is Very high; Minneapolis comes closest.",
+        "Dallas is High, just above Moderate, at 2.02.",
+        "Chicago (2.03) is just above Dallas, which is High.",
+    ],
+)
+def test_band_words_are_paired_with_the_hub_just_before_them(ctx, verdict):
+    a, _ = agent(ctx, tool("explain_hub", {"hub_id": "DAL"}), final(verdict=verdict, hubs=[]))
+    reply = a.answer(None, "Why is Dallas high?")
+    assert reply.status == "answered" and not reply.trace.repaired, reply.trace.repair_problems
+
+
 def test_the_prompts_own_facts_need_no_citation(ctx):
     answer = final(status="out_of_scope", evidence=[], hubs=[],
                    verdict="We have no Seattle hub; our data covers 2016 to 2025 at our 12 hubs.")  # fmt: skip
@@ -291,10 +305,28 @@ def test_after_a_fallback_the_blocks_before_it_are_left_out_and_not_run(ctx):
 
 
 def test_cost_is_priced_per_response_at_its_own_model(ctx):
-    a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final())
+    served_by_sonnet = final()
+    served_by_sonnet.model = "claude-sonnet-5-5"
+    a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), served_by_sonnet)
     reply = a.answer(None, "Which hubs?")
-    # Two responses of 100 input and 50 output tokens at Opus 5.5's 4 and 20 dollars per million.
-    assert reply.trace.usage["cost_usd"] == round(2 * (100 * 4 + 50 * 20) / 1e6, 6)
+    # 100 input and 50 output tokens each: once at Opus 5.5's 4 and 20, once at Sonnet 5.5's 2 and 10 per million.
+    assert reply.trace.usage["cost_usd"] == round(((100 * 4 + 50 * 20) + (100 * 2 + 50 * 10)) / 1e6, 6)
+
+
+def test_the_bottom_of_a_cut_ranking_is_not_the_least_exposed(ctx):
+    top3 = {"hazard": "overall", "region": "all", "top_n": 3, "weight_changes": []}
+    wrong = final(verdict="Denver is the least exposed hub.", hubs=["DEN"], hubs_from="bottom")
+    a, _ = agent(ctx, tool("rank_hubs", top3), wrong, final(verdict="Minneapolis leads.", hubs=["MSP"]))
+    reply = a.answer(None, "Which hub is least exposed?")
+    assert reply.status == "answered" and "not the bottom of any cited order" in reply.trace.repair_problems[0]
+
+
+def test_an_explanations_order_must_include_the_explained_hub(ctx):
+    wrong = final(verdict="Chicago is the most exposed.", hubs=["ORD"])
+    a, _ = agent(ctx, tool("explain_hub", {"hub_id": "DAL"}), wrong,
+                 final(verdict="Dallas is High, just below Chicago.", hubs=["ORD", "DAL"]))  # fmt: skip
+    reply = a.answer(None, "Why is Dallas high?")
+    assert reply.status == "answered" and "not the top of any cited order" in reply.trace.repair_problems[0]
 
 
 # --- milestone 4 readiness: timeouts and two messages at once --------------------------------
