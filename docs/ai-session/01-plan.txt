@@ -1,0 +1,3054 @@
+ ▐▛███▛█   Claude Code v2.1.331
+▝▜██████▀  Fable 5.2 · Claude Ultra
+ ▝▝   ▝▝   ~/Projects/weather-risk-agent
+
+
+❯ Hi Claude. I'm doing a take-home assignment for a Forward Deployed Engineer   
+  role at Moveo. The full assignment is at the bottom. I have about a day, and  
+  I'll be sharing this whole session with them, so let's work the way we would  
+  on a real customer engagement: understand the problem, agree on a plan, build 
+  in small verified steps, and keep a written record of the decisions.          
+                                                                                
+  The customer is a logistics company's analysts, and the decision they need to 
+  make is which hubs get resilience investment this year. Everything we build   
+  should serve that decision: a ranking they can defend, an explanation they    
+  can repeat to their boss, and honesty about what the data can't tell them.    
+                                                                                
+  ## This session: understand, check the data, plan. No code yet.               
+                                                                                
+  1. **Interview me first.** I'm the stand-in for the analysts. Use the         
+  AskUserQuestion tool to interview me about the hard parts: what "exposure"    
+  should mean for an investment decision, which hazards and time windows        
+  matter, how to weigh them, what a good answer looks like, and what's out of   
+  scope. Don't ask obvious questions, and record whatever I can't answer as an  
+  explicit assumption.                                                          
+                                                                                
+  2. **Check the data before designing around it.** Use subagents to check      
+  these candidate sources in parallel, so the raw responses stay out of our     
+  main context. Each subagent should report back whether the source is          
+  reachable, one real sample response, the fields we'd use, rate limits and     
+  terms of use, and any gaps.                                                   
+     - Open-Meteo historical weather API (daily snowfall, precipitation, wind): 
+  https://open-meteo.com/en/docs/historical-weather-api                         
+     - National Weather Service API, active alerts:                             
+  https://www.weather.gov/documentation/services-web-api                        
+     - FEMA National Risk Index (county-level hurricane, flooding and           
+  winter-weather risk): https://hazards.fema.gov/nri/data-resources             
+     If you know a better source, propose it.                                   
+                                                                                
+  3. **Write docs/PLAN.md as a self-contained spec**, then stop and wait for my 
+  approval. It should cover:                                                    
+     - the problem in the analysts' terms, and what's in and out of scope, with 
+  the reasons (a narrow scope done well beats a broad one done shallowly);      
+     - the risk KPI: inputs, per-hazard sub-scores, weights, and how the score  
+  turns into a ranking;                                                         
+     - the architecture (the components and how they talk to each other), the   
+  repo layout, and the data storage, each with the main alternative you         
+  rejected and why;                                                             
+     - the JSON schemas between the LLM and our code, and which model the agent 
+  itself uses at runtime, with the reasoning (answer quality, speed, cost);     
+     - the evaluation design;                                                   
+     - milestones that each end in a check you can run yourself (tests, the     
+  eval, a request to the API), and a final end-to-end check that proves the     
+  whole thing works.                                                            
+                                                                                
+  ## Rules for the whole build                                                  
+                                                                                
+  After I approve the plan, start by writing these into a short CLAUDE.md, so   
+  they still apply after I /clear between milestones:                           
+                                                                                
+  - **Numbers come from code, not from the model.** The risk score is           
+  deterministic and unit-tested without any LLM, with weights in a config file. 
+  The LLM understands the question, calls our tools and explains the results.   
+  Every number in an answer must come from a tool result.                       
+  - **The LLM's output is validated against a JSON schema in code (Pydantic).** 
+  Invalid output gets one repair attempt and then a clear error, never a        
+  guess. I'd lean toward Claude via the Anthropic API since I know it well;     
+  tell me if something else fits better.                                        
+  - **Show evidence, not claims.** A milestone is done when its check passes:   
+  paste the command and its output. Never just say "this should work".          
+  - **Write the evaluation set before the agent exists.** That's 10 to 15       
+  questions: the four from the assignment, a couple of follow-ups, and a couple 
+  the agent should flag as out of scope (for example, a city where we have no   
+  hub). Each gets automatic checks: the right hubs at the top, the right tool   
+  called, numbers that match the tool output. One command runs it and prints a  
+  score.                                                                        
+  - **Say what we don't know.** Keep docs/ASSUMPTIONS.md current, and have the  
+  agent's answers state the data period, the sources and how confident it is.   
+  - **Keep a short decision log in docs/DECISIONS.md, and make small commits    
+  with clear messages.**                                                        
+  - **Secrets live only in a git-ignored .env file.** Never read it or print    
+  it. Also add a deny rule for it in .claude/settings.json, so this is enforced 
+  and not just promised.                                                        
+  - **Ask rather than guess, and push back if you think there's a better        
+  approach.**                                                                   
+  - **Match the model to the task, using your judgment.** As a rule of thumb,   
+  Fable suits open-ended design and architecture questions, Opus suits          
+  implementation and review, and Sonnet suits small, obvious, well-specified    
+  tasks. Choose your subagents' models with that in mind, and say which one you 
+  picked and why. You can't switch the main session's model yourself, so when   
+  you think it should change, or the effort level should, tell me and I'll do   
+  it.                                                                           
+  - **These conversations are a deliverable.** Before every /clear I'll run     
+  /export into docs/ai-session/, numbered in order (01-plan.txt, 02-..., and so 
+  on). At the end of each milestone, remind me to export. Keep                  
+  docs/ai-session/README.md as the index, with one line per session saying what 
+  it covered. Never add docs/ai-session/ to .gitignore.                         
+                                                                                
+  Use Python with uv and pytest. The company is fictional, so we'll define      
+  about a dozen US hubs that cover the questions below (Midwest cities, Miami,  
+  Houston, Denver, Dallas), recorded as an assumption.                          
+                                                                                
+  Bonuses come only after the core works end to end, and only after checking    
+  with me, in this order: deployment to a public URL, an alert when a hub's     
+  risk score changes, voice.                                                    
+                                                                                
+  Before we call it done, a subagent should review the whole diff against       
+  docs/PLAN.md in a fresh context, flagging only gaps that affect correctness   
+  or the assignment's requirements.                                             
+                                                                                
+  The final deliverables are the README (clone to running agent in a few        
+  commands), docs/ARCHITECTURE.md (system architecture, repository structure,   
+  data storage choice), the evaluation results, and a one-page English summary  
+  for the submission.                                                           
+                                                                                
+  ## The assignment                                                             
+                                                                                
+  > **Weather Risk Intelligence Agent**                                         
+  >                                                                             
+  > We are a logistics company operating regional distribution hubs across the  
+  US. Severe weather shuts hubs down, delays shipments and costs us money. Each 
+  year we choose a handful of hubs to invest in resilience upgrades. We are     
+  exploring how AI agents can help our analysts decide which hubs are most      
+  exposed to weather disruption and should be prioritized for investment.       
+  >                                                                             
+  > **Build an AI-powered agent that can answer questions such as:**            
+  > - Which hubs in the Midwest are most exposed to winter disruption?          
+  > - Compare Miami and Houston in terms of hurricane and flood exposure.       
+  > - What percentage of days in Denver last year had snowfall?                 
+  > - Why is the Dallas hub's weather disruption risk high?                     
+  >                                                                             
+  > **The agent should:**                                                       
+  > - Use public APIs to gather weather and hazard data                         
+  > - Rank or compare hubs based on your defined logic or KPI                   
+  > - Explain its reasoning clearly                                             
+  > - Support conversational follow-up questions                                
+  >                                                                             
+  > **Requirements**                                                            
+  > - Include some deterministic scoring or ranking logic (not only LLM output) 
+  > - Include a chat interface to talk with the agent (voice is a bonus)        
+  > - Bonus: a scheduled or webhook-triggered alert when a hub's risk score     
+  changes                                                                       
+  > - Expose the agent through an API that the chat interface uses              
+  > - Enforce a structured output format (JSON schema) between the LLM and your 
+  code                                                                          
+  > - Include a small evaluation set and a way to run it                        
+  > - Clearly communicate assumptions, uncertainty and scoping                  
+  >                                                                             
+  > **Deliverables - within 24 hours:**                                         
+  > - Source code, with instructions to run it. You should be able to run the   
+  agent live during the follow-up interview. Deploying it to a URL is           
+  preferred, but not mandatory.                                                 
+  > - Short design/architecture document explaining: system architecture (the   
+  components and how they talk to each other), repository structure, data       
+  storage choice.                                                               
+  > - The full session with the AI agent you worked with: the plan, and         
+  everything else relevant to your conversation with the agent. This is         
+  mandatory.                                                                    
+  >                                                                             
+  > This assignment is intended to be achievable in approximately one day.      
+  Prioritize clarity, reasoning and thoughtful design over completeness or      
+  polish. You may use any language, framework and LLM provider; Python is       
+  preferred. A narrow scope done well is better than a broad scope done         
+  shallowly.                                                                    
+
+⏺ I'll start by looking at what's already in the project folder and loading the
+  Claude API reference, since the plan has to name a runtime model and I won't
+  quote model facts from memory.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Skill(claude-api)
+  ⎿  Loaded skill · 1 tool allowed
+
+⏺ Four background checks, one per data source including the Iowa State warning
+  archive, are running on Sonnet, and I'll re-run each fetch myself before
+  trusting its findings. The interview's first round of four questions about
+  what the score should mean starts now. · summary
+
+⏺ 4 background agents launched (↓ to manage)
+   ├ Check Open-Meteo historical API
+   ├ Check NWS alerts API
+   ├ Check FEMA National Risk Index
+   └ Check IEM warning archive
+
+⏺ Answered Claude's questions:
+  ⎿  · When we call a hub 'exposed' to weather, should the score measure the 
+     weather at that location alone, or also how much the hub matters to the 
+     business? → Weather only (Recommended)
+     · The assignment names winter weather, hurricanes and flooding. It also 
+     asks why Dallas is 'high risk', and Dallas's main threats are hail, 
+     tornadoes and damaging wind. Which hazards should the score cover? → Four: 
+     add severe storms (Recommended)
+     · A Minneapolis-type hub loses a few days most winters. A Miami-type hub 
+     may lose weeks, but only once in many years. How should the single overall 
+     score combine such different hazards? → Weight by shutdown length 
+     (Recommended)
+     · How many years of weather history should the ranking rest on? (Rare 
+     events such as hurricanes would come from FEMA's longer records in every 
+     option.) → Last 10 full years (Recommended)
+
+› Message from general-purpose
+  Open-Meteo archive check, run 2026-11-24 ~08:45 UTC. Raw files are in
+  /private/tmp/claude-501/-Users-doronreiffman-Projects-weather-risk-agent/f657a
+  bce-c1e4-4f8e-a7d2-0b3d59ad0275/scratchpad/openmeteo/downloads/.
+
+  **1. Reachable: yes.** Endpoint confirmed [observed]. HTTP 200 in 0.42 s,
+  16,063 bytes.
+  `curl -sS -A weather-risk-agent-check/0.1 "https://archive-api.open-meteo.com/
+  v1/archive?latitude=39.7392&longitude=-104.9903&start_date=2025-01-01&end_date
+  =2025-12-31&daily=snowfall_sum,precipitation_sum,rain_sum,wind_gusts_10m_max,t
+  emperature_2m_min,temperature_2m_max&timezone=America/Denver"`
+
+  **2. Sample, Denver 2025, arrays trimmed to 4 values [observed]**
+  ```
+  {"latitude":39.753952,"longitude":-105.02086,"generationtime_ms":1.07,"utc_off
+  set_seconds":-25200,
+   "timezone":"America/Denver","timezone_abbreviation":"GMT-7","elevation":1599.
+  0,
+   "daily_units":{"time":"iso8601","snowfall_sum":"cm","precipitation_sum":"mm",
+  "rain_sum":"mm",
+     "wind_gusts_10m_max":"km/h","temperature_2m_min":"°C","temperature_2m_max":
+  "°C"},
+   "daily":{"time":["2025-01-01","2025-01-02","2025-01-03","2025-01-04",...],
+    "snowfall_sum":[0.0,0.0,0.0,0.42,...],"precipitation_sum":[0.0,0.0,0.0,0.6,.
+  ..],
+    "rain_sum":[0.0,0.0,0.0,0.0,...],"wind_gusts_10m_max":[16.2,15.8,17.6,31.0,.
+  ..],
+    "temperature_2m_min":[-7.5,-3.5,-4.4,-6.1,...],"temperature_2m_max":[3.5,7.9
+  ,8.1,-0.2,...]}}
+  ```
+  The grid cell used was 39.754, -105.021, elevation 1599 m. That is about 2 km
+  from the requested point [observed]. The response has no model field, so it
+  does not say which dataset served it.
+
+  **3. Fields we would use** (units as the response states them [observed])
+  - snowfall_sum: cm
+  - precipitation_sum and rain_sum: mm
+  - wind_gusts_10m_max: km/h
+  - temperature_2m_min and temperature_2m_max: °C
+  - The docs also describe them as "Sum of daily snowfall" and "Sum of daily
+  precipitation (including rain, showers and snowfall)" [docs:
+  https://open-meteo.com/en/docs/historical-weather-api].
+
+  **4. Rate limits and terms** (all [docs])
+  - Free limits: "Less than 10'000 API calls per day, 5'000 per hour and 600 per
+  minute." (https://open-meteo.com/en/terms)
+  - Non-commercial only: "You may only use the free API services for
+  non-commercial purposes." (terms)
+  - Licence on the free tier: "You accept to the CC-BY 4.0 licence". (terms)
+  - Commercial examples (terms): "Websites or apps that have subscriptions or
+  display advertisements.", "Commercial products or promotional activities.",
+  "Undisclosed research at commercial entities."
+  - Pricing page: "The free API is for non-commercial use, rate-limited to
+  10,000 calls/day, and carries no uptime guarantee." It also says "includes a
+  commercial use licence" for the customer API.
+  (https://open-meteo.com/en/pricing)
+  - Long requests count as more than one call: "Requests for data covering more
+  than 10 weather variables or extending over a period of more than 2 weeks for
+  a single location are considered multiple API calls." It adds "a request for 2
+  weeks of data with 15 weather variables will be calculated as 1.5 API calls,
+  while 4 weeks of data equals 3.0 API calls." (pricing)
+  - Attribution: CC BY 4.0 "mandates giving appropriate credit and indicating
+  any modifications". Attribution is required even for commercial use of the
+  data. (pricing). The licence page (https://open-meteo.com/en/licence) is a 200
+  page with an attribution section. It shows the link text "Weather data by
+  Open-Meteo.com". /en/license redirects there.
+  - Pricing page, on historical access: "Historical, climate, ensemble, and
+  satellite radiation APIs require the Professional API Plan or higher." This
+  sits in the FAQ under the Standard plan, so a paid plan would need the
+  Professional tier for this API.
+  - I found no per-month free limit. The pricing page says "monthly limits are
+  not enforced" for now.
+
+  **5. Answers to tests**
+  - **Test 2, Denver 2025 [observed]:**
+    - 365 days returned, 0 null snowfall values, no nulls in any variable.
+    - Days with snowfall above 0: 43. Days at or above 0.25 cm: 33. At or above
+  1.0 cm: 17. At or above 2.54 cm: 10. At or above 5 cm: 1.
+    - Annual snowfall total: 57.54 cm.
+    - The count falls from 43 to 10 across the thresholds, so "a snow day"
+  depends heavily on where the cutoff is set.
+  - **Test 3, multiple locations [observed]:** yes. I sent comma-separated
+  latitude and longitude lists for the three cities, January 2025,
+  `timezone=auto`. HTTP 200, 2,553 bytes. The response is a JSON list of 3
+  objects in request order, each with the same shape as a single response. The
+  grid cells used were:
+
+  | City | Lat | Lon | Elevation | Timezone | Jan snowfall |
+  |---|---|---|---|---|---|
+  | Denver | 39.754 | -105.021 | 1599 m | America/Denver | 13.93 cm |
+  | Miami | 25.764 | -80.196 | 5 m | America/New_York | 0.0 cm |
+  | Minneapolis | 44.956 | -93.209 | 253 m | America/Chicago | 4.34 cm |
+
+    - Docs: "To return data for multiple locations the JSON output changes to a
+  list of structures." [docs]
+    - The call-count weighting for multiple locations is not stated in the
+  sentence I quoted. The pricing page has a "Locations" selector that I could
+  not read as text. Assume each location counts separately [memory].
+  - **Test 4, ten years [observed]:** one request for 2016-01-01 to 2025-12-31
+  with the six variables returned HTTP 200 in 0.57 s, 156,387 bytes. It had
+  3,653 days and no nulls. For the call-count sentence, see section 4. By that
+  rule, a 10-year, 6-variable request for one location probably counts as many
+  calls. By my arithmetic, 4 weeks equals 3.0 calls, which suggests roughly 1
+  call per 2 weeks beyond the first, or about 260 calls for ten years
+  [UNVERIFIED extrapolation, not in the docs]. A dozen cities would be about
+  3,000 calls, still under 10,000 per day.
+  - **Test 5, freshness [observed]:** I requested 2026-11-10 to 2026-11-24. The
+  last date with non-null values was 2026-11-24, which is today, with all six
+  variables filled. The docs table says ERA5 has "Daily with 5 days delay" and
+  IFS is "Every 6 hours with no delay" [docs]. The default "Best match" model is
+  documented as combining IFS HRES, ERA5 and ERA5-Land [docs]. So recent days
+  are probably IFS and older days ERA5-family [inference]. This matters for a
+  long-run series.
+  - **Test 6, dataset [docs unless noted]:**
+    - Datasets listed: ERA5 (0.25°, from 1940), ERA5-Land (0.1°, from 1950),
+  ECMWF IFS (9 km, from 2017).
+    - The default is "Best Match", which "combines IFS HRES, ERA5 and ERA5-Land
+  seamlessly".
+    - The docs also list the models ERA5-Seamless, ERA5-Ensemble and CERRA. I
+  did not test those.
+    - A `models=` parameter exists, and the docs advise "exclusively utilis[ing]
+  ERA5 or ERA5-Land" for decades-long consistency.
+    - `models=era5` worked [observed]: grid 39.75, -105.0, Denver 2025 snowfall
+  total 58.5 cm (default 57.54 cm).
+    - `models=era5_land` returned HTTP 200 but all 365 snowfall values were null
+  [observed], with grid 39.70, -105.0. Snowfall is not available in ERA5-Land,
+  which fits the docs table showing snowfall marked "-" for one model column.
+    - The docs describe reanalysis as combining "weather station, aircraft,
+  buoy, radar, and satellite observations" with models. Snowfall is therefore
+  modelled and not a station measurement.
+    - The docs give no explicit statement of how snowfall_sum is derived beyond
+  "Sum of daily snowfall" in cm. The hourly snowfall text says "For the water
+  equivalent in millimeter, divide by 7. E.g. 7 cm snow = 10 mm precipitation
+  water equivalent".
+  - **Test 8, other variables [docs]:** the docs list `snow_depth` (the docs say
+  it is "overestimated" in ERA5-Land and to "use it with care"), `weather_code`
+  (WMO codes), `precipitation_hours`, `snowfall_water_equivalent_sum`, and
+  apparent temperature. Also wind_gusts_10m_max, which we already use. I only
+  checked these in the docs list, not in a response.
+
+  **6. Gaps and caveats**
+  - **Licence is the main blocker.** The free tier is non-commercial only.
+  Whether the planned tool counts as commercial depends on who uses it. Doron
+  works at a firm, so check this before design. "Undisclosed research at
+  commercial entities" is listed as commercial [docs]. Commercial use needs a
+  paid plan, and the historical API needs the Professional tier [docs].
+  - **Snowfall is modelled, not observed.** Grid cells are 9 to 25 km, and the
+  values are smoothed, with no point observation. Threshold sensitivity is high
+  (43 days above 0 cm versus 10 days at or above 2.54 cm).
+  - **Two data sources behind the default.** The default merges IFS and
+  ERA5-family data, so long-run series may carry model discontinuities. Pin
+  `models=era5` for consistency. `era5_land` has no snowfall.
+  - **Wind gusts are model-derived** and the docs link to ECMWF IFS gust
+  parameterization. They are not station gusts.
+  - **Grid cell differs from the city point** by a few km. The elevation used
+  was 1599 m for Denver. Record the returned latitude, longitude and elevation.
+  - **Call counting:** I fetched the pricing page as text, so the "Locations"
+  and "Time length" counter on it was not readable. Long multi-year
+  multi-location requests count as multiple calls under the docs'
+  fractional-count rule.
+  - **Not tested:** CSV or other formats, error responses and 429 behaviour, and
+  the `cell_selection` parameter.
+
+⏺ Agent "Check Open-Meteo historical API" finished · 59s
+
+› Message from general-purpose
+  All times below are from 2026-11-24 about 08:45 UTC. Scratch files are in
+  /private/tmp/claude-501/-Users-doronreiffman-Projects-weather-risk-agent/f657a
+  bce-c1e4-4f8e-a7d2-0b3d59ad0275/scratchpad/nws/downloads/. I used the
+  User-Agent `weather-risk-agent-check/0.1` on every request, with no contact
+  details.
+
+  **Verdict: the API cannot count warnings over past years. It holds about 7
+  days.**
+
+  ## 1. Reachable
+  Yes. [observed] Re-run this:
+  `curl -s -A "weather-risk-agent-check/0.1" -w "%{http_code}\n"
+  "https://api.weather.gov/alerts/active?point=25.7617,-80.1918"`
+  It returned HTTP 200 at about 08:45 UTC on 2026-11-24.
+
+  Active alerts by point, all HTTP 200 [observed]:
+
+  | City | Active alerts |
+  |---|---|
+  | Denver | 0 |
+  | Miami | 2 |
+  | Minneapolis | 0 |
+  | Houston | 0 |
+
+  Statewide `?area=` also returned 200 [observed]: FL 24, TX 13, AK 4, CO 0, MN
+  0.
+
+  My first attempt returned 400 for the point queries. The cause was a shell bug
+  of mine (the point string was malformed), not the API. The API's own error
+  was "Does not match the regex pattern ^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$"
+  [observed].
+
+  ## 2. Sample alert
+  This is a Miami alert (`properties`, trimmed) [observed]:
+  ```
+  event: Coastal Flood Statement
+  severity: Minor   certainty: Likely   urgency: Expected
+  status: Actual    messageType: Update   category: Met
+  sent / effective: 2026-11-23T22:12:00-05:00
+  onset: 2026-11-24T05:00:00-05:00
+  expires: 2026-11-24T15:00:00-05:00
+  ends: 2026-11-26T07:00:00-05:00
+  areaDesc: Coastal Palm Beach County; Coastal Broward County; Coastal Miami
+  Dade County
+  geocode.SAME: [012099, 012011, 012086]
+  geocode.UGC: [FLZ168, FLZ172, FLZ173]
+  affectedZones: [https://api.weather.gov/zones/forecast/FLZ168, .../FLZ172,
+  .../FLZ173]
+  headline: Coastal Flood Statement issued November 23 at 10:12PM EST until
+  November 26 at 7:00AM EST by NWS Miami FL
+  senderName: NWS Miami FL
+  references: [one earlier alert: id + sent]
+  parameters.VTEC: /O.CON.KMFL.CF.S.0009.261124T1000Z-261126T1200Z/
+  parameters.expiredReferences: [one superseded alert]
+  ```
+
+  ## 3. Fields we would use
+  Meanings are my reading of the response, since the docs pages I read do not
+  define them. [observed] for the values.
+  - **event**: the alert type, for example "Coastal Flood Statement".
+  - **severity**: Minor, Moderate, Severe, Extreme or Unknown. The sample shows
+  Minor.
+  - **certainty**: how likely the event is. The sample shows Likely.
+  - **urgency**: how soon to act. The sample shows Expected.
+  - **headline**: one-line text naming the product, time window and issuing
+  office.
+  - **sent, effective**: when the message was issued and when it takes effect.
+  - **onset**: when the hazard is expected to begin.
+  - **expires**: when this message expires. A later update may replace it.
+  - **ends**: when the event itself is expected to end. It can be null.
+  - **areaDesc**: human-readable list of the affected areas.
+  - **geocode.SAME**: 6-digit county FIPS codes, for example 012086 for
+  Miami-Dade.
+  - **geocode.UGC**: NWS zone or county codes, for example FLZ172.
+  - **affectedZones**: URLs of those zones.
+  - **status**: Actual in the sample. CAP also defines Test, Exercise and others
+  [memory].
+  - **messageType**: Alert, Update or Cancel. The sample is an Update.
+  - **references and parameters.expiredReferences**: link an update to the alert
+  it replaces. This matters for de-duplication.
+
+  ## 4. Rate limits and terms
+  - [docs] "All of the information presented via the API is intended to be open
+  data, free to use for any purpose... we do not charge any fees... although
+  there are reasonable rate limits in place to prevent abuse."
+  (https://www.weather.gov/documentation/services-web-api)
+  - [docs] "The rate limit is not public information, but allows a generous
+  amount for typical use. If the rate limit is execeed a request will return
+  with an error, and may be retried after the limit clears (typically within 5
+  seconds)." (same URL) **No numeric limit is published.**
+  - [docs] "A User Agent is required to identify your application. This string
+  can be anything... If you include contact information (website or email), we
+  can contact you if your string is associated to a security event. This will be
+  replaced with an API key in the future." (same URL)
+  - [docs] A missing User-Agent can give a 403. "We recommend setting the value
+  to something that identifies your application and includes a contact email."
+  (https://weather-gov.github.io/api/general-faqs)
+  - [docs] Caching: "The API was designed with a cache-friendly approach that
+  expires content based upon the information life cycle." (docs URL). Also:
+  "Please don't use cache busting techniques like random numbers in the query
+  string. Requests like this... will return a 400" (FAQ URL).
+  - [observed] `/alerts/active?area=FL` returned `cache-control: public,
+  max-age=4, s-maxage=5`.
+  - [docs] The `/points` mapping "may occasionally change", so check it
+  periodically (docs URL). The FAQ says point mappings "don't change very
+  often", so cache them.
+  - No licence beyond "open data, free to use for any purpose" appeared on the
+  pages I read.
+
+  ## 5. History verdict
+  - **What the docs say.** [docs] "The /alerts endpoint contains alerts issued
+  over the past seven days. For an official archive of NWS CAP alerts, please
+  reach out to the National Centers for Environmental Information (NCEI)."
+  (https://www.weather.gov/documentation/services-web-api)
+  - **What I could retrieve.**
+    - Miami with `start=2025-01-01`, and Miami with no `start` (`limit=500`):
+  both returned 33 alerts. [observed] The oldest `sent` was
+  2026-11-17T08:07-05:00, which is 7 days before today.
+    - Texas with `start=2025-01-01`: 165 alerts, the oldest sent 2026-11-17.
+  [observed]
+    - All US, no filters, `limit=500`: 500 alerts and a cursor to the next page.
+  [observed]
+    - Minneapolis with `start=2025-01-01` returned 0 alerts. [observed] Hence
+  the result is empty, with no error.
+    - Texas for January 2025 (`start`/`end`): HTTP 200 with an empty `features`
+  list. [observed]
+  - **Conclusion.** The `start` parameter is accepted and does not give older
+  data. Only about 7 days exist. The API cannot count warnings over past years.
+  An official archive is at NCEI. [docs] I did not fetch NCEI. Whether it is
+  usable or bulk-downloadable is [memory] and unchecked.
+
+  ## 6. Gaps and caveats
+  **(a) Long-run exposure ranking:**
+  - This API cannot do it. We need another history source such as NCEI, and the
+  spec should treat that as a separate unchecked dependency.
+  - This API's only useful role here is the mapping from a coordinate to a
+  county or zone (see below).
+
+  **(b) "What is active right now at each hub":**
+  - The point query works, but the response has to be filtered. Miami's 2 active
+  alerts are a Coastal Flood Statement plus one other I did not inspect, and
+  sample alert types include minor ones such as Rip Current Statement.
+  [observed] Filter on event type and severity.
+  - Zero alerts is a normal result, so empty must not be treated as an error.
+  Denver, Minneapolis and Houston were all empty today.
+  - Use `references` and `expiredReferences` to handle updates and avoid double
+  alerts.
+  - Change-alerting means polling. I found nothing on push or webhooks in the
+  docs I read.
+  - Keep requests to about one per hub per few minutes. Cached responses expire
+  after about 5 seconds, and the rate limit is unknown.
+
+  **Point lookup** (`/points/39.7392,-104.9903`, HTTP 200) [observed]:
+  - cwa: BOU
+  - forecastZone: https://api.weather.gov/zones/forecast/COZ040
+  - county: https://api.weather.gov/zones/county/COC031
+  - fireWeatherZone: https://api.weather.gov/zones/fire/COZ240
+  - gridId: BOU
+  - timeZone: America/Denver
+  - radarStation: KFTG
+  - relativeLocation: Denver, CO
+
+  The county code COC031 is not the same as the SAME FIPS code in alerts (for
+  example 012086). The spec will need a mapping between the two.
+
+  **Event types** (`/alerts/types`, HTTP 200): 111 types [observed]. Relevant
+  ones, all [observed]:
+  - **Winter:** Blizzard Warning, Winter Storm Warning/Watch, Winter Weather
+  Advisory, Ice Storm Warning, Lake Effect Snow Warning, Snow Squall Warning,
+  Extreme Cold Warning/Watch, Cold Weather Advisory, Freeze Warning/Watch, Frost
+  Advisory, Freezing Fog Advisory.
+  - **Hurricane and tropical:** Hurricane Warning/Watch, Hurricane Force Wind
+  Warning/Watch, Tropical Storm Warning/Watch, Storm Surge Warning/Watch,
+  Tropical Cyclone Local Statement.
+  - **Flood:** Flood Warning/Watch/Advisory/Statement, Flash Flood
+  Warning/Watch/Statement, Coastal Flood Warning/Watch/Advisory/Statement,
+  Lakeshore Flood Warning/Watch/Advisory/Statement.
+
+  **Other caveats:**
+  - The docs say the User-Agent will be replaced by an API key in future. [docs]
+  - All results are from one day's weather, so the 0/2 counts say nothing about
+  typical volume.
+  - I confirmed nothing about service uptime or SLA.
+
+⏺ Agent "Check NWS alerts API" finished · 1m 0s
+
+› Message from general-purpose
+  ## IEM weather-warning archive check (live test, 2026-11-24)
+
+  **Verdict:** the by-point endpoint works and returns what we need. It has real
+  caveats for severe-storm counts and for tropical history before 2008. About
+  13 requests were made, 1 to 2 s apart, with User-Agent
+  `weather-risk-agent-check/0.1`. Downloads are in
+  `.../scratchpad/iem/downloads/` and the scripts in
+  `.../scratchpad/iem/scripts/` (`analyze.py`, `dup.py`).
+
+  ### 1. Reachable
+  Yes [observed]. Run at 2026-11-24 08:45:03 UTC. Result: HTTP 200, 1.91 s,
+  259,257 bytes.
+  ```
+  curl -s -A weather-risk-agent-check/0.1 -w "%{http_code} %{time_total}s
+  %{size_download}B\n" -o mn.json "https://mesonet.agron.iastate.edu/json/vtec_e
+  vents_bypoint.py?lat=44.9778&lon=-93.2650&sdate=2016-01-01&edate=2025-12-31"
+  ```
+  - The other cities also returned 200. Chicago took 3.0 s and 515 KB, Denver
+  1.9 s and 230 KB, Dallas 2.8 s and 459 KB, Miami (2005 to 2025) 4.6 s and 1.07
+  MB, and Houston (2005 to 2025) 3.8 s and 1.46 MB [observed].
+  - The older `/json/` index URL gives a 301 redirect to `/api/`. The endpoint
+  itself is still listed there [observed/docs].
+  - Its help page is
+  `https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?help` [docs].
+  - The help page lists these parameters: `lat`, `lon`, `sdate`, `edate`, `at`
+  (events valid at one instant), `buffer` (0 to 1 degree), `fmt` (json or csv;
+  the help page's own examples also show `fmt=xlsx`) and `callback` [docs].
+
+  ### 2. Sample response
+  The top-level keys are `events` and `generated_at` [observed]. The first
+  Minneapolis records, trimmed:
+  ```
+  {"url":"/vtec/?year=2016&wfo=KMPX&phenomena=WC&significance=Y&eventid=0001","i
+  ssue":"2016-01-10T06:00:00Z","expire":"2016-01-10T18:00:00Z","eventid":1,"phen
+  omena":"WC","hvtec_nwsli":null,"significance":"Y","wfo":"MPX","name":"Wind
+  Chill Advisory","ph_name":"Wind Chill","sig_name":"Advisory","ugc":"MNZ060"}
+  {... "issue":"2016-01-17T09:00:00Z","expire":"2016-01-17T16:00:00Z","eventid":
+  1,"phenomena":"WC","significance":"W","name":"Wind Chill
+  Warning","ugc":"MNZ060"}
+  Chicago: {"issue":"2016-06-22T23:11:00Z","expire":"2016-06-23T02:43:00Z","even
+  tid":286,"phenomena":"TO","significance":"A","wfo":"LOT","name":"Tornado
+  Watch","ugc":"ILC031"}
+  ```
+
+  ### 3. Fields and codes
+  **The call returns every significance (W, A, Y and others) and every
+  phenomenon, so we filter in our own code.**
+
+  Fields in each event record [observed]. The meanings are my reading of the
+  values, since the help page does not describe the fields:
+
+  | Field | Meaning |
+  |---|---|
+  | `phenomena` | Two-letter event type. |
+  | `significance` | One-letter level. |
+  | `eventid` | Event number (called ETN in the docs). |
+  | `wfo` | Issuing NWS office, three letters. |
+  | `issue`, `expire` | UTC timestamps. |
+  | `name`, `ph_name`, `sig_name` | Full name, phenomenon name and level name. |
+  | `ugc` | The county (`...C###`) or forecast zone (`...Z###`) code that
+  matched the point. |
+  | `url` | IEM VTEC browser link for the event. |
+  | `hvtec_nwsli` | Hydrologic site code, null in nearly all records I read.
+  [memory] on what it means. |
+
+  Code meanings come from the lookup table in IEM's own parsing library,
+  `https://raw.githubusercontent.com/akrherz/pyIEM/main/src/pyiem/nws/vtec.py`
+  [docs]:
+  - **Significance:** W = Warning, A = Watch, Y = Advisory.
+  - **Phenomena:**
+
+  | Code | Meaning |
+  |---|---|
+  | WS | Winter Storm |
+  | BZ | Blizzard |
+  | IS | Ice Storm |
+  | WW | Winter Weather (normally advisory level) |
+  | WC | Wind Chill |
+  | CW | Cold Weather |
+  | EC | Extreme Cold |
+  | HU | Hurricane |
+  | TR | Tropical Storm |
+  | SS | Storm Surge |
+  | FF | Flash Flood |
+  | FL | Flood |
+  | FA | Flood (areal) |
+  | TO | Tornado |
+  | SV | Severe Thunderstorm |
+  | HW | High Wind |
+  | LE | Lake Effect Snow |
+
+  - The pyIEM table is a code file, not NWS documentation. I did not fetch an
+  NWS definitions page; my attempt at `weather.gov/bgm/vtec` returned 404.
+  - CW first appears in Houston data on 2025-01-06 and EC on 2025-01-22
+  [observed]. That points to a 2025 NWS renaming of the cold products, but that
+  part is [memory]. Treat WC, CW and EC as one group.
+
+  ### 4. Count tables (UTC calendar days with at least one significance-W event,
+  issue to expire)
+
+  **Winter group, WS+BZ+IS (days per year, 2016 to 2025):**
+
+  | City | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 |
+  Mean |
+  |---|---|---|---|---|---|---|---|---|---|---|---|
+  | Minneapolis | 4 | 0 | 10 | 14 | 10 | 2 | 9 | 6 | 4 | 4 | 6.3 |
+  | Chicago | 4 | 0 | 3 | 5 | 0 | 7 | 9 | 0 | 2 | 3 | 3.3 |
+  | Denver | 8 | 6 | 2 | 7 | 4 | 4 | 7 | 4 | 4 | 0 | 4.6 |
+  | Dallas | 0 | 0 | 0 | 0 | 0 | 4 | 4 | 4 | 0 | 2 | 1.4 |
+
+  - **Lake effect snow (LE):** Chicago had 1 day (2017), and the other three
+  cities had 0 [observed].
+  - **WC+CW+EC (wind chill or cold), mean days per year:** Minneapolis 1.1,
+  Chicago 0.5, Denver 0.6, Dallas 0.5.
+
+  **Tropical group, HU+TR+SS, 2005 to 2025:**
+
+  | City | Distinct days | Years with at least one | Years with a warning |
+  |---|---|---|---|
+  | Miami | 38 | 10 | 2007, 08, 10, 12, 16, 17, 18, 20, 22, 24 |
+  | Houston | 28 | 7 | 2007, 08, 15, 17, 20, 21, 24 |
+
+  Miami and Houston are both undercounted before 2008. Details are in section 6.
+
+  **Flash flood (FF), mean days per year, 2016 to 2025:** Houston 9.7, Dallas
+  8.1, Miami 6.4, Chicago 5.4.
+
+  **Severe storm, mean days per year, 2016 to 2025:**
+
+  | City | TO+SV | TO alone |
+  |---|---|---|
+  | Dallas | 17.0 | 1.3 |
+  | Chicago | 15.1 | 2.1 |
+  | Miami | 14.5 | 1.9 |
+  | Denver | 9.3 | 0.3 |
+
+  **Reading the tables:**
+  - The winter signal separates the cities clearly: Minneapolis, then Denver and
+  Chicago, then Dallas.
+  - Flash flood and severe storm are much closer together. Flash flood runs 5.4
+  to 9.7, severe storm 9.3 to 17.0, and a single year swings widely (Dallas FF
+  went from 3 to 19), so ten years is noisy.
+  - The severe-storm figure measures how often a warning covers the whole
+  county, not tornado exposure (see section 6).
+
+  ### 5. Rate limits and terms
+  - **Nothing numeric is published** on the pages I read. I found no
+  requests-per-minute or daily cap and no attribution requirement.
+  - Quote 1 (`https://mesonet.agron.iastate.edu/api/`) [docs]: "All of these
+  services are provided as-is and without warranty. You are free to use these
+  services for any lawful purpose (including commercial whereby your company
+  makes lots of money using these)... The primary goal of this website is to
+  make data freely available in an open manner."
+  - Quote 2 (same page) [docs]: the v1 API is "geared more toward smallish
+  requests that can be serviced within a second or two," and the CGI services
+  "are heavily trafficked."
+  - I did not read the separate disclaimer page (`/disclaimer.php`), so a
+  licence or attribution rule may exist there.
+  - Our use is about a dozen requests of up to 1.5 MB each. That is far below
+  anything that would strain the server, and I saw no throttling.
+
+  ### 6. Gaps and caveats
+  **Coverage and archive history**
+  - IEM says the NWS started VTEC in 2005 and "mostly wrapped up by 2008." Its
+  stated temporal domain is "Most WWA types back to 2008 or 2005, an archive of
+  Flash Flood Warnings goes back to 2002 or so, and Tornado / Severe
+  Thunderstorm Warnings goes back to 1986." Source:
+  `https://mesonet.agron.iastate.edu/info/datasets/vtec.html` [docs].
+  - Treat 2008 as the start of full coverage [docs, my inference]. I did not
+  test years before 2005.
+  - **Tropical data starts too late.** In Miami and Houston the first HU record
+  is in 2008 and the first TR in 2007; the first SS (storm surge) is 2017
+  [observed].
+    - Miami has no 2005 hurricane or tropical storm entry. Katrina and Wilma
+  were hurricane-level events there in 2005 [memory], so they are missing from
+  the archive. Houston shows no hurricane or tropical storm entry for 2005
+  either.
+    - Use 2008 to 2025 for the tropical group. Even then, Houston's 2008 count
+  of 5 days is plausible for Ike, but I did not verify it.
+
+  **By-point search: county and zone matches, not polygons**
+  - The help page says: "This service is providing events based on the UGCs
+  associated with the event. In the case of storm based warnings, the UGCs are
+  not the official warning. Use the SBW By Point Service for the official
+  warnings." [docs,
+  `https://mesonet.agron.iastate.edu/json/vtec_events_bypoint.py?help`]
+  - So the search does cover both kinds of warning, but tornado, severe
+  thunderstorm and flash flood warnings are matched at county level. A small
+  polygon anywhere in Cook County counts as a Chicago day [observed: ugc
+  `ILC031`].
+  - I did not test the SBW By Point service. It is listed on the `/api/` page
+  and would give the official polygons.
+
+  **Duplicates and event identity**
+  - One city point returns both a county code and a forecast-zone code. The
+  returned codes were Minneapolis `MNC053` and `MNZ060`, Chicago `ILC031`,
+  `ILZ014` and `ILZ104`, Dallas `TXC113` and `TXZ119`, and Miami `FLC086`,
+  `FLZ074` and `FLZ173` [observed].
+  - That means one real-world event can appear as 2 to 3 records. Winter and
+  cold products, which are zone-based, show up under zone codes.
+  - A distinct event is `(wfo, year, phenomena, significance, eventid)`. By that
+  key, Minneapolis had 773 records and 767 events, Chicago 1,544 and 1,534, and
+  Miami 3,196 and 3,163 [observed].
+  - IEM warns the id is not always unique: "A tracking number that should be
+  unique for this event, but sometimes it is not" [docs, same vtec.html page].
+  - I saw this directly in Miami in 2005. The same key, `(MFL, 2005, SV, W, 1)`,
+  appeared with unrelated issue times 3 months apart [observed]. Events with
+  the same key but non-overlapping times are therefore separate events.
+  - IEM also says each event shows only its last known state: "provides the
+  metadata for the last known state of the event" [docs]. The `issue` and
+  `expire` values are the final ones after extensions, which is what a day count
+  needs.
+  - My day counts are a set union of dates, so duplicates and zone overlap do
+  not inflate them. A count of records or events would be inflated, so use days,
+  not counts.
+  - Time zones: all times are UTC [docs]. A winter storm crossing midnight local
+  time can add a day compared with local-day counting.
+
+  **Other limits**
+  - Warning criteria differ by local office and have changed, for example the CW
+  and EC renaming in 2025. Zone boundaries can change over time. Neither was
+  tested.
+  - A warning is a forecast alert, not proof that disruption happened.
+  - Very long river-flood (FL) warnings are not a problem here, but they would
+  dominate any total-days count. In Dallas one FL warning lasted 47 days
+  [observed]. That is why I used FF and kept FL out of the flood group.
+  - Denver's "winter" total counts only WS, BZ and IS. Its WC and cold total is
+  small, but it has many Fire Weather Warnings (FW, 84 records) that are
+  unrelated to winter [observed].
+
+  ### 7. Comparison with NOAA Storm Events Database [memory, not fetched]
+  - It offers per-county CSV bulk files by year plus a web search, with no JSON
+  API.
+  - It reports damaging and noted events, not every warning, and its quality
+  control lags by months.
+  - IEM is easier to script for warning days. Storm Events is better evidence
+  that something actually happened.
+
+⏺ Agent "Check IEM warning archive" finished · 2m 16s
+
+› Message from general-purpose
+  **FEMA NRI check, run 2026-11-24 ~08:45-08:48 UTC. Nothing written to the
+  project folder; scratch in `.../scratchpad/nri/`.**
+
+  ## 1. Reachable: YES, via FEMA's ArcGIS county service. The original site
+  hazards.fema.gov is NOT reachable.
+  - [observed] `https://hazards.fema.gov/nri/data-resources`, `/nri/` and `/`
+  all fail with `curl: (35) Recv failure: Connection reset by peer`. This
+  happened with and without the `weather-risk-agent-check/0.1` User-Agent, on
+  https and http. So I could not read the page you named. I don't know whether
+  the site is gone or only blocking my network.
+  - [observed] The current official home is
+  `https://www.fema.gov/flood-maps/products-tools/national-risk-index` (HTTP
+  200). Its OpenFEMA data page
+  `https://www.fema.gov/about/openfema/data-sets/national-risk-index-data` says:
+  "The National Risk Index December 2025 v1.20 data is now available" (page
+  "Last updated January 6, 2026") [observed].
+  - [observed] www.fema.gov returned 403 (Akamai) to my custom User-Agent on the
+  HTML page and the zip files, but 200 with curl's default. The ArcGIS and
+  OpenFEMA APIs accepted the custom User-Agent.
+  - Re-runnable query, run 2026-11-24 08:47:53 UTC, **HTTP 200**:
+  ```
+  curl -sS -A weather-risk-agent-check/0.1
+  'https://services.arcgis.com/XG15cJAlne2vxtgt/arcgis/rest/services/National_Ri
+  sk_Index_Counties/FeatureServer/0/query?where=STCOFIPS%3D%2712086%27&outFields
+  =STCOFIPS,COUNTY,STATEABBRV,NRI_VER,HRCN_AFREQ,HRCN_EALT,HRCN_ALRB,HRCN_ALR_NP
+  CTL,HRCN_RISKS,HRCN_RISKR&returnGeometry=false&f=json'
+  ```
+
+  ## 2. Sample response [observed]
+  ```
+  {"features":[{"attributes":{"STCOFIPS":"12086","COUNTY":"Miami-Dade","STATEABB
+  RV":"FL",
+   "NRI_VER":"December
+  2025","HRCN_AFREQ":0.30497455032244414,"HRCN_EALT":330598602.60875422,
+   "HRCN_ALRB":0.00080693123334805517,"HRCN_ALR_NPCTL":85.3118712273642,
+   "HRCN_RISKS":99.958281184814339,"HRCN_RISKR":"Very High"}}]}
+  ```
+  Service facts [observed]:
+  - FeatureServer root: `maxRecordCount` 1000. Layer 0 (`NRI_Counties_Prod`):
+  `maxRecordCount` 2000, pagination supported.
+  - Layer data last edited 2025-12-16 (`dataLastEditDate` 1765870621340).
+  - Layer has 467 fields. `NRI_VER` = "December 2025". I pulled all six counties
+  in one `STCOFIPS IN (...)` query.
+  - Bulk downloads (HEAD only, nothing downloaded), base
+  `https://www.fema.gov/about/reports-and-data/openfema/nri/v120/`:
+    - `NRI_Table_Counties.zip`: 24,966,535 bytes (about 25 MB). Page says tables
+  are CSV [docs, FAQ pdf].
+    - `NRI_Shapefile_Counties.zip`: 262,777,407 bytes.
+    - `NRI_GDB_Counties.zip`: 112,429,656 bytes.
+    - Census tract, state and tribal variants also exist; the page says the
+  largest zip is 411.09 MB.
+
+  ## 3. Fields (actual names; one correction to your list)
+  `RFLD` does not exist in this version. Riverine flooding is `IFLD` (Inland
+  Flooding). All other prefixes match: HRCN, CFLD, WNTW, ISTM, CWAV, TRND, HAIL,
+  SWND. All six suffixes you expected exist [observed in layer fields]. Related
+  fields:
+  - `_EVNTS`: historical event count.
+  - `_EALB` / `_EALP` / `_EALPE` / `_EALA`: EAL for buildings, population,
+  population equivalence, agriculture.
+  - `_EALS` / `_EALR`: EAL score and rating.
+  - `_RISKV`: risk value.
+  - `_HLRB`: historic loss ratio, buildings.
+  - `_EXPB`: building exposure.
+  - Whole-county fields include `RISK_SCORE`, `SOVI_SCORE`, `RESL_SCORE`,
+  `POPULATION`, `BUILDVALUE`.
+
+  Meanings and units, from the Dec 2025 technical documentation (TD)
+  `https://www.fema.gov/sites/default/files/documents/fema_national-risk-index_t
+  echnical-documentation.pdf` and glossary (GL)
+  `.../fema_national-risk-index_data-glossary-documentation.pdf`:
+  - **AFREQ.** [docs, TD §5.2] "the expected frequency or probability of a
+  hazard occurrence per year"; it "measures the actual or expected number of
+  hazard occurrences each year in events or event-days." The unit DOES differ by
+  hazard (TD Table 5):
+    - Distinct events per year: Hail, Hurricane, Strong Wind, Tornado.
+    - Event-days per year: Cold Wave, Ice Storm, Inland Flooding, Winter
+  Weather.
+    - Coastal Flooding: modeled "in events, per year" from floodplain and
+  high-tide layers (§7.4), with no historical count.
+    - Cold Wave is listed as "Annualized probability".
+  - **EALT.** [docs, GL] EAL is "the average loss in dollars to buildings,
+  population, and/or agriculture ... each year". Population is monetized at
+  $13.7M per statistical life (GL "Value of Statistical Life"). So EALT mixes
+  building, population and agriculture dollars.
+  - **ALRB.** [docs, GL] "Expected Annual Loss Rate ... average percentage
+  losses to buildings, population, and/or agriculture ... independent of the
+  community's exposure value". [observed] Stored as a fraction: Miami-Dade
+  0.000807 equals `HRCN_EALB`/`HRCN_EXPB`. `ALRB` is building-only.
+  - **ALR_NPCTL.** [docs, TD §5.6.1] A national percentile of the loss rate,
+  computed only among counties where the hazard is applicable (so Coastal
+  Flooding percentiles are ranked among coastal counties only).
+  - **RISKS.** [docs, TD §3.2] "Scores are national percentiles, not absolute
+  measurements." The risk value is EAL times a Community Risk Factor built from
+  Social Vulnerability divided by Community Resilience (mapped to a 0.5 to 2
+  triangular scale), then percentile-ranked. So the score depends on dollars
+  exposed, not just the hazard rate.
+  - **RISKR.** [docs, TD §3.2] Ratings come from k-means clustering (5 clusters)
+  on cube-root values, not fixed score cut-offs.
+  - **Period of record** [docs, TD "Period of Record" sections]:
+    - Hurricane: Atlantic 1851-01-01 to 2024-09-30 (173.86 years).
+    - Tornado: 1950-2023 (74 years) for EF2 to EF5; 1986-2023 (38 years) for EF0
+  and EF1.
+    - Hail: 1986-2023 (38 years).
+    - Strong Wind: 1996-2023, stated as "38.0 years" (that does not match the 28
+  years the dates span; I flag it as a documentation inconsistency).
+    - Inland Flooding: 1996-2023 (27 years).
+    - Ice Storm: 1946-12-31 to 2014-02-12 (67.16 years).
+    - Cold Wave and Winter Weather: 2005-11-12 to 2024-11-12 (19.0 years).
+    - Coastal Flooding: no historical period of record, because it is modeled
+  from FEMA floodplains and NOAA High Tide Flooding probabilities.
+
+  ## 4. Values table [observed, `scratchpad/nri/downloads/six.json`]
+  Cells are: AFREQ | EALT in $M | ALRB | ALR_NPCTL | RISKS | RISKR. Nothing was
+  dropped. Ratings are abbreviated: VH Very High, RH Relatively High, RM
+  Relatively Moderate, RL Relatively Low, VL Very Low. NA means null values with
+  RISKR "Not Applicable".
+
+  | County | Hazard | AFREQ | EALT $M | ALRB | NPCTL | RISKS | RISKR |
+  |---|---|---|---|---|---|---|---|
+  | Miami-Dade 12086 | HRCN | 0.305 | 330.6 | 8.1e-4 | 85.3 | 99.96 | VH |
+  | | CFLD | 2.25 | 22.8 | 5.1e-5 | 68.2 | 99.6 | VH |
+  | | IFLD | 4.00 | 355.8 | 7.5e-4 | 49.7 | 99.7 | VH |
+  | | WNTW | 0 | 0 | 0 | 0 | 0 | "No Rating" |
+  | | ISTM | NA | | | | | Not Applicable |
+  | | CWAV | 1.28 | 41.0 | 1.7e-6 | 91.4 | 99.5 | VH |
+  | | TRND | 1.07 | 24.8 | 2.1e-5 | 15.8 | 98.7 | RH |
+  | | HAIL | 0.56 | 2.9 | 7.1e-6 | 27.8 | 96.6 | RH |
+  | | SWND | 0.76 | 1.1 | 2.5e-7 | 2.6 | 82.4 | RM |
+  | Harris 48201 | HRCN | 0.184 | 457.9 | 5.1e-4 | 83.8 | 100 | VH |
+  | | CFLD | 3.76 | 2.5 | 2.6e-6 | 48.3 | 83.2 | RH |
+  | | IFLD | 5.14 | 1122.1 | 1.3e-3 | 85.5 | 99.97 | VH |
+  | | WNTW | 1.12 | 0.30 | 8.9e-8 | 17.5 | 88.8 | RH |
+  | | ISTM | 0.91 | 4.1 | 4.2e-6 | 47.9 | 99.6 | VH |
+  | | CWAV | 0.48 | 118.1 | 7.6e-7 | 26.7 | 99.9 | VH |
+  | | TRND | 1.61 | 407.4 | 7.5e-5 | 15.5 | 100 | VH |
+  | | HAIL | 2.35 | 1.6 | 1.8e-6 | 17.8 | 92.0 | RM |
+  | | SWND | 1.52 | 7.7 | 4.5e-6 | 29.1 | 99.3 | VH |
+  | Denver 08031 | HRCN, CFLD | NA | | | | | Not Applicable |
+  | | IFLD | 0.82 | 93.6 | 6.9e-4 | 34.3 | 95.3 | RH |
+  | | WNTW | 13.7 | 0.56 | 1.1e-6 | 43.3 | 91.9 | RH |
+  | | ISTM | 0.016 | 0.008 | 4.5e-8 | 11.3 | 12.1 | VL |
+  | | CWAV | 1.26 | 10.1 | 5.9e-7 | 31.0 | 92.1 | RH |
+  | | TRND | 0.16 | 28.0 | 1.4e-4 | 88.1 | 97.9 | RH |
+  | | HAIL | 8.29 | 72.4 | 5.2e-4 | 97.9 | 99.9 | VH |
+  | | SWND | 1.19 | 4.1 | 8.9e-6 | 28.4 | 96.1 | RH |
+  | Dallas 48113 | HRCN | 0.0115 | 0.68 | 1.4e-6 | 28.9 | 73.6 | RL |
+  | | CFLD | NA | | | | | Not Applicable |
+  | | IFLD | 4.61 | 323.7 | 7.3e-4 | 38.6 | 99.6 | VH |
+  | | WNTW | 4.05 | 1.3 | 5.4e-7 | 27.2 | 98.7 | VH |
+  | | ISTM | 1.23 | 4.7 | 5.8e-6 | 38.8 | 99.7 | VH |
+  | | CWAV | 0.95 | 98.4 | 6.3e-7 | 21.0 | 99.9 | VH |
+  | | TRND | 0.93 | 114.8 | 2.0e-4 | 97.9 | 99.8 | VH |
+  | | HAIL | 8.92 | 127.5 | 2.9e-4 | 98.3 | 100 | VH |
+  | | SWND | 4.36 | 5.3 | 3.3e-6 | 15.5 | 98.5 | VH |
+  | Cook 17031 | HRCN | 0.0093 | 0.057 | 5.6e-8 | 6.9 | 48.9 | VL |
+  | | CFLD | 0.012 | 0.037 | 3.5e-8 | 25.2 | 44.0 | RL |
+  | | IFLD | 5.89 | 1096.9 | 1.1e-3 | 78.1 | 99.9 | VH |
+  | | WNTW | 14.6 | 4.4 | 1.2e-6 | 44.0 | 100 | VH |
+  | | ISTM | 0.58 | 2.0 | 1.5e-6 | 33.3 | 97.2 | VH |
+  | | CWAV | 4.25 | 700.0 | 2.8e-9 | 4.9 | 100 | VH |
+  | | TRND | 1.04 | 344.7 | 1.15e-4 | 47.4 | 99.97 | VH |
+  | | HAIL | 3.95 | 11.1 | 1.1e-5 | 35.4 | 99.1 | RH |
+  | | SWND | 5.70 | 11.6 | 1.6e-6 | 5.3 | 99.6 | VH |
+  | Hennepin 27053 | HRCN, CFLD | NA | | | | | Not Applicable |
+  | | IFLD | 1.54 | 188.4 | 6.3e-4 | 26.1 | 98.0 | RH |
+  | | WNTW | 16.6 | 1.3 | 1.3e-6 | 47.7 | 97.4 | VH |
+  | | ISTM | 0.49 | 0.48 | 1.2e-6 | 32.0 | 79.7 | RM |
+  | | CWAV | 8.95 | 101.9 | 1.2e-8 | 6.25 | 99.8 | VH |
+  | | TRND | 0.46 | 83.0 | 1.3e-4 | 71.4 | 99.6 | VH |
+  | | HAIL | 6.41 | 31.2 | 1.0e-4 | 88.4 | 99.6 | VH |
+  | | SWND | 4.57 | 8.7 | 2.3e-5 | 77.6 | 98.9 | VH |
+
+  ## 5. Null / "Not Applicable" / "Insufficient Data" [observed + docs TD §3.2]
+  - Observed nulls (AFREQ, EALT, ALRB and NPCTL are null; RISKS is also null,
+  shown as "NA" in the table; RISKR reads "Not Applicable"): Hurricane and
+  Coastal Flooding for Denver and Hennepin, Coastal Flooding for Dallas, and Ice
+  Storm for Miami-Dade. No test county returned "Insufficient Data".
+  - Miami-Dade Winter Weather is numeric zero with RISKR "No Rating" (EALR "No
+  Expected Annual Losses").
+  - [docs, TD §3.2] "Not Applicable" means a hazard deemed "not able to occur"
+  (set by subject-matter-expert applicability rules). "Insufficient Data" means
+  a factor used to compute EAL is null, for example coverage only for the
+  conterminous US. "No Expected Annual Losses" and "No Rating" mean EAL is zero,
+  from zero exposure or zero frequency. Not-applicable hazards are left out of
+  the composite sum.
+  - Ice Storm Not Applicable for Miami-Dade comes from the hazard-applicability
+  rule. I did not look up why.
+
+  ## 6. Rate limits and terms
+  - **No NRI rate limit is published** in the NRI terms I read (the terms text
+  also covers the API). I did not read ArcGIS Online's own limits; the service
+  root states only max record counts of 1000 and 2000.
+  - Licence/terms text, from the ArcGIS item `https://www.arcgis.com/sharing/res
+  t/content/items/9da4eeb936544335a6db0cd7a8448a51?f=json` (field `licenseInfo`)
+  [observed]:
+    - "The National Risk Index data are meant for planning purposes only."
+    - "This National Risk Index dataset was created for broad nationwide
+  comparisons and is not a substitute for localized risk assessment analysis."
+    - "Users must clearly state that 'This product uses the Federal Emergency
+  Management Agency's National Risk Index dataset API or downloadable datasets
+  but is not endorsed by FEMA...'"
+    - Also: do not reverse engineer; FEMA logos may not be used; FEMA may
+  "suspend your access" and may "rescind your use of the data".
+  - Commercial use: [docs] "This data may be used for commercial purposes." (FAQ
+  pdf `.../fema_national-risk-index_faq-page-documentation.pdf`). Cite as
+  "Federal Emergency Management Agency. (2025). FEMA National Risk Index Data v
+  1.20.0 [Dataset]."
+  - The OpenFEMA terms (`https://www.fema.gov/about/openfema/terms-conditions`)
+  require stating "This product uses the FEMA OpenFEMA API, but is not endorsed
+  by FEMA."
+
+  ## 7. Fallback, OpenFEMA disaster declarations [observed]
+  HTTP 200. Florida, `fipsCountyCode` 086, `incidentType` Hurricane returned 23
+  records. Earliest declaration date 1965-09-14 (Betsy), latest 2024-10-11
+  (Milton).
+
+  ## 8. Gaps and caveats
+  - Granularity is county-level, with no site-level data. The layer is a polygon
+  service you can also query by geometry, but values are county aggregates.
+  - Scores and ratings mix hazard with how much property and population a county
+  has. Cook Cold Wave has RISKS 100 but `ALR_NPCTL` 4.9 and building loss rate
+  2.8e-9, because its $700M EALT is mostly population dollars valued at $13.7M
+  per life. For comparing hazard intensity, use the building-based `ALRB` /
+  `ALR_NPCTL`. For dollars at stake, use `EALT`. `RISKS` also folds in social
+  vulnerability and community resilience.
+  - `RISKS` is a percentile among about 3,100 counties, so it saturates near 100
+  for large counties. Ratings are k-means clusters, not fixed cut-offs.
+  `ALR_NPCTL` is relative only within counties where the hazard applies.
+  - AFREQ units mix events and event-days, so compare across hazards with care.
+  The Hail and Strong Wind AFREQ values are annualized counts over a 49-km grid
+  (TD Table 5) and can exceed 1 per year; I did not check how the counts are
+  aggregated.
+  - Vintages differ: Ice Storm data ends 2014, Hail, Strong Wind, Tornado and
+  Inland Flooding end 2023, Cold Wave and Winter Weather cover only 19 years,
+  and Hurricane goes back to 1851. The TD says EAL "represent[s] an
+  extrapolation based on a snapshot in time". Hurricane and Coastal Flooding are
+  the long-record hazards you wanted. The Coastal Flooding frequency is modeled
+  (floodplain constants of 0.01 and 0.002 plus High Tide Flooding), not
+  observed.
+  - Service names such as `NRI_Counties_v117` and `NRI_Counties_Prod_v1181_view`
+  also exist in the same ArcGIS org. Pin the exact service URL used above and
+  check `NRI_VER`.
+  - Not done: I did not download the CSV (25 MB, available if you want an
+  offline copy); everything above came from the live query plus the PDFs and
+  pages I fetched.
+
+⏺ Agent "Check FEMA National Risk Index" finished · 4m 0s
+
+⏺ All four checks are back, and I'm now re-running each source myself plus two
+  probes, a location-exact warning archive and a licence-clean daily snowfall
+  source. · summary
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+⏺ A check of mine was faulty, so I'm rerunning it: the shell (zsh) didn't split
+  the variable, so every request went out with empty coordinates and got a
+  default answer, which means our code must reject empty coordinates and verify
+  each response's location. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The re-run matches the checker's table, and I've checked each source myself:
+  Open-Meteo and the Iowa State warning archive work, the Weather Service API
+  keeps only seven days of alerts, and FEMA's data works though its page does
+  not. Two findings change the design, so I'll ask you about them next. 
+  · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · What should count as a 'disrupted day' when we score a hub? I tested each
+     option against live data today. → Official warning days (Recommended)
+     · When the agent calls a hub's risk 'high', compared with what? The score 
+     would be in 'expected disruption days per year'. → Fixed bands in days 
+     (Recommended)
+     · For questions like 'what share of days in Denver last year had snowfall',
+     which record should the agent use? The two candidates disagree for Denver 
+     in 2025. → Measured at the airport (Recommended)
+     · Should the agent answer questions about weather happening now or 
+     forecast, such as 'is a storm heading for Houston this week'? → No, 
+     long-run only (Recommended)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Round two is settled, and I checked the warning archive's coverage against
+  Iowa State's dataset page. Last round, I'm reading FEMA's manual to confirm
+  the length of its hurricane record. · summary
+
+⏺ Answered Claude's questions:
+  ⎿  · How far should the agent go beyond ranking weather exposure? → Rank and 
+     explain only (Recommended)
+     · Should an analyst be able to try different weights in the chat, for 
+     example 'what if a hurricane counted double'? → Yes, as a labelled what-if 
+     (Recommended)
+     · Which answer would you rather carry to your boss? The warning-day figures
+     in the previews are today's real ones for two hubs; the band labels and 
+     layout are illustrative. → Verdict, table, footnote (Recommended)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The interview is done, with eleven answers across three rounds saved for the
+  plan. I'm checking the Claude API reference for how to force schema-valid
+  output and how tool calls combine with a structured final answer. · summary
+
+  Read 3 files, ran 1 shell command (ctrl+o to expand)
+
+⏺ Interview and data checks are complete and I have the API details I need. I'm
+  verifying FEMA's usage terms next, since they'll need a required notice in the
+  README. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ All facts I intend to put in the plan are now either re-run by me today or
+  will be marked as unconfirmed. Writing docs/PLAN.md.
+
+⏺ Write(docs/PLAN.md)
+  ⎿  Wrote 615 lines to docs/PLAN.md
+      1 # Weather Risk Intelligence Agent: plan
+      2 
+      3 Status: **draft, waiting for approval.** Written 2026-11-24. No c
+        ode exists yet.
+      4 
+      5 Grade assumed: **interview take-home prototype.** A clear, tested
+         core that runs live on one machine. Single process, no login, no
+         multi-user scaling, no production hardening. Anything beyond tha
+        t is listed as out of scope or as a bonus.
+      6 
+     … +609 lines (ctrl+o to expand)
+
+⏺ The plan is written, and I'm checking two FEMA field descriptions against the
+  manual before I hand it over. · summary
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The manual shows I mislabelled a figure: FEMA's loss-rate percentile covers
+  all loss types, not just buildings, so I'm correcting that label in the plan
+  and in the question's option text along with three smaller wording fixes. 
+  · summary
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      91 
+      92  - **Open-Meteo.** Rejected for two reasons. Its snowfall is mod
+          elled, and for Denver 2025 it disagrees with the airport measur
+          ement (33 or 43 days against 26). And its free tier forbids com
+          mercial use, which matters because the customer is a company.
+      93  - **National Weather Service API.** Not used in the core becaus
+          e it has no history. It stays a candidate for the alert bonus.
+      94 -- **FEMA's headline risk scores and ratings.** Not used. They m
+         -ostly reflect how much property and how many people a county ha
+         -s. Cook County scores 100 out of 100 for cold-wave risk while i
+         -ts building loss rate from cold waves is in the bottom 5% of co
+         -unties (national percentile 4.9). Only FEMA's frequency figures
+         - are used.                                                     
+      94 +- **FEMA's headline risk scores and ratings.** Not used. They m
+         +ostly reflect how much property and how many people a county ha
+         +s. Cook County (Chicago) scores 100 out of 100 for cold-wave ri
+         +sk, while its cold-wave loss rate, meaning expected yearly loss
+         + as a share of what is exposed with all loss types combined, si
+         +ts at national percentile 4.9. Only FEMA's frequency figures ar
+         +e used.                                                        
+      95  - **NOAA Storm Events Database.** Not checked. It is a set of y
+          early bulk files with no query API, and the warning archive alr
+          eady answers the question.
+      96 
+      97  ## 5. The risk KPI: Expected Disruption Days per year
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      73 
+      74  | Source | Result | Evidence |
+      75  |---|---|---|
+      76 -| Open-Meteo historical weather API | Reachable. Ten years of d
+         -aily data for one location in one call, no missing values. Snow
+         -fall is a weather model's estimate, and the count of snow days 
+         -depends heavily on the cut-off. Its terms say: "You may only us
+         -e the free API services for non-commercial purposes." | Denver 
+         -2025: 43 days with any snowfall, 33 at 0.25 cm or more, 10 at 2
+         -.54 cm or more, 1 at 5 cm or more. |                           
+      76 +| Open-Meteo historical weather API | Reachable. A full year of
+         + daily data with no missing values (the checker also fetched te
+         +n years in one call; I did not repeat that). Snowfall is a weat
+         +her model's estimate, and the count of snow days depends heavil
+         +y on the cut-off. Its terms say: "You may only use the free API
+         + services for non-commercial purposes." | Denver 2025: 43 days 
+         +with any snowfall, 33 at 0.25 cm or more, 10 at 2.54 cm or more
+         +, 1 at 5 cm or more. |                                         
+      77  | National Weather Service API, alerts | Reachable. Holds only
+          the last 7 days. Its documentation says: "The /alerts endpoint
+          contains alerts issued over the past seven days." | Asking for
+          Texas alerts since 2025-01-01 returned 165 alerts, the oldest s
+          ent 2026-11-17. |
+      78  | FEMA National Risk Index (NRI) | The page in the brief, `haza
+          rds.fema.gov/nri/data-resources`, did not respond from this mac
+          hine (connection failed). The data itself is available through
+          FEMA's public map service: one query returns any county's figur
+          es as JSON. Release "December 2025". | Miami-Dade hurricane fre
+          quency 0.305 events a year; Harris (Houston) 0.184; Dallas 0.01
+          15; Cook (Chicago) 0.0093. |
+      79  | Iowa Environmental Mesonet (IEM) warning archive, proposed by
+           Claude | Reachable. Returns every past Weather Service warning
+           for a latitude and longitude. A second service returns warning
+          s whose drawn area covered the exact point. Terms: "You are fre
+          e to use these services for any lawful purpose (including comme
+          rcial...)". Coverage per IEM's dataset page: "Most WWA types ba
+          ck to 2008 or 2005". | Days per year under a Winter Storm, Bliz
+          zard or Ice Storm Warning, 2016 to 2025: Minneapolis 6.3, Denve
+          r 4.6, Chicago 3.3, Dallas 1.4 (city-centre points, UTC days).
+          |
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      194 
+      195  - Regions follow the US Census Bureau's regions. There is no h
+           ub in the Northeast.
+      196  - Phoenix is included on purpose as a quiet hub, so the rankin
+           g has a low end to sanity-check against.
+      197 -- Coordinates, county and warning zone for each hub are **read
+          - from the data sources during milestone 1**, not typed from me
+          -mory: coordinates from the station's own metadata, the county 
+          -from a point query against FEMA's county layer, the zones from
+          - the warning archive's response. Only Denver's station has bee
+          -n confirmed so far ("DENVER INTL AP").                        
+      197 +- Coordinates, county and warning zone for each hub are **read
+          + from the data sources during milestone 1**, not typed from me
+          +mory: coordinates from the station's own metadata, the county 
+          +from a point query against FEMA's county layer, the zones from
+          + the warning archive's response. The point query against FEMA'
+          +s layer is untested; if it does not work, the county comes fro
+          +m the county code in the warning data. Only Denver's station h
+          +as been confirmed so far ("DENVER INTL AP").                  
+      198 
+      199  ## 7. Architecture
+      200 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      373  - In milestone 5, run the evaluation unchanged on Sonnet 5.5 a
+           nd Haiku 5.5.
+      374  - Ship the fastest, cheapest model whose score equals the best
+            score and whose error and repair rates are no worse. The owne
+           r makes the final call from the table of quality, speed and co
+           st.
+      375 
+      376 -The model id and effort level are settings, not code. Two fact
+          -s from the reference shape the implementation: on these models
+          - a tool call cannot be forced, so the final answer's shape com
+          -es from structured output and not from a forced "answer" tool;
+          - and thinking cannot be switched off on Opus 5.5, so speed is 
+          -tuned through the effort setting.                             
+      376 +The model id and effort level are settings, not code. Two fact
+          +s from the reference shape the implementation: on Opus 5.5 and
+          + Sonnet 5.5 a tool call cannot be forced, so the final answer'
+          +s shape comes from structured output and not from a forced "an
+          +swer" tool; and thinking cannot be switched off on Opus 5.5, s
+          +o speed is tuned through the effort setting.                  
+      377 
+      378  ## 10. Evaluation design
+      379 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      612  curl -s "https://data.rcc-acis.org/StnData?sid=DEN&sdate=2025-
+           01-01&edate=2025-12-31&elems=snow&meta=name,state,sids,ll&outp
+           ut=json"
+      613  ```
+      614 
+      615 -Documents read for the quoted sentences: `open-meteo.com/en/te
+          -rms`, `www.weather.gov/documentation/services-web-api`, `meson
+          -et.agron.iastate.edu/api/`, `mesonet.agron.iastate.edu/info/da
+          -tasets/vtec.html`, FEMA's National Risk Index technical docume
+          -ntation PDF (pages 51, 218, 397 and 432), and the licence text
+          - on FEMA's National Risk Index map service item.              
+      615 +Documents read for the quoted sentences: `open-meteo.com/en/te
+          +rms`, `www.weather.gov/documentation/services-web-api`, `meson
+          +et.agron.iastate.edu/api/`, `mesonet.agron.iastate.edu/info/da
+          +tasets/vtec.html`, FEMA's National Risk Index technical docume
+          +ntation PDF (pages 51, 89 to 90, 218, 397 and 432), and the li
+          +cence text on FEMA's National Risk Index map service item.    
+
+⏺ The plan is written and waiting for your approval: docs/PLAN.md. Nothing else
+  was created and no code exists.
+
+  What the plan says
+
+  - The score is "expected disruption days per year" for each hub. It counts
+    days the hub was under an official Weather Service warning in 2016 to 2025,
+    per hazard, times a weight for how long that hazard typically shuts a hub.
+    Hurricanes use FEMA's 174-year record instead.
+  - The ranking is a sort on that score, with fixed bands (low, moderate, high,
+    very high) and a confidence label that code computes from data coverage,
+    year-to-year noise and whether the top three survive halving or doubling
+    each weight.
+  - Twelve hubs, each placed at its city's main airport, so the weather station
+    sits at the hub.
+  - The model never types a number in a table. It picks a tool and writes up to
+    four sentences. Code renders the table and the data, period and confidence
+    lines, then checks every digit in those sentences against the tool results.
+    One repair attempt, then a clear error.
+  - Data is fetched ahead of time into a local SQLite file, with the raw
+    responses committed. The demo and the evaluation then do not depend on a
+    university server being up.
+  - Six milestones, each ending in a command whose output gets pasted, plus a
+    final script that clones fresh and exercises everything through the HTTP
+    API.
+
+  Where it departs from your brief
+
+  - Open-Meteo is dropped. Its snowfall is a model estimate that disagrees with
+    the airport measurement for Denver 2025 (33 or 43 days against 26), and its
+    free tier forbids commercial use.
+  - The Weather Service API is not in the core. It keeps only 7 days.
+  - Two sources are added: the Iowa State archive of past warnings (the score's
+    main input) and NOAA's airport station records (the Denver-type questions).
+  - The FEMA page in your brief did not respond from this machine. The same data
+    is live through FEMA's map service.
+
+  One error of mine, and the gap behind it
+
+  In the "high means" question I called a FEMA figure a "building loss rate". It
+  is the loss rate for all loss types combined. The values and the conclusion
+  stand, and the plan is corrected. The gap is in your global CLAUDE.md, in the
+  "Facts that leave the machine" rule: it tells me to check a claim against its
+  source, and I checked the value while taking the field's meaning from a
+  checker's table. Proposed added line: "A figure's label is part of the claim:
+  confirm what a field measures from its data dictionary, not only its value."
+  Say the word and I'll add it.
+
+  What you did not ask about
+
+  - A warning is a forecast, not a closure record. Only the company's own
+    closure log could calibrate the weights.
+  - Ten years is short. Minneapolis ranged from 0 to 14 winter warning days in
+    single years.
+  - A schema guarantees an answer's shape, not its truth. That is why the digit
+    check exists.
+  - Fourteen evaluation cases can catch regressions but cannot rank models
+    finely (roughly plus or minus 15 points of noise).
+  - A public URL spends your API credit on every message, so the deployment
+    bonus needs an access guard.
+
+  What I need from you
+
+  1. Weights and bands. Winter 1.0, flood 0.5, severe storms 0.25 per warning
+     day, hurricane 5.0 per event; bands at 2, 5 and 10 days. These are my
+     judgment. We revisit them with real figures at the end of milestone 2.
+  2. Runtime model. Build on Opus 5.5, then let the evaluation choose between
+     Opus, Sonnet and Haiku.
+  3. Committing raw data. The station service publishes no usage terms on the
+     pages I read. Are you comfortable committing its raw responses?
+  4. Work queue. Your global rule adds .claude/QUEUE.md plus a commit guard
+     copied from another repo. For a repo you are sharing, I plan the queue file
+     only, with the decision log in docs/DECISIONS.md as your brief says.
+     Confirm or correct.
+  5. Main session model. I recommend switching to Opus from milestone 0 onward.
+
+  Once you approve, export this session as docs/ai-session/01-plan.txt and
+  /clear. Milestone 0 starts by writing the rules into CLAUDE.md.
+
+✻ Crunched for 23m 34s · done 11:10 AM
+
+❯ 1. explain your thought process behind those weights and bands before I       
+  approve. 2. Yes, approved. 3. Yes 4. Yes, confirmed. 5. Agreed. Let's go      
+  ahead and do Milestone 0.                                                     
+
+⏺ Taking item 1 first, since you asked for it before approving. My reasoning
+  rested partly on how long each warning type lasts, which I had from general
+  knowledge and never checked. I'm checking it against the archive now so the
+  explanation is honest about what is data and what is judgment.
+
+  Ran 2 shell commands (ctrl+o to expand)
+  ⎿  1 agent type available
+
+⏺ Still on item 1: the checks are back and they change my answer, so here it is
+  in full before I start Milestone 0.
+
+  How I chose the weights and bands
+
+  The reasoning I actually used
+
+  - Winter 1.0 was the anchor. I reasoned that a winter storm warning means one
+    bad day.
+  - Flood 0.5 and severe storms 0.25 came from ranking the hazards by how long I
+    believed each disrupts a hub, then halving at each step. That is an
+    ordering written as numbers, not a measurement.
+  - Hurricane 5.0 was a midpoint guess: a day or two closed before landfall, the
+    storm, then a couple of days of recovery.
+  - Bands at 2, 5 and 10 are round numbers. Five days is a working week, ten is
+    two.
+  - One rough test. Dallas came out near 6.6, so "high", which matched the
+    assignment's wording. I saw that agreement and did not question it.
+
+  What the archive says, checked just now
+
+  ┌─────────────────────┬───────────────────────────────────────┐
+  │    Warning type     │            Typical length             │
+  ├─────────────────────┼───────────────────────────────────────┤
+  │ Winter storm        │ 18 hours in Minneapolis, 30 in Dallas │
+  ├─────────────────────┼───────────────────────────────────────┤
+  │ Flash flood         │ 3 hours                               │
+  ├─────────────────────┼───────────────────────────────────────┤
+  │ Severe thunderstorm │ under 1 hour                          │
+  ├─────────────────────┼───────────────────────────────────────┤
+  │ Tornado             │ about 25 minutes                      │
+  └─────────────────────┴───────────────────────────────────────┘
+
+  - My flood and storm weights are far above what warning length supports. By
+    time under warning, a flash flood warning is about one eighth of a day and a
+    severe thunderstorm warning about one thirtieth. My 0.5 and 0.25 are
+    roughly 4 and 7 times that.
+  - My counting rule inflates winter. Minneapolis had 35 winter warnings in ten
+    years, covering 27 days of actual warning time. Counting every calendar day
+    a warning touches gives 63. That is 6.3 a year against a true 2.7.
+  - The hurricane 5 holds up. Time under tropical warnings in 2008 to 2025,
+    divided by the number of events FEMA's frequency predicts for those years,
+    gives 4.4 days per event for Miami and 5.3 for Houston.
+  - Dallas's "high" came from my markups. Measured as time under warning, Dallas
+    is roughly 2 days a year, not 6.6.
+
+  What I now recommend instead
+
+  - Count time under warning (hours divided by 24), not calendar days touched.
+  - Set all three warning weights to 1.0, meaning "disrupted for as long as the
+    warning is in force". No markup and no ordering judgment. An analyst who
+    believes floods outlast their warnings uses the what-if.
+  - Keep hurricane at 5 days per event, now resting on the cross-check above.
+  - Set the band cut-offs at the Milestone 2 review, from the twelve real
+    figures, with your sign-off.
+  - Accept the consequence: Dallas will probably not be "high". The agent then
+    says so and explains what does drive Dallas, which the plan already
+    requires.
+
+  This rewords your interview answer 5 from "warning days" to "time under
+  warning", so it is your decision. Milestone 0 does not depend on it. I'll
+  record the weights as proposed and unapproved, and ask you at the end.
+
+  Starting Milestone 0 now. First, the two reference guides for the files it
+  touches: the rules file and the permission settings.
+
+⏺ Skill(writing-for-agents)
+  ⎿  Loaded skill
+
+⏺ Skill(update-config)
+  ⎿  Loaded skill · 1 tool allowed
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Milestone 0 scaffolding is underway, and I'm about to remove your work address
+  from pyproject.toml, which the generator copied in from your git identity.
+  Before I commit anything, please tell me which identity to use, since that
+  address would otherwise stamp every commit in a repo you're handing to another
+  company. · summary
+
+⏺ Write(pyproject.toml)
+  ⎿  Added 5 lines, removed 5 lines
+       1  [project]
+       2  name = "wra"
+       3  version = "0.1.0"
+       4 -description = "Add your description here"                      
+       5 -authors = [                                                    
+       6 -    { name = "doron", email = "[REMOVED]" }   
+       7 -]                                                              
+       4 +description = "Weather Risk Intelligence Agent: ranks distribut
+         +ion hubs by exposure to weather disruption and explains the ran
+         +king."                                                         
+       5  requires-python = ">=3.13"
+       6  dependencies = []
+       7 
+       8  [project.scripts]
+      12 -wra = "wra:main"                                               
+       9 +wra = "wra.cli:main"                                           
+      10 
+      11  [build-system]
+      12  requires = ["uv_build>=0.11.0,<0.12.0"]
+     ...
+      16  dev = [
+      17      "pytest>=9.2.0",
+      18  ]
+      19 +                                                               
+      20 +[tool.pytest.ini_options]                                      
+      21 +testpaths = ["tests"]                                          
+
+⏺ Write(src/wra/__init__.py)
+  ⎿  Added 5 lines, removed 2 lines
+      1 -def main() -> None:                                             
+      2 -    print("Hello from wra!")                                    
+      1 +"""Weather Risk Intelligence Agent."""                          
+      2 +                                                                
+      3 +from importlib.metadata import version                          
+      4 +                                                                
+      5 +__version__ = version("wra")                                    
+
+⏺ Write(src/wra/cli.py)
+  ⎿  Wrote 19 lines to src/wra/cli.py
+      1 """Command-line entry point.
+      2 
+      3 Subcommands (ingest, data-report, rank, ask, eval, serve) are add
+        ed one
+      4 milestone at a time; see docs/PLAN.md, section 13.
+      5 """
+      6 
+      7 import argparse
+      8 
+      9 from wra import __version__
+     … +10 lines (ctrl+o to expand)
+
+⏺ Write(tests/test_cli.py)
+  ⎿  Wrote 12 lines to tests/test_cli.py
+      1 import pytest
+      2 
+      3 from wra import __version__
+      4 from wra.cli import main
+      5 
+      6 
+      7 def test_version_flag_prints_package_version(capsys):
+      8     with pytest.raises(SystemExit) as exit_info:
+      9         main(["--version"])
+     … +3 lines (ctrl+o to expand)
+
+⏺ Write(.gitignore)
+  ⎿  Wrote 17 lines to .gitignore
+       1 # Secrets. Only the placeholder file is tracked.
+       2 .env
+       3 .env.*
+       4 !.env.example
+       5 
+       6 # Python
+       7 .venv/
+       8 __pycache__/
+       9 *.pyc
+      10 .pytest_cache/
+     … +7 lines (ctrl+o to expand)
+
+⏺ Write(.env.example)
+  ⎿  Wrote 2 lines to .env.example
+      1 # Copy this file to .env and fill in the value. .env is git-ignor
+        ed.
+      2 ANTHROPIC_API_KEY=
+
+⏺ Write(.claude/settings.json)  ⎿  Wrote 8 lines to .claude/settings.json
+      1 {
+      2   "permissions": {
+      3     "deny": [
+      4       "Read(./.env)",
+      5       "Edit(./.env)"
+      6     ]
+      7   }
+      8 }
+
+⏺ Write(CLAUDE.md)
+  ⎿  Wrote 29 lines to CLAUDE.md
+       1 # Weather Risk Intelligence Agent
+       2 
+       3 A take-home for a Forward Deployed Engineer role. The customer i
+         s a logistics company's analysts deciding which hubs get resilie
+         nce investment this year. Everything built here serves that deci
+         sion: a ranking they can defend, an explanation they can repeat
+         to their boss, and honesty about what the data cannot tell them.
+       4 
+       5 Python with `uv` and `pytest`.
+       6 
+     … +23 lines (ctrl+o to expand)
+
+⏺ Write(README.md)
+  ⎿  Wrote 10 lines to README.md
+       1 # Weather Risk Intelligence Agent
+       2 
+       3 An agent that helps a logistics company's analysts decide which
+         distribution hubs are most exposed to weather disruption.
+       4 
+       5 **Status: scaffold only.** Nothing runs yet beyond a placeholder
+          test. The design is in [docs/PLAN.md](docs/PLAN.md); run instru
+         ctions arrive with the working agent.
+       6 
+       7 ```
+     … +3 lines (ctrl+o to expand)
+
+⏺ Write(docs/ai-session/README.md)
+  ⎿  Wrote 7 lines to docs/ai-session/README.md
+      1 # AI session record
+      2 
+      3 The full Claude Code sessions behind this project, exported by th
+        e owner with `/export` before each `/clear`. Files are numbered i
+        n the order the work happened.
+      4 
+      5 | File | What it covered |
+      6 |---|---|
+      7 | `01-plan.txt` | Interview with the owner, live checks of five d
+        ata sources, the plan, a review of the proposed weights against m
+     … +1 line (ctrl+o to expand)
+
+⏺ Write(docs/ASSUMPTIONS.md)
+  ⎿  Wrote 66 lines to docs/ASSUMPTIONS.md
+      1 # Assumptions and open points
+      2 
+      3 The live list. Where this file and section 15 of `docs/PLAN.md` d
+        iffer, this file wins.
+      4 
+      5 An **assumption** is a choice made without data. An **open point*
+        * is a fact not yet confirmed. Each line says where it stands.
+      6 
+      7 ## Pending decision: how the score counts and weighs warnings
+      8 
+     … +58 lines (ctrl+o to expand)
+
+⏺ Write(docs/DECISIONS.md)
+  ⎿  Wrote 39 lines to docs/DECISIONS.md
+      1 # Decision log
+      2 
+      3 Short entries for choices that shape the rest of the build. Detai
+        ls and evidence are in `docs/PLAN.md`; this file says what was de
+        cided, why, and what was turned down. Entries are never edited; a
+         later decision that replaces one says so.
+      4 
+      5 ## 2026-11-24 — Exposure means weather at the location only
+      6 
+      7 **Decision:** The score measures weather exposure alone. It does
+     … +33 lines (~4 KB) (ctrl+o to expand)
+
+⏺ Write(.claude/QUEUE.md)
+  ⎿  Wrote 15 lines to .claude/QUEUE.md
+       1 # Work queue
+       2 
+       3 Most important first. Each line points to where the item's state
+          lives; the state itself is not kept here.
+       4 
+       5 ## Queue
+       6 
+       7 - [q7] Owner decision: how the score counts and weighs warnings
+         (counting unit, weights, bands). Blocks q3. → `docs/ASSUMPTIONS.
+         md`, "Pending decision"
+     … +8 lines (ctrl+o to expand)
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      1  # Weather Risk Intelligence Agent: plan
+      2 
+      3 -Status: **draft, waiting for approval.** Written 2026-11-24. No 
+        -code exists yet.                                                
+      3 +Status: **approved by the owner on 2026-11-24, except how the sc
+        +ore counts and weighs warnings (sections 5.2 to 5.4), which is u
+        +nder review.** See "Pending decision" in `docs/ASSUMPTIONS.md`. 
+        +Written 2026-11-24.                                             
+      4 
+      5  Grade assumed: **interview take-home prototype.** A clear, teste
+         d core that runs live on one machine. Single process, no login,
+         no multi-user scaling, no production hardening. Anything beyond
+         that is listed as out of scope or as a bonus.
+      6 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 2 lines
+      129 
+      130  ### 5.3 Weights
+      131 
+      132 +> **Under review.** The owner asked how these weights were cho
+          +sen. Checking the reasoning against measured warning lengths s
+          +howed the flood and storm weights, and the day-counting rule i
+          +n 5.2, to be weakly founded. The evidence and a recommended re
+          +vision are in `docs/ASSUMPTIONS.md` under "Pending decision". 
+          +The text below is the original proposal.                      
+      133 +                                                              
+      134  The weight converts one counted unit into disruption days. The
+           se are **starting assumptions made by Claude, not measurements
+           .** They live in `config/scoring.toml`.
+      135 
+      136  | Hazard | Weight | Unit | Reasoning |
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 2 lines
+      545 
+      546  ## 15. Assumptions and open points
+      547 
+      548 +> This section is the list as it stood when the plan was appro
+          +ved. The live list is `docs/ASSUMPTIONS.md`; where they differ
+          +, that file wins.                                             
+      549 +                                                              
+      550  Assumptions are choices made without data. They move to `docs/
+           ASSUMPTIONS.md` in milestone 0.
+      551 
+      552  | # | Assumption |
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Checks 1 and 2 pass; I'm now testing the secret guard, though the .env file
+  only holds an empty placeholder so far, by trying both the file tool and a
+  shell command. · summary
+
+  Read 1 file · 1 failed (ctrl+o to expand)
+  ⎿  1 action not run · permission denied · rule from shared project settings
+     │ Reason: Permission to use Bash with command cat .env has been denied.
+
+⏺ Check 3 passed on both routes: the file-reading tool and a plain cat .env were
+  both refused, and I'll record that with its limit, since an indirect read
+  through a script is untested. I need two answers from you to finish the
+  milestone this turn. · summary
+
+⏺ Update(docs/ASSUMPTIONS.md)
+  ⎿  Added 1 line, removed 1 line
+      63  | O6 | Station ids for the eleven hubs other than Denver, and w
+          hether each has near-complete snowfall records. | M1 |
+      64  | O7 | The warning figures quoted so far were computed in UTC a
+          t city-centre points. The build uses the hub's time zone and ai
+          rport points, so they will move somewhat. | M2 |
+      65  | O8 | Model prices in the plan come from a reference cached on
+           2026-11-03. Re-check against the live pricing page before they
+           appear in the README. | M5 |
+      66 -| O9 | Whether the `.env` deny rule in `.claude/settings.json` 
+         -also stops shell commands, or only the file-reading tools. | M0
+         - check |                                                       
+      66 +| O9 | How far the `.env` deny rule in `.claude/settings.json` 
+         +reaches. Tested 2026-11-24 on a placeholder file: the file-read
+         +ing tool was refused, and so was `cat .env` in the shell. An in
+         +direct read, such as a script that opens the file, was not test
+         +ed and is not claimed to be blocked. | Settled for direct reads
+         + |                                                             
+
+⏺ Answered Claude's questions:
+  ⎿  · Git on this machine is set to stamp commits with your work address at 
+     your current employer. This repository is going to another company. Which 
+     identity should its commits carry? → Personal address, this repo only 
+     (Recommended)
+     · How should the score count and weigh warnings? Measured today: winter 
+     storm warnings last about 18 to 30 hours, flash flood warnings 3 hours, 
+     severe thunderstorm warnings under 1 hour. My original weights (winter 1.0,
+     flood 0.5, storms 0.25 per calendar day touched) overstate flood and 
+     storms about 4 and 7 times, and the day rule counts Minneapolis's 27 days 
+     of winter warning time as 63. → Adopt the revision (Recommended)
+
+⏺ Both answers are recorded, and commits will use your personal address in this
+  repo only. Of the sixteen premises, fourteen hold and one changed as agreed; a
+  new risk (long-running warnings dominating under time-based counting) means
+  river flood warnings are excluded, and Coastal Flood Warnings still need
+  measuring for Milestone 1. I'm revising the plan and the record now. · summary
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      1  # Weather Risk Intelligence Agent: plan
+      2 
+      3 -Status: **approved by the owner on 2026-11-24, except how the sc
+        -ore counts and weighs warnings (sections 5.2 to 5.4), which is u
+        -nder review.** See "Pending decision" in `docs/ASSUMPTIONS.md`. 
+        -Written 2026-11-24.                                             
+      3 +Status: **approved by the owner on 2026-11-24.** Section 5 was r
+        +evised the same day, before any scoring code existed: the score 
+        +counts time under warning instead of calendar days touched, and 
+        +the warning weights are neutral. The first entry under Deviation
+        +s says why. Written 2026-11-24.                                 
+      4 
+      5  Grade assumed: **interview take-home prototype.** A clear, teste
+         d core that runs live on one machine. Single process, no login,
+         no multi-user scaling, no production hardening. Anything beyond
+         that is listed as out of scope or as a bonus.
+      6 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 2 lines
+      41  | 10 | Can analysts try different weights in the chat? | Yes, a
+          s a labelled what-if. The official weights do not change. |
+      42  | 11 | What does a good answer look like? | A two or three sent
+          ence verdict, a small table of the figures behind it, then fixe
+          d lines for data, period and confidence. |
+      43 
+      44 +Answers 3 and 5 were refined later the same day, with the owner
+         +'s agreement: the score counts the time a warning was in force,
+         + not the calendar days it touched, and the three warning weight
+         +s are equal. See Deviations.                                   
+      45 +                                                               
+      46  ## 3. Scope
+      47 
+      48  **In scope**
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Couldn't edit file
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      78  | Open-Meteo historical weather API | Reachable. A full year of
+           daily data with no missing values (the checker also fetched te
+          n years in one call; I did not repeat that). Snowfall is a weat
+          her model's estimate, and the count of snow days depends heavil
+          y on the cut-off. Its terms say: "You may only use the free API
+           services for non-commercial purposes." | Denver 2025: 43 days
+          with any snowfall, 33 at 0.25 cm or more, 10 at 2.54 cm or more
+          , 1 at 5 cm or more. |
+      79  | National Weather Service API, alerts | Reachable. Holds only
+          the last 7 days. Its documentation says: "The /alerts endpoint
+          contains alerts issued over the past seven days." | Asking for
+          Texas alerts since 2025-01-01 returned 165 alerts, the oldest s
+          ent 2026-11-17. |
+      80  | FEMA National Risk Index (NRI) | The page in the brief, `haza
+          rds.fema.gov/nri/data-resources`, did not respond from this mac
+          hine (connection failed). The data itself is available through
+          FEMA's public map service: one query returns any county's figur
+          es as JSON. Release "December 2025". | Miami-Dade hurricane fre
+          quency 0.305 events a year; Harris (Houston) 0.184; Dallas 0.01
+          15; Cook (Chicago) 0.0093. |
+      81 -| Iowa Environmental Mesonet (IEM) warning archive, proposed by
+         - Claude | Reachable. Returns every past Weather Service warning
+         - for a latitude and longitude. A second service returns warning
+         -s whose drawn area covered the exact point. Terms: "You are fre
+         -e to use these services for any lawful purpose (including comme
+         -rcial...)". Coverage per IEM's dataset page: "Most WWA types ba
+         -ck to 2008 or 2005". | Days per year under a Winter Storm, Bliz
+         -zard or Ice Storm Warning, 2016 to 2025: Minneapolis 6.3, Denve
+         -r 4.6, Chicago 3.3, Dallas 1.4 (city-centre points, UTC days). 
+         -|                                                              
+      81 +| Iowa Environmental Mesonet (IEM) warning archive, proposed by
+         + Claude | Reachable. Returns every past Weather Service warning
+         + for a latitude and longitude. A second service returns warning
+         +s whose drawn area covered the exact point. Terms: "You are fre
+         +e to use these services for any lawful purpose (including comme
+         +rcial...)". Coverage per IEM's dataset page: "Most WWA types ba
+         +ck to 2008 or 2005". | Calendar days per year touched by a Wint
+         +er Storm, Blizzard or Ice Storm Warning, 2016 to 2025: Minneapo
+         +lis 6.3, Denver 4.6, Chicago 3.3, Dallas 1.4 (city-centre point
+         +s, UTC days). |                                                
+      82  | NOAA station observations through the ACIS web service, found
+           during the check | Reachable. Returns measured daily snowfall
+          and rainfall for a named station. Operated by the NOAA Regional
+           Climate Centers. | Denver International Airport, 2025: 365 day
+          s, 1 missing, 19 with a trace, 26 with measurable snowfall (0.1
+           inch or more), 29.8 inches in total. |
+      83 
+      84  ### 4.2 Roles in the build
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 2 lines, removed 1 line
+      103  For each hub, the score is the number of **disruption days it
+           should expect in an average year**, summed over four hazards.
+           It is abbreviated EDD.
+      104 
+      105  ```
+      106 -rate(hub, hazard)  = distinct days with a qualifying warning i
+          -n force at the hub, 2016-2025, divided by 10                  
+      106 +rate(hub, hazard)  = hours with a qualifying warning in force 
+          +at the hub, 2016-2025, divided by 24, divided by 10           
+      107 +                     (days under warning per year)            
+      108  EDD(hub, hazard)   = rate(hub, hazard) x weight(hazard)
+      109  EDD(hub, hurricane)= FEMA hurricane events per year for the hu
+           b's county x weight(hurricane)
+      110  EDD(hub, overall)  = sum of the four hazard EDDs
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      116 
+      117  | Hazard | What is counted | Warning types | Source | Period |
+      118  |---|---|---|---|---|
+      119 -| Winter | Days with a warning in force for the hub's forecast
+          - zone | Winter Storm, Blizzard, Ice Storm, Lake Effect Snow (c
+          -odes WS, BZ, IS, LE; warnings only) | IEM, warnings by point |
+          - 2016 to 2025 |                                               
+      119 +| Winter | Time with a warning in force for the hub's forecast
+          + zone | Winter Storm, Blizzard, Ice Storm, Lake Effect Snow (c
+          +odes WS, BZ, IS, LE; warnings only) | IEM, warnings by point |
+          + 2016 to 2025 |                                               
+      120  | Flood | Days with a warning whose drawn area covered the hub
+           , plus days with a coastal warning for the hub's zone | Flash
+           Flood (FF), Coastal Flood (CF); warnings only | IEM, both serv
+           ices | 2016 to 2025 |
+      121  | Severe storms | Days with a warning whose drawn area covered
+            the hub | Tornado (TO), Severe Thunderstorm (SV); warnings on
+           ly | IEM, storm-based warnings by point | 2016 to 2025 |
+      122  | Hurricane | FEMA's annualised frequency of hurricane events
+           for the hub's county | not applicable | FEMA NRI field `HRCN_A
+           FREQ` | 1851 to 2024 |
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      117  | Hazard | What is counted | Warning types | Source | Period |
+      118  |---|---|---|---|---|
+      119  | Winter | Time with a warning in force for the hub's forecast
+            zone | Winter Storm, Blizzard, Ice Storm, Lake Effect Snow (c
+           odes WS, BZ, IS, LE; warnings only) | IEM, warnings by point |
+            2016 to 2025 |
+      120 -| Flood | Days with a warning whose drawn area covered the hub
+          -, plus days with a coastal warning for the hub's zone | Flash 
+          -Flood (FF), Coastal Flood (CF); warnings only | IEM, both serv
+          -ices | 2016 to 2025 |                                         
+      120 +| Flood | Time with a warning whose drawn area covered the hub
+          +, plus time with a coastal warning for the hub's zone | Flash 
+          +Flood (FF), Coastal Flood (CF); warnings only | IEM, both serv
+          +ices | 2016 to 2025 |                                         
+      121  | Severe storms | Days with a warning whose drawn area covered
+            the hub | Tornado (TO), Severe Thunderstorm (SV); warnings on
+           ly | IEM, storm-based warnings by point | 2016 to 2025 |
+      122  | Hurricane | FEMA's annualised frequency of hurricane events
+           for the hub's county | not applicable | FEMA NRI field `HRCN_A
+           FREQ` | 1851 to 2024 |
+      123 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      118  |---|---|---|---|---|
+      119  | Winter | Time with a warning in force for the hub's forecast
+            zone | Winter Storm, Blizzard, Ice Storm, Lake Effect Snow (c
+           odes WS, BZ, IS, LE; warnings only) | IEM, warnings by point |
+            2016 to 2025 |
+      120  | Flood | Time with a warning whose drawn area covered the hub
+           , plus time with a coastal warning for the hub's zone | Flash
+           Flood (FF), Coastal Flood (CF); warnings only | IEM, both serv
+           ices | 2016 to 2025 |
+      121 -| Severe storms | Days with a warning whose drawn area covered
+          - the hub | Tornado (TO), Severe Thunderstorm (SV); warnings on
+          -ly | IEM, storm-based warnings by point | 2016 to 2025 |      
+      121 +| Severe storms | Time with a warning whose drawn area covered
+          + the hub | Tornado (TO), Severe Thunderstorm (SV); warnings on
+          +ly | IEM, storm-based warnings by point | 2016 to 2025 |      
+      122  | Hurricane | FEMA's annualised frequency of hurricane events
+           for the hub's county | not applicable | FEMA NRI field `HRCN_A
+           FREQ` | 1851 to 2024 |
+      123 
+      124  Rules for counting days:
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 5 lines, removed 3 lines
+      121  | Severe storms | Time with a warning whose drawn area covered
+            the hub | Tornado (TO), Severe Thunderstorm (SV); warnings on
+           ly | IEM, storm-based warnings by point | 2016 to 2025 |
+      122  | Hurricane | FEMA's annualised frequency of hurricane events
+           for the hub's county | not applicable | FEMA NRI field `HRCN_A
+           FREQ` | 1851 to 2024 |
+      123 
+      124 -Rules for counting days:                                      
+      124 +Rules for counting time:                                      
+      125 
+      126 -- A day is a calendar day in the hub's own time zone. A warnin
+          -g that touches a day at all counts that day once.             
+      127 -- Days are a set, so overlapping warnings, updates and duplica
+          -te records cannot inflate the count.                          
+      126 +- Time is counted, not calendar days. An 18-hour warning count
+          +s as 18 hours, whether or not it crosses midnight.            
+      127 +- Within one hazard, overlapping and repeated warnings are mer
+          +ged into one spell first, so no hour is counted twice.        
+      128 +- Each hour belongs to the calendar year it falls in, in the h
+          +ub's own time zone.                                           
+      129 +- A record whose expiry is not after its issue time is skipped
+          + and reported in the data report.                             
+      130  - Watches and advisories do not count. Only warnings do.
+      131  - River flood warnings and long-running area flood warnings ar
+           e excluded. In today's check a single point in Dallas was insi
+           de river flood warnings on 242 days in ten years, against 55 d
+           ays for flash flood warnings. Counting them would swamp everyt
+           hing else with mostly minor, slow events.
+      132 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 3 lines
+      134 
+      135  ### 5.3 Weights
+      136 
+      137 -> **Under review.** The owner asked how these weights were cho
+          -sen. Checking the reasoning against measured warning lengths s
+          -howed the flood and storm weights, and the day-counting rule i
+          -n 5.2, to be weakly founded. The evidence and a recommended re
+          -vision are in `docs/ASSUMPTIONS.md` under "Pending decision". 
+          -The text below is the original proposal.                      
+      137 +The weight converts one counted unit into disruption days. The
+          + weights live in `config/scoring.toml`.                       
+      138 
+      139 -The weight converts one counted unit into disruption days. The
+          -se are **starting assumptions made by Claude, not measurements
+          -.** They live in `config/scoring.toml`.                       
+      140 -                                                              
+      139  | Hazard | Weight | Unit | Reasoning |
+      140  |---|---|---|---|
+      141  | Winter | 1.0 | disruption days per warning day | These warni
+           ngs mean travel is dangerous for most of a day. |
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 7 lines, removed 5 lines
+      138 
+      139  | Hazard | Weight | Unit | Reasoning |
+      140  |---|---|---|---|
+      141 -| Winter | 1.0 | disruption days per warning day | These warni
+          -ngs mean travel is dangerous for most of a day. |             
+      142 -| Flood | 0.5 | disruption days per warning day | A flash floo
+          -d closes local roads for hours, less often for a full day. |  
+      143 -| Severe storms | 0.25 | disruption days per warning day | A w
+          -arning lasts under an hour and most cause no damage at a given
+          - site, but some bring power cuts or roof damage. |            
+      144 -| Hurricane | 5.0 | disruption days per event | Closure before
+          - landfall plus recovery and power restoration. |              
+      141 +| Winter | 1.0 | disruption days per day under warning | Neutr
+          +al: the hub counts as disrupted for exactly as long as the war
+          +ning is in force. |                                           
+      142 +| Flood | 1.0 | disruption days per day under warning | Same. 
+          +|                                                             
+      143 +| Severe storms | 1.0 | disruption days per day under warning 
+          +| Same. |                                                     
+      144 +| Hurricane | 5.0 | disruption days per event | Matches the re
+          +cent record: time under Hurricane, Tropical Storm or Storm Sur
+          +ge Warnings in 2008 to 2025, divided by the events FEMA's freq
+          +uency predicts for those years, is 4.4 days per event for Miam
+          +i and 5.3 for Houston. |                                      
+      145 
+      146 -The honest position on weights: no public data says how long e
+          -ach hazard closes a logistics hub. The right source is the com
+          -pany's own closure log, which we do not have. Two things keep 
+          -the ranking defensible anyway: the stability test in 5.6, and 
+          -the what-if in 5.5.                                           
+      146 +The three warning weights are equal on purpose. They add no ju
+          +dgment about which hazard is worse: the measured length of the
+          + warnings already carries that. A winter storm warning lasts a
+          +bout 18 to 30 hours, a flash flood warning about 3, a severe t
+          +hunderstorm warning under 1.                                  
+      147 
+      148 +What the neutral weights leave out is aftermath: flooded roads
+          + that stay closed, power cuts, damage. No public data measures
+          + how long that lasts at a logistics hub. The company's own clo
+          +sure log would, and we do not have it. Until then an analyst w
+          +ho believes a hazard outlasts its warning uses the what-if in 
+          +5.5, and the stability test in 5.6 reports whether the ranking
+          + would change.                                                
+      149 +                                                              
+      150  ### 5.4 From score to ranking, and the bands
+      151 
+      152  - Hubs are sorted by EDD, highest first. Rank 1 is the most ex
+           posed. Ties break by hub id.
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 2 lines, removed 7 lines
+      153  - A ranking can be for one hazard or overall, and for all hubs
+            or one region.
+      154  - Bands turn a figure into a word. They are fixed, so "high" m
+           eans the same thing next year and when hubs are added.
+      155 
+      156 -| Band | EDD per year |                                       
+      157 -|---|---|                                                     
+      158 -| Low | below 2 |                                             
+      159 -| Moderate | 2 to below 5 |                                   
+      160 -| High | 5 to below 10 |                                      
+      161 -| Very high | 10 or more |                                    
+      156 +The four bands are Low, Moderate, High and Very high. Their cu
+          +t-offs are round numbers of days per year, **fixed at the mile
+          +stone 2 review** from the twelve real figures, with the owner'
+          +s sign-off and a line in the decision log. They do not move af
+          +ter that.                                                     
+      157 
+      163 -The cut-offs are a starting assumption. At the end of mileston
+          -e 2 we look at how the real figures spread across them. If nea
+          -rly every hub lands in one band, the cut-offs change only with
+          - the owner's agreement and a line in the decision log.        
+      158 +Setting cut-offs after seeing the figures means the labels des
+          +cribe how our own network spreads. That is acceptable because 
+          +the ranking carries the decision and the label is only a word 
+          +for it, but the agent's answers always give the figure beside 
+          +the label.                                                    
+      159 
+      160  ### 5.5 What-if
+      161 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line
+      181 
+      182  - A warning is a forecast that conditions will be dangerous. I
+           t is not a record that the hub closed.
+      183  - EDD is in "day equivalents under our stated weights". It is
+           not a prediction of closure days.
+      184 +- It counts the time a warning was in force and nothing after 
+          +it. Aftermath is not in the score.                            
+      185  - Ten years is a short record. Minneapolis ranged from 0 to 14
+            winter warning days in single years.
+      186  - Flood exposure at a real site depends on the exact parcel. T
+           his score sees only the hub's coordinates and county.
+      187 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 8 lines, removed 1 line
+      589 
+      590  ## Deviations
+      591 
+      592 -None yet. Changes forced by reality during the build are appen
+          -ded here.                                                     
+      592 +Changes forced by reality are appended here, newest last.     
+      593 
+      594 +**2026-11-24, before any scoring code. How the score counts an
+          +d weighs warnings (section 5).**                              
+      595 +                                                              
+      596 +- *Planned:* count every calendar day a warning touches; weigh
+          +ts of 1.0 (winter), 0.5 (flood) and 0.25 (severe storms) per s
+          +uch day and 5.0 days per hurricane event; bands at 2, 5 and 10
+          +.                                                             
+      597 +- *What happened:* the owner asked how the weights were chosen
+          + before approving them. The honest answer was that the flood a
+          +nd storm weights were an ordering written as numbers, and that
+          + the only test applied was that Dallas came out "high", as the
+          + assignment's wording assumes. Measuring warning lengths in th
+          +e archive then showed that flash flood warnings last about 3 h
+          +ours and severe thunderstorm warnings under 1, so the weights 
+          +overstated them roughly 4 and 7 times; and that counting calen
+          +dar days touched turned Minneapolis's 27 days of winter warnin
+          +g time into 63.                                               
+      598 +- *Now:* count time under warning; all three warning weights a
+          +re 1.0; the hurricane weight stays at 5.0, which the Miami and
+          + Houston records support; band cut-offs are fixed at the miles
+          +tone 2 review. Dallas will probably not come out "high", and t
+          +he agent will say so.                                         
+      599 +- *Lesson:* a number that happens to confirm the expected answ
+          +er is the one to check hardest. The figures behind this entry 
+          +are in `docs/ASSUMPTIONS.md`.                                 
+      600 +                                                              
+      601  ---
+      602 
+      603  ## Appendix A. Commands that reproduce today's checks
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      182  - A warning is a forecast that conditions will be dangerous. I
+           t is not a record that the hub closed.
+      183  - EDD is in "day equivalents under our stated weights". It is
+           not a prediction of closure days.
+      184  - It counts the time a warning was in force and nothing after
+           it. Aftermath is not in the score.
+      185 -- Ten years is a short record. Minneapolis ranged from 0 to 14
+          - winter warning days in single years.                         
+      185 +- Ten years is a short record. In Minneapolis the number of ca
+          +lendar days touched by a winter warning ranged from 0 to 14 in
+          + single years.                                                
+      186  - Flood exposure at a real site depends on the exact parcel. T
+           his score sees only the hub's coordinates and county.
+      187 
+      188  ## 6. The hubs
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      497 
+      498  **M2. Scoring core and the evaluation set. No LLM.** Day count
+           ing, rates, EDD, bands, ranking, what-if, confidence. The six
+           tools as plain functions. The fourteen cases, the graders and
+           the runner.
+      499  Check: `uv run pytest -q` passes, including hand-built warning
+            lists with known answers (overlaps, a midnight crossing, dupl
+           icates). `uv run wra rank overall` and `uv run wra rank winter
+            --region midwest` print tables with no network. `uv run wra e
+           val --agent stub` runs end to end and reports 0 of 14, while t
+           he grader tests show a correct answer passing and a wrong one
+           failing.
+      500 -Review point: I show the first real ranking and how the hubs f
+          -all across the bands. We confirm the weights and cut-offs or l
+          -og a change.                                                  
+      500 +Review point: I show the first real ranking of the twelve hubs
+          +. The owner fixes the band cut-offs, and they go in the decisi
+          +on log.                                                       
+      501 
+      502  **M3. The agent.** Prompt, loop, schemas, validation, repair,
+           grounding, a command-line chat.
+      503  First step is a spike: one live request proving that tool call
+           s and a structured final answer work together on the chosen mo
+           del. If they do not, the fallback is two steps: the tool loop
+           without the output schema, then one final structured call that
+            writes the answer.
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      517  5. Checks each response against the schema and its expected st
+           atus, and checks the follow-up used the earlier context.
+      518  6. Runs `uv run wra eval` and checks the score meets the targe
+           t.
+      519 
+      520 -**If time runs short, cut in this order:** the model compariso
+          -n, the supporting-evidence figures (tropical warning days, FEM
+          -A cross-checks), page styling. The four assignment questions, 
+          -the grounding check and the evaluation are never cut.         
+      520 +**If time runs short, cut in this order:** the model compariso
+          +n, the supporting-evidence figures (time under tropical warnin
+          +gs, FEMA cross-checks), page styling. The four assignment ques
+          +tions, the grounding check and the evaluation are never cut.  
+      521 
+      522  **Bonuses.** Only after the final check passes, and only after
+            asking, in this order: deployment to a public URL, an alert w
+           hen a hub's score changes, voice. Two notes for later. A publi
+           c URL spends the owner's API credit on every message, so it ne
+           eds an access guard before it goes up. And the alert has a nat
+           ural trigger in this design: re-run the ingest, recompute, com
+           pare with the stored scores.
+      523 
+
+⏺ Update(docs/DECISIONS.md)
+  ⎿  Added 1 line, removed 1 line
+      12 
+      13  **Decision:** A hub's exposure to winter weather, flooding and
+          severe storms is measured from National Weather Service warning
+          s in force at the hub in 2016 to 2025. Hurricanes use FEMA's an
+          nualised frequency, which rests on a record from 1851 to 2024.
+      14  **Why:** Warnings are set locally by forecasters, so they track
+           what is dangerous in that place and they capture ice storms. R
+          ejected: our own thresholds on modelled daily weather (Denver 2
+          025 had 43, 10 or 1 snow days depending on the cut-off); FEMA's
+           risk scores and ratings (they mostly reflect how much property
+           and how many people a county has).
+      15 -**Context:** Owner's interview answers 4 and 5. Plan sections 4
+         - and 5. The counting unit, weights and bands are still open: se
+         -e "Pending decision" in `docs/ASSUMPTIONS.md`.                 
+      15 +**Context:** Owner's interview answers 4 and 5. Plan sections 4
+         + and 5. How the warnings are counted and weighed is the last en
+         +try in this file.                                              
+      16 
+      17  ## 2026-11-24 — Three data sources; Open-Meteo and the Weather
+          Service API left out
+      18 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Removed 1 line
+       4 
+       5  ## Queue
+       6 
+       7 -- [q7] Owner decision: how the score counts and weighs warnings
+         - (counting unit, weights, bands). Blocks q3. → `docs/ASSUMPTION
+         -S.md`, "Pending decision"                                      
+       7  - [q2] Milestone 1: data. Hub config, three ingest adapters, ra
+          w cache, SQLite. → `docs/PLAN.md` section 13
+       8  - [q3] Milestone 2: scoring core and evaluation set, no LLM. →
+          `docs/PLAN.md` section 13
+       9  - [q4] Milestone 3: the agent. → `docs/PLAN.md` section 13
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 2 lines
+      12  - [q8] Bonuses, ask first: deployment, score-change alert, voic
+          e. → `docs/PLAN.md` section 13
+      13 
+      14  ## Done / Dropped
+      15 +                                                               
+      16 +- [q7] Owner decision: how the score counts and weighs warnings
+         +. Done 2026-11-24. Proof: last entry of `docs/DECISIONS.md`. Th
+         +e band cut-offs it leaves open are part of q3.                 
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Three commits are in. Closing out the milestone: marking it done in the work
+  queue, then one final verification pass on the committed tree.
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 1 line
+      13 
+      14  ## Done / Dropped
+      15 
+      16 +- [q1] Milestone 0: scaffold and rules. Done 2026-11-24. Proof:
+         + commits `db31520`, `14817f0`, `e427e7b`; the three checks' out
+         +put is in session `01-plan.txt`.                               
+      17  - [q7] Owner decision: how the score counts and weighs warnings
+          . Done 2026-11-24. Proof: last entry of `docs/DECISIONS.md`. Th
+          e band cut-offs it leaves open are part of q3.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Milestone 0 is done and committed. All three checks pass.
+
+  $ uv run pytest -q
+  .                                                    [100%]
+  1 passed in 0.02s
+
+  $ git check-ignore -v .env
+  .gitignore:2:.env       .env
+
+  Read(.env)   -> File is in a directory that is denied by your permission 
+  settings.
+  $ cat .env   -> Permission to use Bash with command cat .env has been denied.
+
+  $ git log --oneline
+  4e8c023 Mark milestone 0 done in the work queue
+  e427e7b Add working rules, the .env guard and the docs skeleton
+  14817f0 Scaffold the uv project with a placeholder test
+  db31520 Add the project plan
+
+  The secret guard was tested on an empty placeholder file, before any real key
+  exists. It blocks the file-reading tool and a direct cat. A script that opens
+  the file was not tested, and I am not claiming it is blocked.
+
+  ★ Insight ─────────────────────────────────────
+  - The package version is read from the installed package's metadata, so
+    pyproject.toml stays the only place it is written.
+  - main() takes its arguments as a parameter. Tests call it directly instead of
+    launching a subprocess, which will keep the later command tests fast.
+  - The deny rule went in and was proven before the key did. Testing it
+    afterwards would have meant aiming a read at a real secret.
+    ─────────────────────────────────────────────────
+
+  What changed during the milestone
+
+  - The scoring rule. You chose the revision: count actual time under warning,
+    equal weights for winter, flood and severe storms, 5 days per hurricane
+    event, band cut-offs fixed at the Milestone 2 review. The plan's section 5
+    is rewritten, the decision log has the entry, and the plan's Deviations
+    section records why, including that my only test of the first weights was
+    Dallas coming out "high".
+  - Commit identity. This repository commits with your personal address. Your
+    machine-wide git setting is untouched. Your work address is in no tracked
+    file and no commit.
+  - One new open point. Coastal Flood Warnings have not been measured. If they
+    run for days they could dominate the flood figure, so Milestone 1 measures
+    them before they stay in.
+
+  Three things for you
+
+  1. Your work address appears once in this session's transcript. The project
+     generator printed it when it created pyproject.toml, before I removed it.
+     After you export, search 01-plan.txt for your employer's domain and delete
+     that line before sharing.
+  2. Export now. Run /export into docs/ai-session/01-plan.txt, then /clear. The
+     index file already lists it. Switch the main session to Opus for Milestone
+     1, as agreed.
+  3. Your API key. .env holds an empty placeholder. Put your Anthropic key in it
+     any time before Milestone 3. Milestones 1 and 2 do not need it.
+
+  Two proposed rule lines, your call
+
+  - For your global CLAUDE.md, from the mislabelled FEMA figure: "A figure's
+    label is part of the claim: confirm what a field measures from its data
+    dictionary, not only its value."
+  - For this project's CLAUDE.md, from the weights: "Before proposing a number,
+    check whether data already in hand can measure it. A number that confirms
+    the expected answer gets checked hardest."
+
+  Say yes to either and I'll add it at the start of the next session.
+
+  Next is Milestone 1: the hub list, the three data loaders, and the local
+  database, ending in a data report for all twelve hubs.
+
+✻ Cogitated for 10m 35s · done 11:29 AM
+
+❯ yes to this project's CLAUDE.md fix.                                          
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line
+      23  8. **Ask rather than guess, and push back** when there is a bet
+          ter approach.
+      24  9. **Match the model to the task** and say which was picked and
+           why: Fable for open design questions and the final whole-diff
+          review, Opus for implementation and per-milestone review, Sonne
+          t for small, fully specified tasks. The main session's model an
+          d effort level are the owner's to switch, so say when they shou
+          ld change.
+      25  10. **Bonuses** (deployment, score-change alert, voice, in that
+           order) start only after the final end-to-end check passes, and
+           only after asking.
+      26 +11. **Measure before proposing.** Before proposing a number, ch
+         +eck whether data already in hand can measure it. A number that 
+         +confirms the expected answer gets checked hardest.             
+      27 
+      28  ## Sessions are a deliverable
+      29 
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The rule is in and committed (a2aa716). It is rule 11 in this project's
+  CLAUDE.md:
+
+  ▎ Measure before proposing. Before proposing a number, check whether data 
+  ▎ already in hand can measure it. A number that confirms the expected answer 
+  ▎ gets checked hardest.
+
+  I left the proposed line for your global CLAUDE.md alone, since you approved
+  only this one.
+
+  The working tree is clean, so this is a good point to export. Run /export into
+  docs/ai-session/01-plan.txt, remove the one line with your work address, then
+  /clear and switch to Opus. The next session's first commit will pick up the
+  exported file, and Milestone 1 starts from the work queue.
+
+✻ Cooked for 22s · done 11:33 AM
+
+❯ /export docs/ai-session/01-plan.text                                          
+  ⎿  Conversation exported to /Users/doronreiffman/Projects/weather-risk-agent/d
+     ocs/ai-session/01-plan.text
+
+❯ let's /handoff                                                                
+
+⏺ Skill(handoff)
+  ⎿  Loaded skill
+
+⏺ Running the handoff. First, accounting for anything still running and
+  preparing the session's full diff for an independent review.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Nothing of ours is still running, and I'm leaving the other idle Claude
+  session on this machine alone. I've also confirmed the work address is not in
+  the export, so nothing needs removing; next I'm sending the 16-file diff to a
+  fresh Opus reviewer against your original brief. · summary
+
+⏺ feature-dev:code-reviewer(Review session diff against brief) Opus 5.5
+  ⎿  Backgrounded agent (↓ to manage · ctrl+o to expand)
+
+⏺ The reviewer is running. The handoff is gated on its findings, so I'm holding
+  the remaining steps (the queue re-sort, the commit and the next-session
+  prompt) until it reports. I'll be notified when it finishes and will pick up
+  from there.
+
+✻ Cooked for 2m 16s · done 11:37 AM
+
+› Message from feature-dev:code-reviewer
+  **Verdict:** Yes. The diff does the stated task (the plan plus Milestone 0)
+  and stays in scope. PLAN.md covers every item on the owner's list. CLAUDE.md
+  carries all ten build rules. I found no secrets and no employer address or
+  domain in the diff. I could not check commit author emails, since I have no
+  git.
+
+  **Findings, most severe first**
+
+  1. **The session export's file name doesn't match its references.** Medium
+  severity, high confidence.
+     - The file on disk is `docs/ai-session/01-plan.text`.
+     - `docs/ai-session/README.md` (the index), `.claude/QUEUE.md` (q1's proof
+  pointer) and CLAUDE.md all say `01-plan.txt`, which is also the owner's
+  naming.
+     - The file is not in the diff, so I can't confirm it is tracked.
+     - Why it matters: the sessions are a deliverable, and right now the index
+  and the proof point to a file that does not exist.
+
+  2. **Old calendar-day wording is left in parts of PLAN.md that will steer the
+  build.** Low to medium severity, medium confidence.
+     - Section 13, M2: "Day counting" and a test for "a midnight crossing".
+  Under the new rule the edge case that matters is a warning crossing New Year
+  in the hub's local time zone (ASSUMPTIONS A4). That case is not in the test
+  list.
+     - Section 5.7 states the record's limits using the abandoned metric
+  ("calendar days touched ... 0 to 14").
+     - Section 12 says "day counts" and section 4.2 says "days".
+     - Section 11 names the module `days.py`. Trivial, but it is the same
+  leftover.
+
+  3. **CLAUDE.md rules 2 and 4 drop parts of the owner's wording.** Low
+  severity, high confidence.
+     - Rule 4 leaves out what the eval set must contain (the four assignment
+  questions, follow-ups, out-of-scope cases) and the three named checks (right
+  hubs at the top, right tool, numbers match).
+     - Rule 2 drops "never a guess".
+     - PLAN §10 and §14 still carry all of it, and CLAUDE.md says to read
+  PLAN.md every session, so the meaning survives a `/clear`.
+
+  4. **The evidence for the hurricane weight leans on an open point.** Low
+  severity, medium confidence.
+     - ASSUMPTIONS point 4 and PLAN §5.3 count Tropical Storm warning time in
+  the numerator.
+     - Whether FEMA's event count includes tropical storms is still open (O3).
+     - If it does not, the 4.4 and 5.3 days per event are inflated. A5 says
+  "supported by two hubs' records" without linking it to O3.
+
+  5. **The Dallas hub contradicts the placement rule.** Low severity, medium
+  confidence.
+     - PLAN §6 and ASSUMPTIONS A1 say each hub sits at its city's main airport,
+  but Dallas is placed at Love Field (DAL).
+     - Either move it, or state why (for example, keeping it in one county).
+
+  6. **The final end-to-end check is not fully specified.** Low severity, medium
+  confidence.
+     - `scripts/e2e.sh` clones into a temporary folder, which has no `.env`. The
+  plan does not say how the API key reaches the cloned server and the eval run.
+     - Step 6 checks "the target", but the target is defined over 3 repetitions,
+  while `wra eval` is not given `--reps 3` there.
+
+  7. **The eval's `numbers` check adds little.** Low severity, medium
+  confidence.
+     - Tables are rendered by code, so comparing them to the grader's own tool
+  call will always pass.
+     - Any non-error answer has already passed the grounding check. If the
+  grader reuses that same code, the eval cannot catch a grounding bug.
+     - The grader self-tests in §10.3 help only partly.
+
+  8. **Two packages in the lock file are very new.** Low severity; the facts are
+  certain, whether it matters is the owner's call.
+     - `uv.lock` pins `packaging` 26.4, published 2026-11-23 (one day old), and
+  `pytest` 9.2.0, published 2026-10-27 (28 days old).
+     - The owner's age rule names npm only, so this is not a breach as written.
+  Flagging it in case the owner means the rule to cover PyPI too.
+
+  **Checked and consistent:**
+  - **Numbers:** they agree across PLAN, ASSUMPTIONS and DECISIONS: the
+  hurricane arithmetic, Minneapolis 27 against 63 days, Denver 26 of 364 days
+  (7.1%), Dallas about 2.
+  - **Section 5 revision:** QUEUE, DECISIONS, ASSUMPTIONS and PLAN §5 all
+  describe the new rule as current. §15 and Deviations hold the old rule as
+  declared.
+  - **Scaffold:** the CLI, the test, `.gitignore` and the deny rule look correct
+  for M0.
+  - **Scope:** the plan covers every assignment requirement and nothing is
+  over-built for a prototype.
+
+  Files referenced:
+  - /Users/doronreiffman/Projects/weather-risk-agent/docs/PLAN.md
+  - /Users/doronreiffman/Projects/weather-risk-agent/CLAUDE.md
+  - /Users/doronreiffman/Projects/weather-risk-agent/docs/ASSUMPTIONS.md
+  - /Users/doronreiffman/Projects/weather-risk-agent/docs/ai-session/README.md
+  - /Users/doronreiffman/Projects/weather-risk-agent/.claude/QUEUE.md
+  - /Users/doronreiffman/Projects/weather-risk-agent/uv.lock
+
+⏺ The review is back. Verdict: the diff does the stated task and stays in scope,
+  with eight findings. Per your rule I'm checking each claim against its source
+  before acting on it.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Agent "Review session diff against brief" finished · 3m 40s
+
+⏺ Every finding checks out against the files. Six are mine to fix now. Two need
+  your decision, and I'll ask once the fixes are in.
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      85 
+      86  | Source | Role | Why this one |
+      87  |---|---|---|
+      88 -| IEM warning archive | The score's main input for winter, floo
+         -d and severe storms. | It measures official "this is dangerous 
+         -here" days, set locally by forecasters. It captures ice storms,
+         - which snowfall data misses. Commercial use is explicitly allow
+         -ed. |                                                          
+      88 +| IEM warning archive | The score's main input for winter, floo
+         +d and severe storms. | It measures how long an official "this i
+         +s dangerous here" warning was in force, set locally by forecast
+         +ers. It captures ice storms, which snowfall data misses. Commer
+         +cial use is explicitly allowed. |                              
+      89  | FEMA NRI | Hurricane frequency. Also a cross-check figure for
+           the other hazards. | Hurricanes are too rare for 10 years of d
+          ata. FEMA's hurricane record runs from 1851 to 2024 (173.86 yea
+          rs, counted as distinct events, per its technical documentation
+          ). |
+      90  | NOAA station observations (ACIS) | Daily snowfall and rainfal
+          l questions, such as the Denver one. | It is measured, and it i
+          s the figure the Weather Service itself would quote. |
+      91 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      448    src/wra/
+      449      cli.py                   wra ingest | data-report | rank |
+            ask | eval | serve
+      450      ingest/                  iem.py, fema_nri.py, acis.py, sto
+           re.py
+      451 -    scoring/                 days.py, kpi.py, confidence.py   
+          -   (pure functions)                                           
+      451 +    scoring/                 warning_time.py, kpi.py, confiden
+          +ce.py   (pure functions)                                      
+      452      tools/                   one module per tool, plus the reg
+           istry
+      453      agent/                   schemas.py, prompt.py, loop.py, g
+           rounding.py, render.py
+      454      api/                     app.py, sessions.py, static/index
+           .html
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      479  | `station_daily` | One row per hub per day: snowfall, precipi
+           tation, and the flags for trace and missing. |
+      480  | `fetch_log` | What was fetched, from which URL, when, with a
+            checksum. |
+      481 
+      482 -- Raw warning events are stored, and the day counts are comput
+          -ed from them by the scoring code. That keeps the counting rule
+          - in one tested place, and anyone can audit a figure back to in
+          -dividual warnings.                                            
+      482 +- Raw warning events are stored, and the time under warning is
+          + computed from them by the scoring code. That keeps the counti
+          +ng rule in one tested place, and anyone can audit a figure bac
+          +k to individual warnings.                                     
+      483  - The raw API responses are kept under `data/raw/` and committ
+           ed. A fresh clone then builds the database in seconds without
+           the network, the demo does not depend on a university server,
+           and the evaluation's expected answers stay fixed. `wra ingest
+           --refresh` fetches again.
+      484  - The ingest refuses to send a request with an empty coordinat
+           e and records which areas each response was for. Today's check
+            showed why: a request with empty coordinates returned 926 rec
+           ords and no error.
+      485 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      495  **M1. Data.** Hub config, three ingest adapters, raw cache, SQ
+           Lite.
+      496  Check: `uv run wra ingest --refresh` prints rows per source an
+           d hub. `uv run pytest tests/test_ingest_parsers.py -q` passes
+           on recorded responses, including the empty-coordinate guard an
+           d a warning whose expiry is before its issue time (seen in tod
+           ay's data). `uv run wra data-report` prints, per hub, the stat
+           ion name, county, zones, row counts and share of missing stati
+           on days, and confirms the county from FEMA agrees with the cou
+           nty code in the warning data.
+      497 
+      498 -**M2. Scoring core and the evaluation set. No LLM.** Day count
+          -ing, rates, EDD, bands, ranking, what-if, confidence. The six 
+          -tools as plain functions. The fourteen cases, the graders and 
+          -the runner.                                                   
+      498 +**M2. Scoring core and the evaluation set. No LLM.** Merging w
+          +arnings into spells and summing their time, rates, EDD, bands,
+          + ranking, what-if, confidence. The six tools as plain function
+          +s. The fourteen cases, the graders and the runner.            
+      499  Check: `uv run pytest -q` passes, including hand-built warning
+            lists with known answers (overlaps, a midnight crossing, dupl
+           icates). `uv run wra rank overall` and `uv run wra rank winter
+            --region midwest` print tables with no network. `uv run wra e
+           val --agent stub` runs end to end and reports 0 of 14, while t
+           he grader tests show a correct answer passing and a wrong one
+           failing.
+      500  Review point: I show the first real ranking of the twelve hubs
+           . The owner fixes the band cut-offs, and they go in the decisi
+           on log.
+      501 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      496  Check: `uv run wra ingest --refresh` prints rows per source an
+           d hub. `uv run pytest tests/test_ingest_parsers.py -q` passes
+           on recorded responses, including the empty-coordinate guard an
+           d a warning whose expiry is before its issue time (seen in tod
+           ay's data). `uv run wra data-report` prints, per hub, the stat
+           ion name, county, zones, row counts and share of missing stati
+           on days, and confirms the county from FEMA agrees with the cou
+           nty code in the warning data.
+      497 
+      498  **M2. Scoring core and the evaluation set. No LLM.** Merging w
+           arnings into spells and summing their time, rates, EDD, bands,
+            ranking, what-if, confidence. The six tools as plain function
+           s. The fourteen cases, the graders and the runner.
+      499 -Check: `uv run pytest -q` passes, including hand-built warning
+          - lists with known answers (overlaps, a midnight crossing, dupl
+          -icates). `uv run wra rank overall` and `uv run wra rank winter
+          - --region midwest` print tables with no network. `uv run wra e
+          -val --agent stub` runs end to end and reports 0 of 14, while t
+          -he grader tests show a correct answer passing and a wrong one 
+          -failing.                                                      
+      499 +Check: `uv run pytest -q` passes, including hand-built warning
+          + lists with known answers (overlaps, duplicates, a warning tha
+          +t crosses New Year in the hub's time zone, an expiry before th
+          +e issue time). `uv run wra rank overall` and `uv run wra rank 
+          +winter --region midwest` print tables with no network. `uv run
+          + wra eval --agent stub` runs end to end and reports 0 of 14, w
+          +hile the grader tests show a correct answer passing and a wron
+          +g one failing.                                                
+      500  Review point: I show the first real ranking of the twelve hubs
+           . The owner fixes the band cut-offs, and they go in the decisi
+           on log.
+      501 
+      502  **M3. The agent.** Prompt, loop, schemas, validation, repair,
+           grounding, a command-line chat.
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      182  - A warning is a forecast that conditions will be dangerous. I
+           t is not a record that the hub closed.
+      183  - EDD is in "day equivalents under our stated weights". It is
+           not a prediction of closure days.
+      184  - It counts the time a warning was in force and nothing after
+           it. Aftermath is not in the score.
+      185 -- Ten years is a short record. In Minneapolis the number of ca
+          -lendar days touched by a winter warning ranged from 0 to 14 in
+          - single years.                                                
+      185 +- Ten years is a short record. Minneapolis's time under winter
+          + warnings ranged from none to 6.3 days in single years, around
+          + an average of 2.7 (city-centre test point, UTC years).       
+      186  - Flood exposure at a real site depends on the exact parcel. T
+           his score sees only the hub's coordinates and county.
+      187 
+      188  ## 6. The hubs
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      141  | Winter | 1.0 | disruption days per day under warning | Neutr
+           al: the hub counts as disrupted for exactly as long as the war
+           ning is in force. |
+      142  | Flood | 1.0 | disruption days per day under warning | Same.
+           |
+      143  | Severe storms | 1.0 | disruption days per day under warning
+           | Same. |
+      144 -| Hurricane | 5.0 | disruption days per event | Matches the re
+          -cent record: time under Hurricane, Tropical Storm or Storm Sur
+          -ge Warnings in 2008 to 2025, divided by the events FEMA's freq
+          -uency predicts for those years, is 4.4 days per event for Miam
+          -i and 5.3 for Houston. |                                      
+      144 +| Hurricane | 5.0 | disruption days per event | Matches the re
+          +cent record: time under Hurricane, Tropical Storm or Storm Sur
+          +ge Warnings in 2008 to 2025, divided by the events FEMA's freq
+          +uency predicts for those years, is 4.4 days per event for Miam
+          +i and 5.3 for Houston. Because that warning time includes trop
+          +ical storms and storm surge, the weight makes FEMA's frequency
+          + reproduce time under any tropical warning. Whether FEMA's own
+          + count includes tropical storms is open point O3; it changes h
+          +ow to read the 5.0, per hurricane or per tropical system. |   
+      145 
+      146  The three warning weights are equal on purpose. They add no ju
+           dgment about which hazard is worse: the measured length of the
+            warnings already carries that. A winter storm warning lasts a
+           bout 18 to 30 hours, a flash flood warning about 3, a severe t
+           hunderstorm warning under 1.
+      147 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line
+      196  | West | Denver (DEN), Phoenix (PHX) |
+      197 
+      198  - Regions follow the US Census Bureau's regions. There is no h
+           ub in the Northeast.
+      199 +- Dallas is the one exception to "main airport". It uses Love 
+          +Field (DAL) instead of the larger Dallas/Fort Worth airport, o
+          +n the expectation that Love Field keeps the hub, its station a
+          +nd its county inside Dallas itself. Milestone 1's county looku
+          +p confirms or corrects this.                                  
+      200  - Phoenix is included on purpose as a quiet hub, so the rankin
+           g has a low end to sanity-check against.
+      201  - Coordinates, county and warning zone for each hub are **read
+            from the data sources during milestone 1**, not typed from me
+           mory: coordinates from the station's own metadata, the county
+           from a point query against FEMA's county layer, the zones from
+            the warning archive's response. The point query against FEMA'
+           s layer is untested; if it does not work, the county comes fro
+           m the county code in the warning data. Only Denver's station h
+           as been confirmed so far ("DENVER INTL AP").
+      202 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      511 
+      512  **Final end-to-end check.** `scripts/e2e.sh` does the followin
+           g and prints each result:
+      513 
+      514 -1. Clones the repository into a temporary folder.             
+      514 +1. Clones the repository into a temporary folder. The clone ha
+          +s no `.env`, so the script points the cloned app at the origin
+          +al repository's `.env` through an environment variable (`WRA_E
+          +NV_FILE`). The key is never copied or printed.                
+      515  2. `uv sync`, then `uv run wra ingest` from the committed raw
+           responses, with no network.
+      516  3. `uv run pytest -q`.
+      517  4. Starts the server and, through the HTTP API only, asks the
+           four assignment questions, one follow-up and one out-of-scope
+           question.
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      516  3. `uv run pytest -q`.
+      517  4. Starts the server and, through the HTTP API only, asks the
+           four assignment questions, one follow-up and one out-of-scope
+           question.
+      518  5. Checks each response against the schema and its expected st
+           atus, and checks the follow-up used the earlier context.
+      519 -6. Runs `uv run wra eval` and checks the score meets the targe
+          -t.                                                            
+      519 +6. Runs `uv run wra eval --reps 3` and checks the score meets 
+          +the target, which is defined over 3 repetitions.              
+      520 
+      521  **If time runs short, cut in this order:** the model compariso
+           n, the supporting-evidence figures (time under tropical warnin
+           gs, FEMA cross-checks), page styling. The four assignment ques
+           tions, the grounding check and the evaluation are never cut.
+      522 
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 1 line, removed 1 line
+      413  | `status` | The answer's status is the expected one. |
+      414  | `tool` | The required tool was called with the key arguments
+           , and no tool was called where none should be. It does not req
+           uire an exact sequence. |
+      415  | `hubs` | `hubs_ranked` matches what the scoring code returns
+            when the grader calls it directly on the same data. |
+      416 -| `numbers` | The figures in the response tables equal the gra
+          -der's own call to the tool, and every digit in the verdict pas
+          -ses the grounding check. |                                    
+      416 +| `numbers` | The tables shown equal what the tool returns whe
+          +n the grader calls it with the arguments the case expects. Tha
+          +t catches an answer about the wrong hub, year or hazard. Where
+          + a figure has been checked by hand against the source, the cas
+          +e pins that value, so a bug in our own tool is caught too. Fir
+          +st pinned value: Denver International, 2025, 26 days of measur
+          +able snowfall out of 364 observed. |                          
+      417  | `mentions` | Required words are present (for example both hu
+           b names, or the band), and forbidden ones are absent (for exam
+           ple any dollar figure). |
+      418 
+      419  A case passes when all its checks pass.
+
+⏺ Update(docs/PLAN.md)
+  ⎿  Added 2 lines
+      418 
+      419  A case passes when all its checks pass.
+      420 
+      421 +The evaluation does not re-test the grounding check from secti
+          +on 8.4. Any answer that reaches a grader has already passed it
+          +, so a grader reusing the same code would prove nothing. The g
+          +rounding check has its own unit tests with planted wrong numbe
+          +rs (milestone 3), and the evaluation reports how often it forc
+          +ed a repair or an error.                                      
+      422 +                                                              
+      423  ### 10.3 Running and reporting
+      424 
+      425  - One command: `uv run wra eval`. It prints a per-case table a
+           nd a score, and saves every conversation, tool call and grader
+            result under `evals/runs/<timestamp>/`.
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      14  ## Rules for the build
+      15 
+      16  1. **Numbers come from code.** The risk score is deterministic
+          and unit-tested with no LLM, with its weights in a config file.
+           The LLM understands the question, calls our tools and explains
+           the results. Every number in an answer comes from a tool resul
+          t.
+      17 -2. **LLM output is validated in code** against a JSON schema (P
+         -ydantic). Invalid output gets one repair attempt, then a clear 
+         -error.                                                         
+      17 +2. **LLM output is validated in code** against a JSON schema (P
+         +ydantic). Invalid output gets one repair attempt, then a clear 
+         +error, never a guess.                                          
+      18  3. **Evidence, not claims.** A milestone is done when its check
+           passes: paste the command and its output.
+      19  4. **The evaluation set exists before the agent does:** 10 to 1
+          5 questions with automatic checks, one command that runs them a
+          nd prints a score.
+      20  5. **Say what we don't know.** The agent's answers state the da
+          ta period, the sources and the confidence.
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 1 line, removed 1 line
+      16  1. **Numbers come from code.** The risk score is deterministic
+          and unit-tested with no LLM, with its weights in a config file.
+           The LLM understands the question, calls our tools and explains
+           the results. Every number in an answer comes from a tool resul
+          t.
+      17  2. **LLM output is validated in code** against a JSON schema (P
+          ydantic). Invalid output gets one repair attempt, then a clear
+          error, never a guess.
+      18  3. **Evidence, not claims.** A milestone is done when its check
+           passes: paste the command and its output.
+      19 -4. **The evaluation set exists before the agent does:** 10 to 1
+         -5 questions with automatic checks, one command that runs them a
+         -nd prints a score.                                             
+      19 +4. **The evaluation set exists before the agent does:** 10 to 1
+         +5 questions: the four from the assignment, a couple of follow-u
+         +ps, and a couple the agent should flag as out of scope (for exa
+         +mple, a city with no hub). Each has automatic checks: the right
+         + hubs at the top, the right tool called, numbers that match the
+         + tool output. One command runs it and prints a score.          
+      20  5. **Say what we don't know.** The agent's answers state the da
+          ta period, the sources and the confidence.
+      21  6. **Small commits with clear messages.** A commit message clai
+          ms only what was actually run.
+      22  7. **Secrets live only in the git-ignored `.env`.** Work from `
+          .env.example`. `.env` itself stays unread and unprinted; `.clau
+          de/settings.json` denies it.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Answered Claude's questions:
+  ⎿  · You exported the session as docs/ai-session/01-plan.text, but your brief,
+     the index file and the work queue all say 01-plan.txt. The export was also
+     taken before this handoff, so it does not include the review. What should 
+     happen to the file? → Leave it, I'll re-export
+     · The reviewer noticed that two of the Python packages installed today are 
+     very new: 'packaging' was published yesterday and 'pytest' 28 days ago. 
+     Your standing rule against packages under a month old names npm only. 
+     Should it cover Python packages in this project too? → No, leave as 
+     installed
+
+⏺ Both decisions are recorded: you'll re-export the transcript yourself, and the
+  package-age rule stays npm-only. I'm committing the six review fixes, then
+  bringing the queue and rules file to their end-of-session state. · summary
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(.claude/QUEUE.md)
+  ⎿  Added 1 line
+       4 
+       5  ## Queue
+       6 
+       7 +- [q9] Commit the session 01 transcript once the owner has re-e
+         +xported it as `docs/ai-session/01-plan.txt`. → `docs/ai-session
+         +/README.md`                                                    
+       8  - [q2] Milestone 1: data. Hub config, three ingest adapters, ra
+          w cache, SQLite. → `docs/PLAN.md` section 13
+       9  - [q3] Milestone 2: scoring core and evaluation set, no LLM. →
+          `docs/PLAN.md` section 13
+      10  - [q4] Milestone 3: the agent. → `docs/PLAN.md` section 13
+
+⏺ Update(CLAUDE.md)
+  ⎿  Added 6 lines
+      25  10. **Bonuses** (deployment, score-change alert, voice, in that
+           order) start only after the final end-to-end check passes, and
+           only after asking.
+      26  11. **Measure before proposing.** Before proposing a number, ch
+          eck whether data already in hand can measure it. A number that
+          confirms the expected answer gets checked hardest.
+      27 
+      28 +## Gotchas and settled points                                  
+      29 +                                                               
+      30 +- The shell is zsh: an unquoted `$VAR` is not split into words.
+         + Feed a loop with `while read -r a b c` over a here-doc. A loop
+         + that broke this way sent empty coordinates and got plausible-l
+         +ooking data back.                                              
+      31 +- This repository commits with a repo-local personal address. T
+         +he machine-wide git identity is the owner's work address, and i
+         +t stays out of every tracked file and commit. Generators copy i
+         +t (`uv init` did), so before each commit `git diff --cached | g
+         +rep -i -c -F "$(git config --global user.email | cut -d@ -f2)"`
+         + prints 0.                                                     
+      32 +- The owner's one-month package-age rule stays npm-only here (o
+         +wner 2026-11-24). Python packages install at their current vers
+         +ions.                                                          
+      33 +                                                               
+      34  ## Sessions are a deliverable
+      35 
+      36  At the end of each milestone, remind the owner to run `/export`
+           into `docs/ai-session/` (numbered `01-plan.txt`, `02-...`) bef
+          ore `/clear`, and add one line for that session to `docs/ai-ses
+          sion/README.md`. `docs/ai-session/` stays tracked by git.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Task: Complete Milestone 1 (data) of the Weather Risk Intelligence Agent, as 
+  defined in docs/PLAN.md section 13, and settle the open points it owns. Queue 
+  items q9 and q2 in .claude/QUEUE.md.
+
+  Where to work: /Users/doronreiffman/Projects/weather-risk-agent (one Python 
+  package, src/wra, managed with uv). Branch main, no remote.
+
+  Read first, in this order:
+  1. CLAUDE.md (rules, gotchas, settled points)
+  2. .claude/QUEUE.md
+  3. docs/PLAN.md: sections 4 (sources and what was verified), 5.2 (what is 
+  counted), 6 (hubs), 11 (layout), 12 (storage), 13 (Milestone 1 and its check),
+  Appendix A (request URLs that worked)
+  4. docs/ASSUMPTIONS.md: open points O1, O3, O5, O6 and O10 are settled in this
+  milestone
+  5. docs/DECISIONS.md
+
+  Two checks before the main work:
+
+  A. Session 01 transcript (q9). Check: ls docs/ai-session/
+    01-plan.txt present → run the work-address check from CLAUDE.md on it, 
+  commit it alone ("Add session 01 transcript"), move q9 to Done. If 
+  01-plan.text is also there, ask the owner whether to delete it; leave it 
+  untracked until they answer.
+    01-plan.txt absent → tell the owner the re-export did not happen. If 
+  01-plan.text is there, ask whether to rename that earlier export (taken before
+  the handoff) to 01-plan.txt and commit it. If neither file is there, say so 
+  and note in docs/ai-session/README.md that session 01 was not exported. Leave 
+  q9 open until the owner answers.
+
+  B. Main session model. Check: the model this session runs on.
+    Opus → proceed.
+    Anything else → tell the owner that Opus was agreed for milestones 0 to 4 
+  (docs/PLAN.md section 14) and ask whether to continue on the current model.
+
+  Milestone 1 deliverables (q2):
+  - config/hubs.toml with the twelve hubs of PLAN section 6. Coordinates, county
+  and warning zones are read from the data sources and written back, never 
+  typed from memory.
+  - Three ingest adapters under src/wra/ingest/: the Iowa State warning archive 
+  (two services: vtec_events_bypoint.py for zone-based warnings, sbw_by_point.py
+  for warnings whose drawn area covered the point), FEMA's National Risk Index 
+  county layer, and NOAA station daily data (ACIS StnData).
+  - Raw responses kept under data/raw/ and committed. SQLite file 
+  data/wra.sqlite built from them (git-ignored), with the tables of PLAN section
+  12.
+  - CLI commands: wra ingest [--refresh], wra data-report.
+
+  Implementation guidance:
+  - Test-first for the parsers, on recorded responses 
+  (superpowers:test-driven-development). Add a dependency only when this 
+  milestone needs it (httpx is expected).
+  - Known wrinkles, each needs a test: a request with empty coordinates returns 
+  data and no error, so refuse to send one; some records have an expiry at or 
+  before their issue time, so skip and report them; one point returns both a 
+  county code and zone codes; station values use T for trace and M for missing.
+  - Be polite to the Iowa State server: about 24 requests per full ingest, one 
+  second apart, a generic User-Agent with no contact details.
+  - Before calling the milestone done, have an Opus subagent with a fresh 
+  context review the milestone's diff against docs/PLAN.md, and check its 
+  findings against the files before acting on them.
+  - Deviations from the plan go in the Deviations section of docs/PLAN.md. 
+  Assumptions and open points are updated in docs/ASSUMPTIONS.md in the same 
+  commit that changes them.
+
+  Constraints and settled points (do not reopen):
+  - Scoring rule: time under warning, weights 1.0 / 1.0 / 1.0 and 5.0 days per 
+  hurricane event. No scoring code, agent or API in this milestone. Band 
+  cut-offs are set at the Milestone 2 review, not here.
+  - Sources: no Open-Meteo, and the Weather Service API is not in the core.
+  - .env stays unread. This milestone needs no API key.
+  - The package-age rule is npm-only in this project; the owner declined 
+  extending it to Python.
+  - Work queue file only: no commit guard hook, no OPEN_ISSUES.md. Open points 
+  live in docs/ASSUMPTIONS.md.
+  - Commits carry the repo-local personal address. Run the work-address check in
+  CLAUDE.md before every commit.
+  - Do not drive the owner's browser.
+
+  Verify, pasting each command and its output:
+  1. uv run wra ingest --refresh  → rows per source and hub
+  2. uv run pytest -q  → all pass, including tests/test_ingest_parsers.py with 
+  the empty-coordinate guard and the bad-expiry record
+  3. uv run wra data-report  → per hub: station name, county, zones, row counts,
+  share of missing station days; the county from FEMA agrees with the county 
+  code in the warning data; typical length of Coastal Flood Warnings (O10); size
+  of data/raw (O5)
+  4. A second uv run wra ingest with no flag rebuilds the database from data/raw
+  without the network
+  5. git status clean; git log shows small commits
+  At the end: move q2 to Done with its proof, remind the owner to /export into 
+  docs/ai-session/02-data.txt, and add that line to docs/ai-session/README.md.
+
+  Background:
+  - Milestone 0 is done and was reviewed by an independent Opus reviewer: eight 
+  findings, six fixed in commit 2ba1ee3, two decided by the owner (transcript 
+  file handling, package age).
+  - The warning figures quoted in the docs were measured at city-centre points 
+  in UTC. This milestone uses airport points and the hub's time zone, so the 
+  figures will move (O7).
+  - Only Denver's station id (DEN, "DENVER INTL AP") is confirmed. Dallas is 
+  planned at Love Field on the expectation that it lies in Dallas County; the 
+  county lookup confirms or corrects that.
+  - The owner's stated plan: re-export session 01 after the handoff, as 
+  docs/ai-session/01-plan.txt.
+  - .env holds an empty placeholder. The owner adds the key before Milestone 3.
+
+  That block is the prompt for the next session. Paste it as the first message
+  after /clear.
+
+  Before you clear: run /export docs/ai-session/01-plan.txt so the transcript
+  includes this handoff and the review. The earlier 01-plan.text is still on
+  disk, untracked. Delete it if you don't want it, or the next session will ask.
+
+  The review. One Opus reviewer read the whole diff against your original brief.
+  Its verdict: the work does the stated task and stays in scope. It raised
+  eight findings, and I confirmed each against the files before acting.
+
+  - Six fixed in commit 2ba1ee3:
+    - Day-based wording was left in the plan after the scoring rule changed.
+    - Two of your rules lost content when I shortened them for CLAUDE.md: the
+      evaluation set's contents, and "never a guess". Both are restored.
+    - The Dallas hub breaks the "main airport" rule without saying why. The plan
+      now states the reason and that Milestone 1 confirms it.
+    - The evidence for the hurricane weight was not linked to the open question
+      it depends on.
+    - The final end-to-end check did not say how the API key reaches a fresh
+      clone.
+    - One evaluation check could not catch a bug in our own tool. It now pins
+      values checked by hand.
+  - Two decided by you: the transcript's file name (you'll re-export), and
+    package age (the rule stays npm-only).
+
+  Committed. Seven commits on main, working tree clean apart from the old
+  export, placeholder test passing.
+
+  Rules file. CLAUDE.md gained rule 11 earlier, and at handoff a three-line
+  section of gotchas and settled points: the zsh loop trap, the check that keeps
+  your work address out of the repository, and the package-age decision.
+
+  Logs.
+  - Decision log: no new entry at handoff. The session's seven decisions were
+    logged as they were made.
+  - Open issues: no separate file, as you confirmed. Open points live in
+    docs/ASSUMPTIONS.md.
+  - Work queue: q1 and q7 are done. q9 (commit the transcript) is new and sits
+    first, ahead of Milestone 1.
+  - Memory plugin: nothing written. The session-start briefing named no handoff
+    file to write to.
+
+  Want anything in the prompt changed before you use it?
+
+✻ Baked for 10m 40s · done 11:46 AM
