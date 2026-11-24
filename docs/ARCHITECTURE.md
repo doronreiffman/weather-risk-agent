@@ -73,7 +73,7 @@ The reply the API sends (`AgentReply`, same file) adds `session_id`, `tables`, `
 
 ## The agent loop
 
-`src/wra/agent/loop.py` is our own loop on the Anthropic Messages API. Each request carries the model and effort from `config/agent.toml` (today `claude-opus-5-5`, effort `medium`; `WRA_MODEL` and `WRA_EFFORT` override), the system prompt (`src/wra/agent/prompt.py`), tools, history, answer schema, a prompt-caching marker and the server-side refusal fallback. A message gets at most 6 model calls. A refused reply becomes a `declined` error; one cut off at 16,000 tokens becomes `cut_off`.
+`src/wra/agent/loop.py` is our own loop on the Anthropic Messages API. Each request carries the model and effort from `config/agent.toml` (today `claude-haiku-5-5`, effort `medium`, the owner's choice from the model comparison in `docs/EVAL_RESULTS.md`; `WRA_MODEL` and `WRA_EFFORT` override), the system prompt (`src/wra/agent/prompt.py`), tools, history, answer schema and a prompt-caching marker. The server-side refusal fallback is sent when `fallbacks` is set; it is off, because Haiku 5.5 has none. A message gets at most 6 model calls. A refused reply becomes a `declined` error; one cut off at 16,000 tokens becomes `cut_off`.
 
 Conversations live in memory in the one agent object. A lock per conversation refuses a second message while the first is answered (`busy`). An unknown id, as after a restart, is refused without a model call (`unknown_conversation`). A turn ending in any error is removed whole, so the next question never sees a rejected answer.
 
@@ -143,7 +143,7 @@ With `--paid` it goes on to spend API credit. It starts `wra serve` on port 8765
 ## Left out on purpose
 
 - **No agent framework or Managed Agents.** Validation and repair must sit inside a loop we control; Managed Agents is in beta and bills session time (`docs/DECISIONS.md`).
-- **No forced "answer" tool.** On Opus 5.5 a tool call cannot be forced, so structured output shapes the answer (`docs/PLAN.md`, section 9).
+- **No forced "answer" tool.** On Opus 5.5 and Sonnet 5.5 a tool call cannot be forced, so structured output shapes the answer (`docs/PLAN.md`, section 9).
 - **No live calls from tools.** A public server could be down during a demo, and an evaluation over moving data has no fixed answers.
 - **No JavaScript packages or build step.** One static page with `fetch` meets the brief.
 - **No Markdown library.** In two evaluation runs the model wrote only bold (`docs/ASSUMPTIONS.md`, milestone 4 section, point 4).

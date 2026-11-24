@@ -2,7 +2,7 @@
 
 An agent that helps a logistics company's analysts decide which distribution hubs are most exposed to weather disruption.
 
-**Status: the chat page and its API work (milestone 4 of 5).** Twelve hubs are loaded from three public sources into a local database and ranked by expected disruption days a year, with code-computed confidence. An agent on Claude Opus 5.5 answers questions by calling six tools; code validates every answer, checks each number against the tool results and builds the tables. The first evaluation run passed 12 of 14 cases; two checks that failed right answers were corrected, a review tightened the answer checks, and the run on commit `097adfb` passed 14 of 14 with no repairs (see [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md)). Later commits changed the prompt and the client settings; no evaluation run has been made on them yet. The API and the page are tested on a scripted stand-in for the model, which makes no paid call, and were checked live on 2026-11-24: a question and its follow-up through the API, and the four assignment questions in the page. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed and what was decided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).
+**Status: milestone 5 of 5 under way: results and documents written, the final review and end-to-end run still to come.** Twelve hubs are loaded from three public sources into a local database and ranked by expected disruption days a year, with code-computed confidence. An agent on Claude Haiku 5.5 answers questions by calling six tools; code validates every answer, checks each number against the tool results and builds the tables. With the fourteen evaluation cases asked three times each, Haiku passed 41 of 42 and Opus 5.5 all 42, with no answer refused; Haiku costs about one twenty-seventh as much per answer and was chosen ([docs/EVAL_RESULTS.md](docs/EVAL_RESULTS.md)). A one-page summary for the analysts' manager is in [docs/SUMMARY.md](docs/SUMMARY.md), and how it is built in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The API and the page are tested on a scripted stand-in for the model, which makes no paid call, and were checked live on 2026-11-24: a question and its follow-up through the API, and the four assignment questions in the page. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed and what was decided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).
 
 ## Run it
 
@@ -25,7 +25,7 @@ The agent needs an Anthropic API key. Copy `.env.example` to `.env` and fill in 
 uv run wra serve           # the chat page at http://127.0.0.1:8000/ and its API; every question is paid
 uv run wra ask "Which hubs in the Midwest are most exposed to winter disruption?"
 uv run wra chat            # a conversation in the terminal, follow-ups included
-uv run wra eval            # all fourteen cases through the real agent; 0.53 USD at list price on 2026-11-24
+uv run wra eval            # all fourteen cases through the real agent; 0.014 USD a repetition on Haiku (2026-11-24)
 scripts/e2e.sh --paid      # the whole end-to-end check: six questions through the API, then wra eval --reps 3
 ```
 

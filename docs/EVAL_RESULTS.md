@@ -1,0 +1,106 @@
+# Evaluation results
+
+Milestone 5, run on 24 November 2026 (UTC), on commits `4e4ae6a` to `7197faa` (the tree each run used is named below). The agent ships on **Claude Haiku 5.5**, the owner's choice from the comparison in this document.
+
+## What was run
+
+Fourteen cases (plan section 10.1): the four assignment questions, two follow-ups, a what-if and the return from it, an overall top three, the method, three out-of-scope questions and a year outside the data. Each case ran three times. Every check is code, never a model (plan section 10.2): the expected status, the right tool called with the key arguments, the hub order against the scoring code, the tables against a fresh run of the tool, and required or forbidden words. The clock is pinned to 2026-11-24, so "last year" is 2025.
+
+The target (plan section 10.3): the four assignment questions pass in every repetition, and at least 90% of all case runs pass.
+
+Every run below is kept under `evals/runs/` and committed, so each figure here can be checked against its record.
+
+## The model comparison
+
+All three models ran unchanged: the same prompt, tools and checks, at effort `medium`.
+
+| Model | Run | Case runs passed | Answers refused | Answers repaired | Target | Cost | Per answer | Median answer time |
+|---|---|---|---|---|---|---|---|---|
+| Opus 5.5 | `20261124T220322Z-claude` | 42 of 42 | 0 of 57 | 1 | met | 1.14 USD | 2.0 cents | 5.0 s |
+| Sonnet 5.5 | `20261124T220803Z-claude` | 36 of 42 (38 after the grader fixes) | 4 of 57 | 1 | not met | 0.66 USD | 1.2 cents | |
+| Haiku 5.5 | `20261124T221217Z-claude` | 41 of 42 | 2 of 57 | 2 | met | 0.04 USD | 0.075 cents | |
+| Haiku 5.5, band check fixed | `20261124T223759Z-claude` | 41 of 42 | 0 of 57 | 2 | met | 0.04 USD | 0.074 cents | 4.5 s |
+
+The first three runs used the agent as of commit `4e4ae6a`; the last used `7197faa`. A refused answer is one the checks rejected twice: the analyst sees a plain error, never an unchecked answer. Costs are at list price, from the API's own token counts.
+
+**The owner chose Haiku 5.5.** The plan's rule (section 9) was the cheapest model whose score equals the best; by that rule Opus wins by one case run. Haiku costs about one twenty-seventh as much per answer, refuses none, and its one miss is a right answer written in words (below). Every later evaluation also costs cents instead of about a dollar.
+
+## What failed, and why
+
+**Haiku's two refusals were a bug in our band check.** Both came on "What if a hurricane counted double?". Haiku ran the what-if, labelled it, named Miami Very high (true in the what-if) and cited the official ranking as well. The check kept one band per hub, the last one cited, so it compared Very high with the official Moderate and refused a right answer twice. It now accepts any band a cited result gives the hub (`src/wra/agent/checks.py`, `_cited_bands`). With the fix, Haiku refused nothing.
+
+**Haiku's remaining miss** is case 10, repetition 1: the method answer wrote the weights as "one day" and "five days". The grader requires figures, because the number check reads digits only, so a weight in words would go unchecked (owner, milestone 2). The answer was otherwise right.
+
+**Sonnet's two doubtful grades were grader bugs or strictness, now fixed with the owner's agreement.** Its earthquake answer said "earthquakes" and failed a whole-word match for "earthquake"; the grader now allows a final s. Its answer to "Which of the two is worse overall?" said neither hub is clearly worse (Houston 1.96, Miami 1.85, within the year-to-year swings) and gave no order; that now passes when the verdict says so. Re-grading the saved answers changed exactly those two case runs. The three fixes are in `docs/ASSUMPTIONS.md`, milestone 5 section.
+
+**Sonnet's real problem: it repeats tool calls until it runs out.** In 4 of its 57 answers it made six model calls without answering, the limit per message; one was the Dallas assignment question. It repeated an identical call in 10 answers; Opus and Haiku never did.
+
+## Diagnosing Sonnet
+
+| Test, on the five question types where Sonnet repeated calls, three times each | Run | Case runs with a refusal | Tool calls | Identical repeats | Cost |
+|---|---|---|---|---|---|
+| Opus, effort medium (from the comparison run) | `20261124T220322Z-claude` | 0 of 15 | 18 | 0 | 0.39 USD |
+| Sonnet, effort medium (from the comparison run) | `20261124T220803Z-claude` | 4 of 15 | 50 | 19 | 0.32 USD |
+| Sonnet, effort high | `20261124T223122Z-claude` | 1 of 15 | 45 | 21 | 0.35 USD |
+| Sonnet, medium, a prompt line: "never call a tool again with arguments you have already used; cite the earlier result_id" | `20261124T224015Z-claude` | 3 of 15 | | 19 | 0.32 USD |
+| Sonnet, medium, a loop guard answering an identical call with a note naming the earlier result | `20261124T224258Z-claude` | 3 of 15 | | 16 | 0.29 USD |
+
+The three Sonnet tests ran on `7197faa`; the prompt line and the guard were uncommitted changes on top of it, each run alone.
+
+- **Ruled out:** our code treating Sonnet differently (the same request, and its own turn sent back unchanged), a substitute model (all 57 answers served by Sonnet), and effort as the root cause (high cut the refusals, not the repeats).
+- **Seen in a replay with thinking shown:** on the Dallas question, the two identical calls came with no thinking at all, then Sonnet answered on its fourth call. With the guard on, it asked for the same overall ranking five times in a row, each time told the result was unchanged.
+- **Not tested:** how Sonnet handles a tool loop when every reply must match the answer schema. Testing it means splitting the loop into tool calls without the schema and one final structured call (the plan's milestone 3 fallback), a change to the agent's design.
+- **Why the owner stopped there:** on these questions Sonnet's extra calls bring its cost close to Opus's (0.29 to 0.35 USD against 0.39), while Haiku costs about 96% less. The prompt line and the guard were removed; neither is in the code.
+
+The diagnosis cost 1.02 USD, including a replay of two questions with thinking shown (0.06 USD, not a run record).
+
+## Verdict length
+
+The plan asks for at most four short sentences. On Opus, 6 of 57 verdicts ran to five, all at five; part of the length is the plain-word definitions added before milestone 5. On Haiku, none ran past four (2 sentences in 16 verdicts, 3 in 36, 4 in 5). The count splits sentences at end punctuation, including one closed by bold; it was checked by hand on 14 Opus verdicts and 8 Haiku verdicts. Accepted by the owner (`docs/ASSUMPTIONS.md`, O14).
+
+## Limits
+
+- **Fourteen cases is a regression gate, not a fine instrument.** At 42 case runs and a 90% pass rate, the usual 95% margin is about plus or minus 9 points, and repeats of the same question are not independent, so the real margin is wider.
+- **The number check reads figures in digits only.** A wrong small whole number can match a rank or count in a large result, and a claim in words goes unchecked. The Dallas answer below says winter drives its risk "mainly under winter storm, ice storm and blizzard warnings": no tool result splits winter by warning type, so that is the model's own claim. The tables beside each verdict always show the computed figures.
+- **Prose quality is not graded.** The four assignment answers follow in full for a person to read.
+
+## The four assignment answers, as the shipped model gave them
+
+From run `20261124T223759Z-claude`, repetition 1. The page shows each with the cited tables, their notes, and the data, period and confidence lines.
+
+### 1. Which hubs in the Midwest are most exposed to winter disruption?
+
+Minneapolis (MSP) is clearly the most exposed Midwest hub to winter disruption, at **2.71** disruption days a year, and its lead over Kansas City is clear of year-to-year swings. Kansas City (MCI), Chicago (ORD) and Indianapolis (IND) follow, but their order is not settled: their gaps fall within normal year-to-year variation. Columbus (CMH) is the least exposed at **0.66** days a year.
+
+- Confidence is low: the figures count only days under a winter weather warning, and three of the four gaps between hubs fall within year-to-year swings, so only the Minneapolis lead is firm.
+- Winter's effect on roads often outlasts the warning itself, so this score may understate winter disruption relative to floods and storms.
+
+Confidence: low. Table: Winter weather exposure, Midwest hubs.
+
+### 2. Compare Miami and Houston in terms of hurricane and flood exposure.
+
+**Miami has the higher hurricane exposure**, at 1.52 expected disruption days a year against Houston's 0.92, and Houston sits at 0.61 of Miami's figure. **Houston has the higher flood exposure**, at 0.47 days a year against Miami's 0.21, and Miami's gap below Houston is large enough to count as clearly lower. The hurricane gap cannot be tested for certainty, because the Federal Emergency Management Agency (FEMA) gives only one long-run hurricane figure with no yearly values.
+
+- Hurricane figures come from FEMA's long-run frequency (record 1851 to 2024), so the Miami and Houston hurricane gap is not tested against year-to-year swings.
+- Coastal flood warnings, which cover the shore, are not in the flood score: Houston had 0.29 such warning days a year and Miami had none, so Houston's flood lead may understate its coastal risk.
+- The figures measure weather at each hub's location only, and confidence is medium because the hurricane figures have no yearly values.
+
+Confidence: medium. Table: Miami and Houston, compared.
+
+### 3. What percentage of days in Denver last year had snowfall?
+
+In 2025, Denver's airport weather station recorded measurable snowfall (at least 0.1 inch) on **7.1%** of observed days, which is 26 days. Another 19 days had only a trace, meaning snow fell but too little to measure, and those are counted separately.
+
+- One day in 2025 was missing from the station record and is left out of the percentage; the figure is based on 364 observed days.
+
+Confidence: high. Table: Denver (DEN), days with measurable snowfall, 2025.
+
+### 4. Why is the Dallas hub's weather disruption risk high?
+
+Dallas (DAL) is rated **High**, at 2.02 expected disruption days a year, ranking 6th of 12 hubs. Winter weather drives about half of that (47%), mainly under winter storm, ice storm and blizzard warnings, followed by flooding (31%) and severe storms (19%). Hurricanes add little (3%) because Dallas sits well inland.
+
+- Dallas sits only just inside the High band, and Chicago (ORD) sits just above it at 2.03, so the data cannot separate the two; confidence is low, so treat this as a rough guide to relative exposure.
+- The score counts only time under a warning, so it may understate winter's impact on freight, since roads stay slow for hours after a winter event ends.
+- The figures describe weather at the Dallas airport station and say nothing about the hub's building, site-level flood risk or its importance to the business.
+
+Confidence: low. Table: Dallas (DAL), 2.02 expected disruption days a year, High, 6th of 12.

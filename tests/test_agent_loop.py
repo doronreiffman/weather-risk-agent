@@ -190,10 +190,22 @@ def test_the_request_uses_strict_tools_and_the_answer_schema_and_never_forces_a_
     assert all(word not in sent for word in ('"minimum"', '"minItems"', '"maxItems"', '"pattern"', '"title"'))
     schema = first["output_config"]["format"]["schema"]
     assert schema["properties"]["status"]["enum"] == ["answered", "out_of_scope", "no_data", "needs_clarification"]
-    assert first["output_config"]["effort"] == "medium" and first["model"] == "claude-opus-5-5"
-    assert first["fallbacks"] == "default" and first["betas"] == ["server-side-fallback-2026-07-01"]
+    # The owner's choice after the milestone 5 comparison: Haiku 5.5, which has no server-side refusal fallback.
+    assert first["output_config"]["effort"] == "medium" and first["model"] == "claude-haiku-5-5"
+    assert "fallbacks" not in first and "betas" not in first
     assert "tool_choice" not in first and "temperature" not in first
     assert first["system"] == second["system"] and first["tools"] == second["tools"]
+
+
+def test_the_refusal_fallback_is_sent_when_configured(ctx):
+    import dataclasses
+
+    settings = dataclasses.replace(load_settings(REPO / "config" / "agent.toml"), model="claude-opus-5-5",
+                                   fallbacks="default")  # fmt: skip
+    client = Scripted(final())
+    ClaudeAgent(ctx, settings, client).answer(None, "Which hubs in the Midwest are most exposed?")
+    assert client.requests[0]["fallbacks"] == "default"
+    assert client.requests[0]["betas"] == ["server-side-fallback-2026-07-01"]
 
 
 # --- the owner's additions after the milestone 3 review --------------------------------------

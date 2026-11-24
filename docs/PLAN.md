@@ -666,6 +666,8 @@ Changes forced by reality are appended here, newest last.
 - *The API step is Python, `src/wra/evals/e2e.py`, tested on the scripted fake model (`tests/test_e2e.py`).* The follow-up ("And which is the least exposed?" after the Midwest winter question) counts as using the earlier context when the reply's `hubs_ranked` holds the last hub of the Midwest winter ranking, worked out from the scoring code (Columbus today). The server runs on port 8765, so the owner's own `wra serve` on 8000 can stay up.
 - *`wra eval` reports the target, and `--require-target` makes a miss fail the command (section 10.3 stated the target; nothing computed it).* The script's step 6 relies on it.
 - *A check by hand of the page before the demo (owner, queue q16).* README, "Checking the page by hand before a demo".
+- *The model is Haiku 5.5, against section 9's rule (owner).* The rule was the cheapest model whose score equals the best; Opus scored 42 of 42 and Haiku 41 of 42, at about one twenty-seventh of the cost per answer. Its refusal fallback is off, since Haiku has none. `docs/EVAL_RESULTS.md`.
+- *Three check fixes from the comparison (owner).* `docs/ASSUMPTIONS.md`, milestone 5 section.
 
 ---
 

@@ -1,8 +1,10 @@
 # How the agent calls Claude (docs/PLAN.md, section 9). Settings, not code:
 # WRA_MODEL and WRA_EFFORT in the environment override the two below.
 
-model = "claude-opus-5-5"   # build and tune here; milestone 5 measures Sonnet 5.5 and Haiku 5.5
-effort = "medium"           # Opus 5.5's own default, set explicitly; thinking cannot be switched off on it
+# Owner's choice after milestone 5's comparison (docs/EVAL_RESULTS.md): Haiku 5.5 matched Opus 5.5 within one
+# case run at about 1/27 of the cost per answer. Built and tuned on claude-opus-5-5.
+model = "claude-haiku-5-5"
+effort = "medium"           # Haiku 5.5's own default, set explicitly; the comparison ran every model at medium
 max_tokens = 16000          # per model call; non-streaming
 max_model_calls = 6         # per user message (plan section 8.4)
 timeout_seconds = 60        # per model call; measured calls take 4 to 8 seconds (owner, 2026-11-24)
@@ -11,8 +13,10 @@ message_time_limit_seconds = 90  # per user message, all model calls and the ret
 
 # Server-side refusal fallback: when the model's safety system declines, the
 # API re-runs the request on a substitute model chosen by the refusal's category.
+# Off: Haiku 5.5 has none, and with "default" a declined request stays declined
+# (Claude API reference, Migrating to Claude Haiku 5.5). Set "default" for Opus or Sonnet.
 fallback_beta = "server-side-fallback-2026-07-01"
-fallbacks = "default"
+fallbacks = ""
 
 # List prices in US dollars per million tokens, checked against the live pricing
 # page (platform.claude.com/docs/en/about-claude/pricing) on 2026-11-24 (open

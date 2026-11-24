@@ -1,0 +1,3526 @@
+{
+  "agent": "claude",
+  "today": "2026-11-24",
+  "reps": 3,
+  "runs": [
+    {
+      "case_id": 4,
+      "turns": [
+        "Why is the Dallas hub's weather disruption risk high?"
+      ],
+      "rep": 0,
+      "passed": true,
+      "error": false,
+      "seconds": 12.13,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "explain_hub called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals explain_hub re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Dallas', 'High']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "e5e935fbbd504b3fa95ffef74c8db092",
+          "status": "answered",
+          "verdict": "Dallas is in the **High** band at **2.02** expected disruption days a year, 6th of 12 hubs. Nearly half of that comes from winter weather (0.94 days, 47%). Flooding adds 0.63 days (31%) and severe storms 0.39 days (19%). Hurricanes add very little (0.06 days, 3%). Dallas is only just over the 2.0 line for High, and Houston (**Moderate**) is close behind at 1.96.",
+          "tables": [
+            {
+              "title": "Dallas (DAL): 2.02 expected disruption days a year, High, 6th of 12",
+              "columns": [
+                "Hazard",
+                "Rate",
+                "Weight",
+                "Disruption days a year",
+                "Share of total",
+                "Quietest year",
+                "Worst year"
+              ],
+              "rows": [
+                [
+                  "Winter weather",
+                  0.94,
+                  1.0,
+                  0.94,
+                  "47%",
+                  "2016 (0.00)",
+                  "2023 (3.12)"
+                ],
+                [
+                  "Flooding",
+                  0.63,
+                  1.0,
+                  0.63,
+                  "31%",
+                  "2019 (0.21)",
+                  "2025 (1.53)"
+                ],
+                [
+                  "Severe storms",
+                  0.39,
+                  1.0,
+                  0.39,
+                  "19%",
+                  "2016 (0.25)",
+                  "2019 (0.84)"
+                ],
+                [
+                  "Hurricanes",
+                  0.0115,
+                  5.0,
+                  0.06,
+                  "3%",
+                  "",
+                  ""
+                ],
+                [
+                  "Total",
+                  null,
+                  null,
+                  2.02,
+                  "100%",
+                  "",
+                  ""
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024). Years are calendar years in the hub's own time zone. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3.",
+              "notes": [
+                "Overall rank 6th of 12; Chicago (ORD) 2.03 above; Houston (IAH) 1.96 below.",
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            },
+            {
+              "title": "Overall exposure, all hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Disruption days a year",
+                "Band",
+                "Winter",
+                "Flood",
+                "Severe storms",
+                "Hurricanes",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.9,
+                  "High",
+                  2.71,
+                  0.06,
+                  0.13,
+                  0.0,
+                  "no"
+                ],
+                [
+                  2,
+                  "Memphis (MEM)",
+                  2.44,
+                  "High",
+                  1.31,
+                  0.73,
+                  0.28,
+                  0.12,
+                  "no"
+                ],
+                [
+                  3,
+                  "Denver (DEN)",
+                  2.21,
+                  "High",
+                  2.07,
+                  0.02,
+                  0.12,
+                  0.0,
+                  "no"
+                ],
+                [
+                  4,
+                  "Kansas City (MCI)",
+                  2.2,
+                  "High",
+                  1.44,
+                  0.43,
+                  0.32,
+                  0.0,
+                  "no"
+                ],
+                [
+                  5,
+                  "Chicago (ORD)",
+                  2.03,
+                  "High",
+                  1.4,
+                  0.33,
+                  0.25,
+                  0.05,
+                  "no"
+                ],
+                [
+                  6,
+                  "Dallas (DAL)",
+                  2.02,
+                  "High",
+                  0.94,
+                  0.63,
+                  0.39,
+                  0.06,
+                  "no"
+                ],
+                [
+                  7,
+                  "Houston (IAH)",
+                  1.96,
+                  "Moderate",
+                  0.39,
+                  0.47,
+                  0.19,
+                  0.92,
+                  "no"
+                ],
+                [
+                  8,
+                  "Miami (MIA)",
+                  1.85,
+                  "Moderate",
+                  0.0,
+                  0.21,
+                  0.12,
+                  1.52,
+                  "no"
+                ],
+                [
+                  9,
+                  "Indianapolis (IND)",
+                  1.56,
+                  "Moderate",
+                  1.16,
+                  0.18,
+                  0.18,
+                  0.04,
+                  "no"
+                ],
+                [
+                  10,
+                  "Atlanta (ATL)",
+                  1.24,
+                  "Moderate",
+                  0.27,
+                  0.56,
+                  0.17,
+                  0.24,
+                  "no"
+                ],
+                [
+                  11,
+                  "Columbus (CMH)",
+                  0.99,
+                  "Low",
+                  0.66,
+                  0.13,
+                  0.17,
+                  0.03,
+                  "yes"
+                ],
+                [
+                  12,
+                  "Phoenix (PHX)",
+                  0.42,
+                  "Low",
+                  0.0,
+                  0.17,
+                  0.2,
+                  0.06,
+                  ""
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "With winter counted double, the top three are Minneapolis, Denver and Memphis."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 2 of 2 gaps are within the hubs' year-to-year swings. Data coverage 100% (the share of the records these figures need that the data holds). 10 of 11 gaps are within the hubs' year-to-year swings; clear: Columbus above Phoenix. The top hub changes with winter halved, flood doubled, hurricane doubled."
+          },
+          "caveats": [
+            "Confidence is low. The gaps between Dallas and the hubs next to it are within normal year-to-year swings, so its 6th place and its High band are not firmly settled.",
+            "Disruption days here are days under a National Weather Service warning. That means they leave out how long roads stay bad after a warning ends, which matters most for winter weather."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1",
+            "R2"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "explain_hub",
+                "input": {
+                  "hub_id": "DAL"
+                }
+              },
+              {
+                "id": "R2",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": 12,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R3",
+                "name": "explain_hub",
+                "input": {
+                  "hub_id": "DAL"
+                }
+              },
+              {
+                "id": "R4",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": 12,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R5",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": 12,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 12122,
+            "usage": {
+              "input_tokens": 14,
+              "output_tokens": 1208,
+              "cache_read_input_tokens": 49344,
+              "cache_creation_input_tokens": 13857,
+              "cost_usd": 0.051685
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 4,
+      "turns": [
+        "Why is the Dallas hub's weather disruption risk high?"
+      ],
+      "rep": 1,
+      "passed": true,
+      "error": false,
+      "seconds": 4.98,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "explain_hub called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals explain_hub re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Dallas', 'High']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "2fc3c56e0d9340e5be94369657c3d775",
+          "status": "answered",
+          "verdict": "Dallas is in the **High** band at 2.02 expected disruption days a year, 6th of 12. Winter weather is the biggest driver at 0.94 days (47% of the total). Flooding adds 0.63 days (31%) and severe storms 0.39 days (19%). Hurricanes add only 0.06 days (3%).",
+          "tables": [
+            {
+              "title": "Dallas (DAL): 2.02 expected disruption days a year, High, 6th of 12",
+              "columns": [
+                "Hazard",
+                "Rate",
+                "Weight",
+                "Disruption days a year",
+                "Share of total",
+                "Quietest year",
+                "Worst year"
+              ],
+              "rows": [
+                [
+                  "Winter weather",
+                  0.94,
+                  1.0,
+                  0.94,
+                  "47%",
+                  "2016 (0.00)",
+                  "2023 (3.12)"
+                ],
+                [
+                  "Flooding",
+                  0.63,
+                  1.0,
+                  0.63,
+                  "31%",
+                  "2019 (0.21)",
+                  "2025 (1.53)"
+                ],
+                [
+                  "Severe storms",
+                  0.39,
+                  1.0,
+                  0.39,
+                  "19%",
+                  "2016 (0.25)",
+                  "2019 (0.84)"
+                ],
+                [
+                  "Hurricanes",
+                  0.0115,
+                  5.0,
+                  0.06,
+                  "3%",
+                  "",
+                  ""
+                ],
+                [
+                  "Total",
+                  null,
+                  null,
+                  2.02,
+                  "100%",
+                  "",
+                  ""
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024). Years are calendar years in the hub's own time zone. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3.",
+              "notes": [
+                "Overall rank 6th of 12; Chicago (ORD) 2.03 above; Houston (IAH) 1.96 below.",
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 2 of 2 gaps are within the hubs' year-to-year swings."
+          },
+          "caveats": [
+            "Confidence is low. The hubs just above and below Dallas, Chicago at 2.03 and Houston at 1.96, are so close that normal year-to-year swings could reorder them. Treat Dallas as roughly mid-table, not firmly 6th.",
+            "Winter is the largest share, and it swings widely: 0.00 days in 2016 and 3.12 in 2023. The score counts only time under warning, so it may understate winter, because icy roads stay slow after the warning ends."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "explain_hub",
+                "input": {
+                  "hub_id": "DAL"
+                }
+              },
+              {
+                "id": "R2",
+                "name": "explain_hub",
+                "input": {
+                  "hub_id": "DAL"
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 4981,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 516,
+              "cache_read_input_tokens": 15992,
+              "cache_creation_input_tokens": 1752,
+              "cost_usd": 0.011155
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 4,
+      "turns": [
+        "Why is the Dallas hub's weather disruption risk high?"
+      ],
+      "rep": 2,
+      "passed": true,
+      "error": false,
+      "seconds": 7.01,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "explain_hub called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals explain_hub re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Dallas', 'High']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "1e2a42084b0a418a8b55dadb79ec7974",
+          "status": "answered",
+          "verdict": "Dallas is rated **High** at 2.02 expected disruption days a year, 6th of 12. That is only just over the 2.0 cut-off for High. About 47% of its total comes from winter weather (0.94 days), 31% from flooding (0.63) and 19% from severe storms (0.39). Hurricanes add very little (0.06). Among the 12 hubs, Dallas has the most severe-storm days (0.39) and the second-most flood days (0.63, behind Memphis at 0.73).",
+          "tables": [
+            {
+              "title": "Dallas (DAL): 2.02 expected disruption days a year, High, 6th of 12",
+              "columns": [
+                "Hazard",
+                "Rate",
+                "Weight",
+                "Disruption days a year",
+                "Share of total",
+                "Quietest year",
+                "Worst year"
+              ],
+              "rows": [
+                [
+                  "Winter weather",
+                  0.94,
+                  1.0,
+                  0.94,
+                  "47%",
+                  "2016 (0.00)",
+                  "2023 (3.12)"
+                ],
+                [
+                  "Flooding",
+                  0.63,
+                  1.0,
+                  0.63,
+                  "31%",
+                  "2019 (0.21)",
+                  "2025 (1.53)"
+                ],
+                [
+                  "Severe storms",
+                  0.39,
+                  1.0,
+                  0.39,
+                  "19%",
+                  "2016 (0.25)",
+                  "2019 (0.84)"
+                ],
+                [
+                  "Hurricanes",
+                  0.0115,
+                  5.0,
+                  0.06,
+                  "3%",
+                  "",
+                  ""
+                ],
+                [
+                  "Total",
+                  null,
+                  null,
+                  2.02,
+                  "100%",
+                  "",
+                  ""
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024). Years are calendar years in the hub's own time zone. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3.",
+              "notes": [
+                "Overall rank 6th of 12; Chicago (ORD) 2.03 above; Houston (IAH) 1.96 below.",
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            },
+            {
+              "title": "Overall exposure, all hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Disruption days a year",
+                "Band",
+                "Winter",
+                "Flood",
+                "Severe storms",
+                "Hurricanes",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.9,
+                  "High",
+                  2.71,
+                  0.06,
+                  0.13,
+                  0.0,
+                  "no"
+                ],
+                [
+                  2,
+                  "Memphis (MEM)",
+                  2.44,
+                  "High",
+                  1.31,
+                  0.73,
+                  0.28,
+                  0.12,
+                  "no"
+                ],
+                [
+                  3,
+                  "Denver (DEN)",
+                  2.21,
+                  "High",
+                  2.07,
+                  0.02,
+                  0.12,
+                  0.0,
+                  "no"
+                ],
+                [
+                  4,
+                  "Kansas City (MCI)",
+                  2.2,
+                  "High",
+                  1.44,
+                  0.43,
+                  0.32,
+                  0.0,
+                  "no"
+                ],
+                [
+                  5,
+                  "Chicago (ORD)",
+                  2.03,
+                  "High",
+                  1.4,
+                  0.33,
+                  0.25,
+                  0.05,
+                  "no"
+                ],
+                [
+                  6,
+                  "Dallas (DAL)",
+                  2.02,
+                  "High",
+                  0.94,
+                  0.63,
+                  0.39,
+                  0.06,
+                  "no"
+                ],
+                [
+                  7,
+                  "Houston (IAH)",
+                  1.96,
+                  "Moderate",
+                  0.39,
+                  0.47,
+                  0.19,
+                  0.92,
+                  "no"
+                ],
+                [
+                  8,
+                  "Miami (MIA)",
+                  1.85,
+                  "Moderate",
+                  0.0,
+                  0.21,
+                  0.12,
+                  1.52,
+                  "no"
+                ],
+                [
+                  9,
+                  "Indianapolis (IND)",
+                  1.56,
+                  "Moderate",
+                  1.16,
+                  0.18,
+                  0.18,
+                  0.04,
+                  "no"
+                ],
+                [
+                  10,
+                  "Atlanta (ATL)",
+                  1.24,
+                  "Moderate",
+                  0.27,
+                  0.56,
+                  0.17,
+                  0.24,
+                  "no"
+                ],
+                [
+                  11,
+                  "Columbus (CMH)",
+                  0.99,
+                  "Low",
+                  0.66,
+                  0.13,
+                  0.17,
+                  0.03,
+                  "yes"
+                ],
+                [
+                  12,
+                  "Phoenix (PHX)",
+                  0.42,
+                  "Low",
+                  0.0,
+                  0.17,
+                  0.2,
+                  0.06,
+                  ""
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "With winter counted double, the top three are Minneapolis, Denver and Memphis."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 2 of 2 gaps are within the hubs' year-to-year swings. Data coverage 100% (the share of the records these figures need that the data holds). 10 of 11 gaps are within the hubs' year-to-year swings; clear: Columbus above Phoenix. The top hub changes with winter halved, flood doubled, hurricane doubled."
+          },
+          "caveats": [
+            "Confidence is low. Dallas is within 0.01 to 0.06 days of its neighbours Chicago and Houston, and those gaps are smaller than normal year-to-year swings, so its 6th place is not firm. Houston, just below, is rated Moderate.",
+            "Dallas's winter figure ranges from 0.00 days in 2016 to 3.12 in 2023, so one bad winter moves the total a lot."
+          ],
+          "hubs_ranked": [
+            "MSP",
+            "MEM",
+            "DEN",
+            "MCI",
+            "ORD",
+            "DAL"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1",
+            "R2"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "explain_hub",
+                "input": {
+                  "hub_id": "DAL"
+                }
+              },
+              {
+                "id": "R2",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": 12,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 7001,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 732,
+              "cache_read_input_tokens": 19497,
+              "cache_creation_input_tokens": 0,
+              "cost_usd": 0.009286
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 5,
+      "turns": [
+        "Which hubs in the Midwest are most exposed to winter disruption?",
+        "And which is the least exposed?"
+      ],
+      "rep": 0,
+      "passed": true,
+      "error": false,
+      "seconds": 13.32,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "rank_hubs called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": true,
+          "detail": "asserted ['IND', 'CMH']; scoring code gives ['MSP', 'MCI', 'ORD', 'IND', 'CMH'] (last)"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals rank_hubs re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Columbus']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "1174effe7ac542d2b04c84b152bc60d1",
+          "status": "answered",
+          "verdict": "**Minneapolis (MSP)** is the Midwest hub most exposed to winter disruption, at 2.71 expected disruption days a year. That is 1.88 times Kansas City, and the gap is larger than year-to-year swings. Kansas City (1.44), Chicago (1.4), Indianapolis (1.16) and Columbus (0.66) follow. The order of Kansas City, Chicago and Indianapolis is not settled, because their gaps are within normal year-to-year variation.",
+          "tables": [
+            {
+              "title": "Winter weather exposure, Midwest hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Days under warning a year",
+                "Disruption days a year",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.71,
+                  2.71,
+                  "yes"
+                ],
+                [
+                  2,
+                  "Kansas City (MCI)",
+                  1.44,
+                  1.44,
+                  "no"
+                ],
+                [
+                  3,
+                  "Chicago (ORD)",
+                  1.4,
+                  1.4,
+                  "no"
+                ],
+                [
+                  4,
+                  "Indianapolis (IND)",
+                  1.16,
+                  1.16,
+                  "no"
+                ],
+                [
+                  5,
+                  "Columbus (CMH)",
+                  0.66,
+                  0.66,
+                  ""
+                ]
+              ],
+              "what_counts": "Days a year under a Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warning that covered the hub, 2016 to 2025, times weight 1. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive"
+            ],
+            "period": "2016-2025",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 3 of 4 gaps are within the hubs' year-to-year swings; clear: Minneapolis above Kansas City."
+          },
+          "caveats": [
+            "Confidence is low: only one of the four gaps between neighbouring hubs is clear, so treat everything below Minneapolis as a rough grouping, not a firm order.",
+            "The score counts only time under a winter warning. Roads stay slow for hours after snow and ice, so winter disruption is probably understated."
+          ],
+          "hubs_ranked": [
+            "MSP",
+            "MCI",
+            "ORD",
+            "IND",
+            "CMH"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R2",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R3",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R4",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R5",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 9906,
+            "usage": {
+              "input_tokens": 14,
+              "output_tokens": 965,
+              "cache_read_input_tokens": 34343,
+              "cache_creation_input_tokens": 10841,
+              "cost_usd": 0.040215
+            }
+          }
+        },
+        {
+          "session_id": "1174effe7ac542d2b04c84b152bc60d1",
+          "status": "answered",
+          "verdict": "**Columbus (CMH)** is the least exposed Midwest hub for winter disruption, at 0.66 expected disruption days a year. Indianapolis is next lowest at 1.16, which is 1.76 times Columbus. Even so, that gap is within the hubs' normal year-to-year swings, so Columbus's last place is likely but not settled.",
+          "tables": [
+            {
+              "title": "Winter weather exposure, Midwest hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Days under warning a year",
+                "Disruption days a year",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.71,
+                  2.71,
+                  "yes"
+                ],
+                [
+                  2,
+                  "Kansas City (MCI)",
+                  1.44,
+                  1.44,
+                  "no"
+                ],
+                [
+                  3,
+                  "Chicago (ORD)",
+                  1.4,
+                  1.4,
+                  "no"
+                ],
+                [
+                  4,
+                  "Indianapolis (IND)",
+                  1.16,
+                  1.16,
+                  "no"
+                ],
+                [
+                  5,
+                  "Columbus (CMH)",
+                  0.66,
+                  0.66,
+                  ""
+                ]
+              ],
+              "what_counts": "Days a year under a Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warning that covered the hub, 2016 to 2025, times weight 1. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive"
+            ],
+            "period": "2016-2025",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 3 of 4 gaps are within the hubs' year-to-year swings; clear: Minneapolis above Kansas City."
+          },
+          "caveats": [
+            "Confidence is low. Only one of the four gaps between neighbouring hubs is clear, so the lower end of the ranking is a rough grouping, not a firm order."
+          ],
+          "hubs_ranked": [
+            "IND",
+            "CMH"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 3400,
+            "usage": {
+              "input_tokens": 4,
+              "output_tokens": 472,
+              "cache_read_input_tokens": 10841,
+              "cache_creation_input_tokens": 351,
+              "cost_usd": 0.00669
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 5,
+      "turns": [
+        "Which hubs in the Midwest are most exposed to winter disruption?",
+        "And which is the least exposed?"
+      ],
+      "rep": 1,
+      "passed": false,
+      "error": true,
+      "seconds": 14.89,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "rank_hubs called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": false,
+          "detail": "asserted ['CMH', 'PHX']; scoring code gives ['MSP', 'MCI', 'ORD', 'IND', 'CMH'] (last)"
+        },
+        {
+          "name": "numbers",
+          "passed": false,
+          "detail": "the reply does not show the table rank_hubs returns (Winter weather exposure, Midwest hubs: expected disruption days a year); the reply does not show the table rank_hubs returns (Winter weather exposure, Midwest hubs: expected disruption days a year); the reply does not show the table rank_hubs returns (Winter weather exposure, Midwest hubs: expected disruption days a year); the reply does not show the table rank_hubs returns (Winter weather exposure, Midwest hubs: expected disruption days a year); the reply does not show the table rank_hubs returns (Winter weather exposure, Midwest hubs: expected disruption days a year); the reply does not show the table rank_hubs returns (Winter weather exposure, Midwest hubs: expected disruption days a year)"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Columbus']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "b3f67def6e4c45239c0339629436bed5",
+          "status": "error",
+          "verdict": "",
+          "tables": [],
+          "footnote": null,
+          "caveats": [],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [],
+          "error": "No final answer within 6 model calls.",
+          "error_code": "too_many_calls",
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R2",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R3",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R4",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R5",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R6",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 7886,
+            "usage": {
+              "input_tokens": 14,
+              "output_tokens": 750,
+              "cache_read_input_tokens": 45184,
+              "cache_creation_input_tokens": 0,
+              "cost_usd": 0.012046
+            }
+          }
+        },
+        {
+          "session_id": "b3f67def6e4c45239c0339629436bed5",
+          "status": "answered",
+          "verdict": "**Phoenix (PHX)** is the least exposed hub overall, at 0.42 expected disruption days a year, in the **Low** band. Columbus (CMH) is next least exposed at 0.99 days, also **Low**. Phoenix's figure is 0.42 times Columbus's, and that gap is larger than the year-to-year swings, so the order of these two is settled. Every other hub scores at least 1.24 days and sits in the **Moderate** or **High** band.",
+          "tables": [
+            {
+              "title": "Overall exposure, all hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Disruption days a year",
+                "Band",
+                "Winter",
+                "Flood",
+                "Severe storms",
+                "Hurricanes",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.9,
+                  "High",
+                  2.71,
+                  0.06,
+                  0.13,
+                  0.0,
+                  "no"
+                ],
+                [
+                  2,
+                  "Memphis (MEM)",
+                  2.44,
+                  "High",
+                  1.31,
+                  0.73,
+                  0.28,
+                  0.12,
+                  "no"
+                ],
+                [
+                  3,
+                  "Denver (DEN)",
+                  2.21,
+                  "High",
+                  2.07,
+                  0.02,
+                  0.12,
+                  0.0,
+                  "no"
+                ],
+                [
+                  4,
+                  "Kansas City (MCI)",
+                  2.2,
+                  "High",
+                  1.44,
+                  0.43,
+                  0.32,
+                  0.0,
+                  "no"
+                ],
+                [
+                  5,
+                  "Chicago (ORD)",
+                  2.03,
+                  "High",
+                  1.4,
+                  0.33,
+                  0.25,
+                  0.05,
+                  "no"
+                ],
+                [
+                  6,
+                  "Dallas (DAL)",
+                  2.02,
+                  "High",
+                  0.94,
+                  0.63,
+                  0.39,
+                  0.06,
+                  "no"
+                ],
+                [
+                  7,
+                  "Houston (IAH)",
+                  1.96,
+                  "Moderate",
+                  0.39,
+                  0.47,
+                  0.19,
+                  0.92,
+                  "no"
+                ],
+                [
+                  8,
+                  "Miami (MIA)",
+                  1.85,
+                  "Moderate",
+                  0.0,
+                  0.21,
+                  0.12,
+                  1.52,
+                  "no"
+                ],
+                [
+                  9,
+                  "Indianapolis (IND)",
+                  1.56,
+                  "Moderate",
+                  1.16,
+                  0.18,
+                  0.18,
+                  0.04,
+                  "no"
+                ],
+                [
+                  10,
+                  "Atlanta (ATL)",
+                  1.24,
+                  "Moderate",
+                  0.27,
+                  0.56,
+                  0.17,
+                  0.24,
+                  "no"
+                ],
+                [
+                  11,
+                  "Columbus (CMH)",
+                  0.99,
+                  "Low",
+                  0.66,
+                  0.13,
+                  0.17,
+                  0.03,
+                  "yes"
+                ],
+                [
+                  12,
+                  "Phoenix (PHX)",
+                  0.42,
+                  "Low",
+                  0.0,
+                  0.17,
+                  0.2,
+                  0.06,
+                  ""
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "With winter counted double, the top three are Minneapolis, Denver and Memphis."
+              ]
+            },
+            {
+              "title": "Phoenix and Columbus: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Band",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Overall",
+                  "Columbus (CMH)",
+                  null,
+                  0.99,
+                  "Low",
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Overall",
+                  "Phoenix (PHX)",
+                  null,
+                  0.42,
+                  "Low",
+                  0.57,
+                  0.42,
+                  "yes"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Phoenix 0.0, Columbus 0.0."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 10 of 11 gaps are within the hubs' year-to-year swings; clear: Columbus above Phoenix. The top hub changes with winter halved, flood doubled, hurricane doubled."
+          },
+          "caveats": [
+            "The full 12-hub ranking has low confidence because 10 of its 11 gaps between neighbouring hubs are within normal year-to-year swings. Only the gap between Columbus and Phoenix is clear, so the middle of the table is not settled.",
+            "Phoenix's score reflects only the four scored hazards (winter, flood, severe storms, hurricanes). Extreme heat is not scored, so this does not show Phoenix is low-risk for weather generally."
+          ],
+          "hubs_ranked": [
+            "CMH",
+            "PHX"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1",
+            "R2"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              },
+              {
+                "id": "R2",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "PHX",
+                    "CMH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 6977,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 831,
+              "cache_read_input_tokens": 12045,
+              "cache_creation_input_tokens": 9123,
+              "cost_usd": 0.032338
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 5,
+      "turns": [
+        "Which hubs in the Midwest are most exposed to winter disruption?",
+        "And which is the least exposed?"
+      ],
+      "rep": 2,
+      "passed": true,
+      "error": false,
+      "seconds": 6.33,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "rank_hubs called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": true,
+          "detail": "asserted ['IND', 'CMH']; scoring code gives ['MSP', 'MCI', 'ORD', 'IND', 'CMH'] (last)"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals rank_hubs re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Columbus']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "4fe4a3870add451b935da3a06f91f067",
+          "status": "answered",
+          "verdict": "**Minneapolis (MSP)** is the Midwest hub most exposed to winter disruption, at 2.71 expected disruption days a year. That is clearly ahead of Kansas City (MCI) at 1.44. Kansas City, Chicago (ORD, 1.4) and Indianapolis (IND, 1.16) are close together, so their order is not settled. Columbus (CMH) is lowest at 0.66.",
+          "tables": [
+            {
+              "title": "Winter weather exposure, Midwest hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Days under warning a year",
+                "Disruption days a year",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.71,
+                  2.71,
+                  "yes"
+                ],
+                [
+                  2,
+                  "Kansas City (MCI)",
+                  1.44,
+                  1.44,
+                  "no"
+                ],
+                [
+                  3,
+                  "Chicago (ORD)",
+                  1.4,
+                  1.4,
+                  "no"
+                ],
+                [
+                  4,
+                  "Indianapolis (IND)",
+                  1.16,
+                  1.16,
+                  "no"
+                ],
+                [
+                  5,
+                  "Columbus (CMH)",
+                  0.66,
+                  0.66,
+                  ""
+                ]
+              ],
+              "what_counts": "Days a year under a Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warning that covered the hub, 2016 to 2025, times weight 1. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive"
+            ],
+            "period": "2016-2025",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 3 of 4 gaps are within the hubs' year-to-year swings; clear: Minneapolis above Kansas City."
+          },
+          "caveats": [
+            "Confidence is low because 3 of the 4 gaps between neighbouring hubs are within normal year-to-year swings. Only Minneapolis standing above Kansas City is reliable.",
+            "The score counts only time under a winter warning. Roads can stay slow for hours after a warning ends, so winter may be understated."
+          ],
+          "hubs_ranked": [
+            "MSP",
+            "MCI",
+            "ORD",
+            "IND",
+            "CMH"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "winter",
+                  "region": "midwest",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 3519,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 445,
+              "cache_read_input_tokens": 9764,
+              "cache_creation_input_tokens": 0,
+              "cost_usd": 0.005438
+            }
+          }
+        },
+        {
+          "session_id": "4fe4a3870add451b935da3a06f91f067",
+          "status": "answered",
+          "verdict": "**Columbus (CMH)** is the least exposed Midwest hub for winter disruption, at 0.66 expected disruption days a year. Indianapolis (IND) is next lowest at 1.16. The data does not firmly separate the two, because the gap between them is within normal year-to-year swings.",
+          "tables": [
+            {
+              "title": "Winter weather exposure, Midwest hubs: expected disruption days a year",
+              "columns": [
+                "Rank",
+                "Hub",
+                "Days under warning a year",
+                "Disruption days a year",
+                "Clear of next"
+              ],
+              "rows": [
+                [
+                  1,
+                  "Minneapolis (MSP)",
+                  2.71,
+                  2.71,
+                  "yes"
+                ],
+                [
+                  2,
+                  "Kansas City (MCI)",
+                  1.44,
+                  1.44,
+                  "no"
+                ],
+                [
+                  3,
+                  "Chicago (ORD)",
+                  1.4,
+                  1.4,
+                  "no"
+                ],
+                [
+                  4,
+                  "Indianapolis (IND)",
+                  1.16,
+                  1.16,
+                  "no"
+                ],
+                [
+                  5,
+                  "Columbus (CMH)",
+                  0.66,
+                  0.66,
+                  ""
+                ]
+              ],
+              "what_counts": "Days a year under a Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warning that covered the hub, 2016 to 2025, times weight 1. Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive"
+            ],
+            "period": "2016-2025",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 3 of 4 gaps are within the hubs' year-to-year swings; clear: Minneapolis above Kansas City."
+          },
+          "caveats": [
+            "Confidence is low, so Columbus as the lowest is the likely order but not a settled one."
+          ],
+          "hubs_ranked": [
+            "IND",
+            "CMH"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 2804,
+            "usage": {
+              "input_tokens": 4,
+              "output_tokens": 362,
+              "cache_read_input_tokens": 5545,
+              "cache_creation_input_tokens": 331,
+              "cost_usd": 0.00501
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 6,
+      "turns": [
+        "Compare Miami and Houston in terms of hurricane and flood exposure.",
+        "Which of the two is worse overall?"
+      ],
+      "rep": 0,
+      "passed": true,
+      "error": false,
+      "seconds": 12.3,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "rank_hubs called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": true,
+          "detail": "asserted ['IAH', 'MIA']; scoring code gives ['IAH', 'MIA'] (exact)"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals compare_hubs re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Houston']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "d422a9fd6dcc447b9280d05876ea2c84",
+          "status": "answered",
+          "verdict": "**Miami** is more exposed to hurricanes: 1.52 expected disruption days a year, against 0.92 for **Houston**. **Houston** is more exposed to flooding: 0.47 days a year against 0.21 for Miami. The flood gap is larger than the year-to-year swings, so Houston's higher flood exposure is a solid result. The hurricane gap can't be tested statistically.",
+          "tables": [
+            {
+              "title": "Miami and Houston: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Hurricanes",
+                  "Miami (MIA)",
+                  0.305,
+                  1.52,
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Hurricanes",
+                  "Houston (IAH)",
+                  0.1836,
+                  0.92,
+                  0.6,
+                  0.61,
+                  "not testable"
+                ],
+                [
+                  "Flooding",
+                  "Houston (IAH)",
+                  0.47,
+                  0.47,
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Flooding",
+                  "Miami (MIA)",
+                  0.21,
+                  0.21,
+                  0.26,
+                  0.45,
+                  "yes"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled. Not testable: FEMA gives one long-run hurricane figure with no yearly values.",
+              "notes": [
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Miami 1.58, Houston 1.29.",
+                "Not scored: days a year under Coastal Flood Warnings for the hub's whole forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Houston 0.29. Coastal flooding stays at the shore, while the warning covers the zone, so these are left out of the flood figure."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "medium",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). Every gap tested is larger than the hubs' year-to-year swings. Hurricane figures are one long-run FEMA figure with no yearly values, so their gaps cannot be tested."
+          },
+          "caveats": [
+            "Confidence is medium. The hurricane figures are one long-run FEMA average (1851 to 2024) with no yearly values, so their gap can't be tested against year-to-year swings.",
+            "Flood here means flash flood warnings only. Coastal flood and storm-surge warnings are not scored, and this data can't show flood risk at an individual site."
+          ],
+          "hubs_ranked": [
+            "MIA",
+            "IAH"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "hurricane",
+                    "flood"
+                  ]
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 4351,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 405,
+              "cache_read_input_tokens": 4221,
+              "cache_creation_input_tokens": 5801,
+              "cost_usd": 0.018987
+            }
+          }
+        },
+        {
+          "session_id": "d422a9fd6dcc447b9280d05876ea2c84",
+          "status": "answered",
+          "verdict": "**Houston** scores slightly higher overall, at 1.96 expected disruption days a year against 1.85 for **Miami**. Both are in the **Moderate** band. The gap is only 0.11 days and is within normal year-to-year swings, so the data does not settle which is worse. Miami's hurricane exposure and Houston's flood exposure roughly offset each other.",
+          "tables": [
+            {
+              "title": "Miami and Houston: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Band",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Overall",
+                  "Houston (IAH)",
+                  null,
+                  1.96,
+                  "Moderate",
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Overall",
+                  "Miami (MIA)",
+                  null,
+                  1.85,
+                  "Moderate",
+                  0.11,
+                  0.94,
+                  "no"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Miami 1.58, Houston 1.29."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 1 of 1 gaps are within the hubs' year-to-year swings."
+          },
+          "caveats": [
+            "Confidence is low: the gap is within normal year-to-year swings, so a different set of years could reverse the order.",
+            "The score counts only time under warning, so it may understate winter weather. That matters little for these two hubs, which have almost no winter exposure."
+          ],
+          "hubs_ranked": [
+            "IAH",
+            "MIA"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R2"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R2",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              },
+              {
+                "id": "R3",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              },
+              {
+                "id": "R4",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              },
+              {
+                "id": "R5",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              },
+              {
+                "id": "R6",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": null,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 7922,
+            "usage": {
+              "input_tokens": 14,
+              "output_tokens": 785,
+              "cache_read_input_tokens": 49229,
+              "cache_creation_input_tokens": 8949,
+              "cost_usd": 0.035173
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 6,
+      "turns": [
+        "Compare Miami and Houston in terms of hurricane and flood exposure.",
+        "Which of the two is worse overall?"
+      ],
+      "rep": 1,
+      "passed": true,
+      "error": false,
+      "seconds": 10.2,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "compare_hubs called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": true,
+          "detail": "asserted ['IAH', 'MIA']; scoring code gives ['IAH', 'MIA'] (exact)"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals compare_hubs re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Houston']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "9795425b7e8547a5ad1ec2d3989ea88b",
+          "status": "answered",
+          "verdict": "**Miami** is more exposed to hurricanes: 1.52 expected disruption days a year, against 0.92 for **Houston**, which is 0.61 times Miami's figure. **Houston** is more exposed to flooding: 0.47 days a year against 0.21 for Miami. The flood gap is larger than the year-to-year swings, so Houston's higher flood figure is reliable. Hurricane gaps can't be tested this way, so treat Miami's lead there as indicative.",
+          "tables": [
+            {
+              "title": "Miami and Houston: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Hurricanes",
+                  "Miami (MIA)",
+                  0.305,
+                  1.52,
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Hurricanes",
+                  "Houston (IAH)",
+                  0.1836,
+                  0.92,
+                  0.6,
+                  0.61,
+                  "not testable"
+                ],
+                [
+                  "Flooding",
+                  "Houston (IAH)",
+                  0.47,
+                  0.47,
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Flooding",
+                  "Miami (MIA)",
+                  0.21,
+                  0.21,
+                  0.26,
+                  0.45,
+                  "yes"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled. Not testable: FEMA gives one long-run hurricane figure with no yearly values.",
+              "notes": [
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Miami 1.58, Houston 1.29.",
+                "Not scored: days a year under Coastal Flood Warnings for the hub's whole forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Houston 0.29. Coastal flooding stays at the shore, while the warning covers the zone, so these are left out of the flood figure."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "medium",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). Every gap tested is larger than the hubs' year-to-year swings. Hurricane figures are one long-run FEMA figure with no yearly values, so their gaps cannot be tested."
+          },
+          "caveats": [
+            "Confidence is medium. The hurricane figure is one long-run FEMA average (1851 to 2024) with no yearly values, so it can't be checked against year-to-year swings. The flood figure counts Flash Flood Warnings, which are Weather Service alerts that flooding is under way or imminent, from 2016 to 2025.",
+            "Coastal flood warnings (shore flooding) are not scored. They covered Houston's warning zone 0.29 days a year and Miami's 0.0.",
+            "Flooding here is zone-wide, so it can't show which individual sites are at risk."
+          ],
+          "hubs_ranked": [
+            "MIA",
+            "IAH"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "hurricane",
+                    "flood"
+                  ]
+                }
+              },
+              {
+                "id": "R2",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "hurricane",
+                    "flood"
+                  ]
+                }
+              },
+              {
+                "id": "R3",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "hurricane",
+                    "flood"
+                  ]
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 6739,
+            "usage": {
+              "input_tokens": 10,
+              "output_tokens": 703,
+              "cache_read_input_tokens": 23202,
+              "cache_creation_input_tokens": 3156,
+              "cost_usd": 0.01726
+            }
+          }
+        },
+        {
+          "session_id": "9795425b7e8547a5ad1ec2d3989ea88b",
+          "status": "answered",
+          "verdict": "Overall, **Houston** comes out slightly ahead at 1.96 expected disruption days a year, against 1.85 for **Miami**. Both are in the **Moderate** band. The gap is only 0.11 days, and Miami is 0.94 times Houston's figure. Neither can be called worse, because the gap is within normal year-to-year swings.",
+          "tables": [
+            {
+              "title": "Miami and Houston: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Band",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Overall",
+                  "Houston (IAH)",
+                  null,
+                  1.96,
+                  "Moderate",
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Overall",
+                  "Miami (MIA)",
+                  null,
+                  1.85,
+                  "Moderate",
+                  0.11,
+                  0.94,
+                  "no"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Miami 1.58, Houston 1.29."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 1 of 1 gaps are within the hubs' year-to-year swings."
+          },
+          "caveats": [
+            "Confidence is low. The gap between the two is smaller than how much each hub's figure moves from year to year, so their order is not settled and could reverse in another set of years.",
+            "The overall score counts only time under a Weather Service warning. The hubs differ by hazard: Miami is higher on hurricanes and Houston on flooding."
+          ],
+          "hubs_ranked": [
+            "IAH",
+            "MIA"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R4"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R4",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 3456,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 377,
+              "cache_read_input_tokens": 18341,
+              "cache_creation_input_tokens": 1709,
+              "cost_usd": 0.009889
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 6,
+      "turns": [
+        "Compare Miami and Houston in terms of hurricane and flood exposure.",
+        "Which of the two is worse overall?"
+      ],
+      "rep": 2,
+      "passed": true,
+      "error": false,
+      "seconds": 10.13,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "compare_hubs called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": true,
+          "detail": "asserted ['IAH', 'MIA']; scoring code gives ['IAH', 'MIA'] (exact)"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals compare_hubs re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Houston']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "c24277994a594d878fa1be3357690be5",
+          "status": "answered",
+          "verdict": "**Miami is more exposed to hurricanes and Houston is more exposed to flooding.** Miami has 1.52 expected hurricane disruption days a year against Houston's 0.92, so Houston is 0.61 of Miami's figure. Houston has 0.47 flood days a year against Miami's 0.21, so Miami is 0.45 of Houston's figure. The flood gap is bigger than the year-to-year swings, so it is a real difference. The hurricane gap cannot be tested that way.",
+          "tables": [
+            {
+              "title": "Miami and Houston: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Hurricanes",
+                  "Miami (MIA)",
+                  0.305,
+                  1.52,
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Hurricanes",
+                  "Houston (IAH)",
+                  0.1836,
+                  0.92,
+                  0.6,
+                  0.61,
+                  "not testable"
+                ],
+                [
+                  "Flooding",
+                  "Houston (IAH)",
+                  0.47,
+                  0.47,
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Flooding",
+                  "Miami (MIA)",
+                  0.21,
+                  0.21,
+                  0.26,
+                  0.45,
+                  "yes"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled. Not testable: FEMA gives one long-run hurricane figure with no yearly values.",
+              "notes": [
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Miami 1.58, Houston 1.29.",
+                "Not scored: days a year under Coastal Flood Warnings for the hub's whole forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Houston 0.29. Coastal flooding stays at the shore, while the warning covers the zone, so these are left out of the flood figure."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "medium",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). Every gap tested is larger than the hubs' year-to-year swings. Hurricane figures are one long-run FEMA figure with no yearly values, so their gaps cannot be tested."
+          },
+          "caveats": [
+            "Confidence is medium. FEMA gives one long-run hurricane figure with no yearly values, so the Miami\u2013Houston hurricane gap is not statistically tested. The flood figures come from 2016 to 2025 warnings only.",
+            "Flood here means flash flood warnings. Coastal flood warnings (shore flooding, 0.29 days a year for Houston) are not scored, and the data does not show flood risk at individual hub sites."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "hurricane",
+                    "flood"
+                  ]
+                }
+              },
+              {
+                "id": "R2",
+                "name": "rank_hubs",
+                "input": {
+                  "hazard": "overall",
+                  "region": "all",
+                  "top_n": 12,
+                  "weight_changes": []
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 6223,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 772,
+              "cache_read_input_tokens": 15823,
+              "cache_creation_input_tokens": 3505,
+              "cost_usd": 0.018081
+            }
+          }
+        },
+        {
+          "session_id": "c24277994a594d878fa1be3357690be5",
+          "status": "answered",
+          "verdict": "**Houston scores slightly higher overall, but the two are effectively tied.** Houston has 1.96 expected disruption days a year and Miami has 1.85. Both are in the **Moderate** band. The 0.11 gap is within the year-to-year swings, so their order is not settled.",
+          "tables": [
+            {
+              "title": "Miami and Houston: expected disruption days a year, compared",
+              "columns": [
+                "Hazard",
+                "Hub",
+                "Rate",
+                "Disruption days a year",
+                "Band",
+                "Below the highest by",
+                "Ratio to the highest",
+                "Clear of the highest"
+              ],
+              "rows": [
+                [
+                  "Overall",
+                  "Houston (IAH)",
+                  null,
+                  1.96,
+                  "Moderate",
+                  0.0,
+                  1.0,
+                  ""
+                ],
+                [
+                  "Overall",
+                  "Miami (MIA)",
+                  null,
+                  1.85,
+                  "Moderate",
+                  0.11,
+                  0.94,
+                  "no"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Rate: days a year under warning; for hurricanes, FEMA events a year (record 1851-2024); none for overall. Bands label overall figures only. Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty in the two hubs' averages, worked out from how much each hub's figure moved from year to year; no when it is not, so their order is not settled.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or Storm Surge Warnings for the hub's forecast zone (a Weather Service warning area, usually a county or part of one), 2016 to 2025: Miami 1.58, Houston 1.29."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "low",
+            "confidence_reason": "Data coverage 100% (the share of the records these figures need that the data holds). 1 of 1 gaps are within the hubs' year-to-year swings."
+          },
+          "caveats": [
+            "Confidence is low. The gap is smaller than how much each hub's figure moves from year to year, so the data cannot say which hub is worse.",
+            "Hurricanes are weighted 5 times as heavily as the other hazards. Houston's higher overall score comes from its flood, winter and severe-storm days outweighing Miami's larger hurricane figure."
+          ],
+          "hubs_ranked": [
+            "IAH",
+            "MIA"
+          ],
+          "is_what_if": false,
+          "evidence": [
+            "R3"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R3",
+                "name": "compare_hubs",
+                "input": {
+                  "hub_ids": [
+                    "MIA",
+                    "IAH"
+                  ],
+                  "hazards": [
+                    "overall"
+                  ]
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 3895,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 419,
+              "cache_read_input_tokens": 19179,
+              "cache_creation_input_tokens": 1903,
+              "cost_usd": 0.010877
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 10,
+      "turns": [
+        "How is the score calculated, and what are the weights?"
+      ],
+      "rep": 0,
+      "passed": true,
+      "error": false,
+      "seconds": 6.49,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "get_methodology called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals get_methodology re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['1', '5']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "2d6500eace444c75945c832a33305728",
+          "status": "answered",
+          "verdict": "The score is **expected disruption days a year**. It adds up the days a year each hub spent under a National Weather Service warning (an official forecast that dangerous weather is happening or about to), 2016 to 2025, for winter weather, flash floods and severe storms. Each of those days has a weight of 1. Hurricanes add FEMA's long-run count of hurricane and tropical storm events a year for the hub's county (1851 to 2024), with a weight of 5 days per event. Bands on the overall figure are **Low** (below 1), **Moderate** (1 to under 2), **High** (2 to under 3) and **Very high** (3 or more).",
+          "tables": [
+            {
+              "title": "How the exposure score is calculated",
+              "columns": [
+                "Hazard",
+                "What is counted",
+                "Weight",
+                "Source",
+                "Period"
+              ],
+              "rows": [
+                [
+                  "Winter weather",
+                  "Time under Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Flooding",
+                  "Time under Flash Flood warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Severe storms",
+                  "Time under Tornado, Severe Thunderstorm warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Hurricanes",
+                  "FEMA hurricane events a year for the hub's county, tropical storms included",
+                  "5 disruption days per event",
+                  "FEMA National Risk Index",
+                  "1851-2024"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3. Not counted: Watches (the hazard is possible, not certain), advisories (less serious than a warning), river flood warnings (a river forecast to rise above its flood level at a set point), area flood warnings (flooding that builds slowly over a wide area), coastal flood warnings, cold and wind-chill warnings, high-wind warnings, heat, wildfire, earthquakes.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "A warning is a forecast that conditions will be dangerous, not a record that a hub closed.",
+                "The score is days under warning times the stated weights, plus a set number of days per hurricane. It does not predict how many days a hub will close.",
+                "It counts the time a warning was in force and nothing after it.",
+                "Ten years is a short record: yearly figures swing widely, so hubs with close figures cannot be told apart.",
+                "Flood exposure at a real site depends on the exact parcel; the score sees only the hub's location and county.",
+                "Exposure means weather at the location only. Hub importance, upgrade costs and investment choices are outside the score."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri",
+              "noaa_station_acis"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "high",
+            "confidence_reason": "The method is fixed in config/scoring.toml; it is a rule, not a measurement."
+          },
+          "caveats": [
+            "A warning is a forecast, not a record that a hub closed, so the score does not predict closure days. Ten years is also short, so hubs with close figures cannot be told apart.",
+            "Watches (the hazard is possible, not certain), advisories (less serious than a warning), river and coastal flood warnings, cold, wind, heat and wildfire are not counted. Winter's effect on roads lasts beyond the warning, so winter may be understated."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "get_methodology",
+                "input": {}
+              },
+              {
+                "id": "R2",
+                "name": "get_methodology",
+                "input": {}
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 6489,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 465,
+              "cache_read_input_tokens": 10855,
+              "cache_creation_input_tokens": 9075,
+              "cost_usd": 0.028439
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 10,
+      "turns": [
+        "How is the score calculated, and what are the weights?"
+      ],
+      "rep": 1,
+      "passed": true,
+      "error": false,
+      "seconds": 6.13,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "get_methodology called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals get_methodology re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['1', '5']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "6ae99b50bb984b71adc333636be9ff93",
+          "status": "answered",
+          "verdict": "The score is **expected disruption days a year**, added up over four hazards. Winter weather, flooding and severe storms each count **1 day for every day under a National Weather Service warning** (2016\u20132025). Hurricanes count **5 days per FEMA hurricane event a year** (tropical storms included, county-level, 1851\u20132024). Bands for the overall score are Low (below 1), Moderate (1 up to 2), High (2 up to 3) and Very high (3 or more).",
+          "tables": [
+            {
+              "title": "How the exposure score is calculated",
+              "columns": [
+                "Hazard",
+                "What is counted",
+                "Weight",
+                "Source",
+                "Period"
+              ],
+              "rows": [
+                [
+                  "Winter weather",
+                  "Time under Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Flooding",
+                  "Time under Flash Flood warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Severe storms",
+                  "Time under Tornado, Severe Thunderstorm warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Hurricanes",
+                  "FEMA hurricane events a year for the hub's county, tropical storms included",
+                  "5 disruption days per event",
+                  "FEMA National Risk Index",
+                  "1851-2024"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3. Not counted: Watches (the hazard is possible, not certain), advisories (less serious than a warning), river flood warnings (a river forecast to rise above its flood level at a set point), area flood warnings (flooding that builds slowly over a wide area), coastal flood warnings, cold and wind-chill warnings, high-wind warnings, heat, wildfire, earthquakes.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "A warning is a forecast that conditions will be dangerous, not a record that a hub closed.",
+                "The score is days under warning times the stated weights, plus a set number of days per hurricane. It does not predict how many days a hub will close.",
+                "It counts the time a warning was in force and nothing after it.",
+                "Ten years is a short record: yearly figures swing widely, so hubs with close figures cannot be told apart.",
+                "Flood exposure at a real site depends on the exact parcel; the score sees only the hub's location and county.",
+                "Exposure means weather at the location only. Hub importance, upgrade costs and investment choices are outside the score."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri",
+              "noaa_station_acis"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "high",
+            "confidence_reason": "The method is fixed in config/scoring.toml; it is a rule, not a measurement."
+          },
+          "caveats": [
+            "A warning is a forecast of dangerous conditions, not a record that a hub closed, so the score is not a prediction of closure days.",
+            "Not scored: watches, advisories, river and area flood warnings, coastal flood warnings, cold, wind, heat, wildfire and earthquakes. Winter's effect on roads lasts beyond the warning, so winter may be understated.",
+            "Ten years is a short record, so hubs with close scores cannot be told apart."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "get_methodology",
+                "input": {}
+              },
+              {
+                "id": "R2",
+                "name": "get_methodology",
+                "input": {}
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 6132,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 416,
+              "cache_read_input_tokens": 19930,
+              "cache_creation_input_tokens": 0,
+              "cost_usd": 0.006169
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 10,
+      "turns": [
+        "How is the score calculated, and what are the weights?"
+      ],
+      "rep": 2,
+      "passed": true,
+      "error": false,
+      "seconds": 6.01,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "answered"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "get_methodology called with the key arguments"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": true,
+          "detail": "table equals get_methodology re-run"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['1', '5']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "22f438ceffec4e569ba68918f09edcc3",
+          "status": "answered",
+          "verdict": "The score is **expected disruption days a year**. It adds up the days a year each hub spent under a National Weather Service warning (an official forecast that dangerous weather is happening or imminent) for 2016 to 2025, each multiplied by a weight. Winter weather, flooding and severe storms each have a weight of **1**. Hurricanes are weighted **5** days per event, using FEMA's long-run count of hurricane and tropical storm events a year for the hub's county. Bands for the overall score are Low (below 1), Moderate (1 up to 2), High (2 up to 3) and Very high (3 or more).",
+          "tables": [
+            {
+              "title": "How the exposure score is calculated",
+              "columns": [
+                "Hazard",
+                "What is counted",
+                "Weight",
+                "Source",
+                "Period"
+              ],
+              "rows": [
+                [
+                  "Winter weather",
+                  "Time under Winter Storm, Blizzard, Ice Storm, Lake Effect Snow warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Flooding",
+                  "Time under Flash Flood warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Severe storms",
+                  "Time under Tornado, Severe Thunderstorm warnings that covered the hub",
+                  "1 disruption days per day under warning",
+                  "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
+                  "2016-2025"
+                ],
+                [
+                  "Hurricanes",
+                  "FEMA hurricane events a year for the hub's county, tropical storms included",
+                  "5 disruption days per event",
+                  "FEMA National Risk Index",
+                  "1851-2024"
+                ]
+              ],
+              "what_counts": "Expected disruption days a year: days a year under a National Weather Service warning that covered the hub, 2016 to 2025, times its weight (winter 1, flood 1, severe storms 1), plus FEMA hurricane events a year times 5. Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm. Bands, for overall figures: Low below 1, Moderate from 1, High from 2, Very high from 3. Not counted: Watches (the hazard is possible, not certain), advisories (less serious than a warning), river flood warnings (a river forecast to rise above its flood level at a set point), area flood warnings (flooding that builds slowly over a wide area), coastal flood warnings, cold and wind-chill warnings, high-wind warnings, heat, wildfire, earthquakes.",
+              "notes": [
+                "Winter's effect on roads outlasts the warning more than other weather does: in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds were still almost 8 mph below normal four hours after ice and snow events. This score counts only time under warning, so it may understate winter next to floods and storms.",
+                "A warning is a forecast that conditions will be dangerous, not a record that a hub closed.",
+                "The score is days under warning times the stated weights, plus a set number of days per hurricane. It does not predict how many days a hub will close.",
+                "It counts the time a warning was in force and nothing after it.",
+                "Ten years is a short record: yearly figures swing widely, so hubs with close figures cannot be told apart.",
+                "Flood exposure at a real site depends on the exact parcel; the score sees only the hub's location and county.",
+                "Exposure means weather at the location only. Hub importance, upgrade costs and investment choices are outside the score."
+              ]
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "iem_warning_archive",
+              "fema_nri",
+              "noaa_station_acis"
+            ],
+            "period": "2016-2025; hurricanes 1851-2024",
+            "data_as_of": "2026-11-24",
+            "confidence": "high",
+            "confidence_reason": "The method is fixed in config/scoring.toml; it is a rule, not a measurement."
+          },
+          "caveats": [
+            "A warning is a forecast, not a record that a hub closed, so the score is not a prediction of closure days. Ten years is a short record, so hubs with close scores cannot be told apart.",
+            "Winter's effect on roads lasts longer than the warning, so the score may understate winter. Watches, advisories, river and coastal flood warnings, cold, wind, heat and wildfire are not counted."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "get_methodology",
+                "input": {}
+              },
+              {
+                "id": "R2",
+                "name": "get_methodology",
+                "input": {}
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 6010,
+            "usage": {
+              "input_tokens": 8,
+              "output_tokens": 439,
+              "cache_read_input_tokens": 19930,
+              "cache_creation_input_tokens": 0,
+              "cost_usd": 0.006399
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 11,
+      "turns": [
+        "How exposed is our Seattle hub?"
+      ],
+      "rep": 0,
+      "passed": true,
+      "error": false,
+      "seconds": 4.3,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "out_of_scope"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "only allowed tools called"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": null,
+          "detail": "no table expected"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Seattle']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "d4e050c93fb74320a99d4e74e3c993b7",
+          "status": "out_of_scope",
+          "verdict": "There is no Seattle hub, so I can't rate its exposure. We cover 12 hubs: Chicago, Minneapolis, Kansas City, Indianapolis, Columbus, Miami, Houston, Dallas, Atlanta, Memphis, Denver and Phoenix.",
+          "tables": [
+            {
+              "title": "Hubs in all regions",
+              "columns": [
+                "Hub",
+                "City",
+                "State",
+                "Region",
+                "Weather station",
+                "County"
+              ],
+              "rows": [
+                [
+                  "ORD",
+                  "Chicago",
+                  "IL",
+                  "Midwest",
+                  "CHICAGO OHARE INTL AP",
+                  "DuPage County"
+                ],
+                [
+                  "MSP",
+                  "Minneapolis",
+                  "MN",
+                  "Midwest",
+                  "MINNEAPOLIS-ST. PAUL INTERNATIONAL AIRPORT",
+                  "Hennepin County"
+                ],
+                [
+                  "MCI",
+                  "Kansas City",
+                  "MO",
+                  "Midwest",
+                  "KANSAS CITY INTL AP",
+                  "Platte County"
+                ],
+                [
+                  "IND",
+                  "Indianapolis",
+                  "IN",
+                  "Midwest",
+                  "INDIANAPOLIS INTL AP",
+                  "Marion County"
+                ],
+                [
+                  "CMH",
+                  "Columbus",
+                  "OH",
+                  "Midwest",
+                  "JOHN GLENN INTERNATIONAL AIRPORT",
+                  "Franklin County"
+                ],
+                [
+                  "MIA",
+                  "Miami",
+                  "FL",
+                  "South",
+                  "MIAMI INTERNATIONAL AP",
+                  "Miami-Dade County"
+                ],
+                [
+                  "IAH",
+                  "Houston",
+                  "TX",
+                  "South",
+                  "HOUSTON INTERCONTINENTAL AP",
+                  "Harris County"
+                ],
+                [
+                  "DAL",
+                  "Dallas",
+                  "TX",
+                  "South",
+                  "DALLAS FAA AP",
+                  "Dallas County"
+                ],
+                [
+                  "ATL",
+                  "Atlanta",
+                  "GA",
+                  "South",
+                  "ATLANTA HARTSFIELD-JACKSON INTERNATIONAL AIRPORT",
+                  "Clayton County"
+                ],
+                [
+                  "MEM",
+                  "Memphis",
+                  "TN",
+                  "South",
+                  "MEMPHIS INTERNATIONAL AP",
+                  "Shelby County"
+                ],
+                [
+                  "DEN",
+                  "Denver",
+                  "CO",
+                  "West",
+                  "DENVER INTL AP",
+                  "Denver County"
+                ],
+                [
+                  "PHX",
+                  "Phoenix",
+                  "AZ",
+                  "West",
+                  "PHOENIX AIRPORT",
+                  "Maricopa County"
+                ]
+              ],
+              "what_counts": "Each hub sits at its city's main airport weather station (Dallas: Love Field). Its county is the one containing the station's coordinates. Regions follow the US Census Bureau's regions.",
+              "notes": []
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "noaa_station_acis",
+              "fema_nri",
+              "iem_warning_archive"
+            ],
+            "period": "2016-2025",
+            "data_as_of": "2026-11-24",
+            "confidence": "high",
+            "confidence_reason": "FEMA's county map and the warning archive name the same county for all 12 hubs."
+          },
+          "caveats": [
+            "If Seattle is a real site, it would need to be added to the data before it could be scored. I can rank any of the 12 hubs listed instead."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "list_hubs",
+                "input": {
+                  "region": "all"
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 4302,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 332,
+              "cache_read_input_tokens": 8418,
+              "cache_creation_input_tokens": 1860,
+              "cost_usd": 0.008824
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 11,
+      "turns": [
+        "How exposed is our Seattle hub?"
+      ],
+      "rep": 1,
+      "passed": true,
+      "error": false,
+      "seconds": 4.27,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "out_of_scope"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "only allowed tools called"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": null,
+          "detail": "no table expected"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Seattle']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "6f6798c650a54686b7ba4788245a3eef",
+          "status": "out_of_scope",
+          "verdict": "There is no Seattle hub, so I can't rate its exposure. We cover 12 hubs, and none is in Washington state or the Pacific Northwest. The nearest western hubs are Denver and Phoenix, and neither says anything about Seattle's weather.",
+          "tables": [],
+          "footnote": null,
+          "caveats": [
+            "If you meant one of the 12 hubs, tell me which. They are Chicago, Minneapolis, Kansas City, Indianapolis, Columbus, Miami, Houston, Dallas, Atlanta, Memphis, Denver and Phoenix."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "list_hubs",
+                "input": {
+                  "region": "all"
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 4264,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 347,
+              "cache_read_input_tokens": 8418,
+              "cache_creation_input_tokens": 1848,
+              "cost_usd": 0.008944
+            }
+          }
+        }
+      ]
+    },
+    {
+      "case_id": 11,
+      "turns": [
+        "How exposed is our Seattle hub?"
+      ],
+      "rep": 2,
+      "passed": true,
+      "error": false,
+      "seconds": 4.02,
+      "checks": [
+        {
+          "name": "status",
+          "passed": true,
+          "detail": "out_of_scope"
+        },
+        {
+          "name": "tool",
+          "passed": true,
+          "detail": "only allowed tools called"
+        },
+        {
+          "name": "hubs",
+          "passed": null,
+          "detail": "no order asserted by this case"
+        },
+        {
+          "name": "numbers",
+          "passed": null,
+          "detail": "no table expected"
+        },
+        {
+          "name": "mentions",
+          "passed": true,
+          "detail": "has ['Seattle']"
+        }
+      ],
+      "replies": [
+        {
+          "session_id": "72482bab7f7c4b0a87e049ecb490b0bb",
+          "status": "out_of_scope",
+          "verdict": "There is **no Seattle hub** in our data, so I can't give an exposure figure or band for it. We cover 12 hubs: Chicago, Minneapolis, Kansas City, Indianapolis, Columbus, Miami, Houston, Dallas, Atlanta, Memphis, Denver and Phoenix. If you meant one of those, tell me which and I'll pull its exposure.",
+          "tables": [
+            {
+              "title": "Hubs in all regions",
+              "columns": [
+                "Hub",
+                "City",
+                "State",
+                "Region",
+                "Weather station",
+                "County"
+              ],
+              "rows": [
+                [
+                  "ORD",
+                  "Chicago",
+                  "IL",
+                  "Midwest",
+                  "CHICAGO OHARE INTL AP",
+                  "DuPage County"
+                ],
+                [
+                  "MSP",
+                  "Minneapolis",
+                  "MN",
+                  "Midwest",
+                  "MINNEAPOLIS-ST. PAUL INTERNATIONAL AIRPORT",
+                  "Hennepin County"
+                ],
+                [
+                  "MCI",
+                  "Kansas City",
+                  "MO",
+                  "Midwest",
+                  "KANSAS CITY INTL AP",
+                  "Platte County"
+                ],
+                [
+                  "IND",
+                  "Indianapolis",
+                  "IN",
+                  "Midwest",
+                  "INDIANAPOLIS INTL AP",
+                  "Marion County"
+                ],
+                [
+                  "CMH",
+                  "Columbus",
+                  "OH",
+                  "Midwest",
+                  "JOHN GLENN INTERNATIONAL AIRPORT",
+                  "Franklin County"
+                ],
+                [
+                  "MIA",
+                  "Miami",
+                  "FL",
+                  "South",
+                  "MIAMI INTERNATIONAL AP",
+                  "Miami-Dade County"
+                ],
+                [
+                  "IAH",
+                  "Houston",
+                  "TX",
+                  "South",
+                  "HOUSTON INTERCONTINENTAL AP",
+                  "Harris County"
+                ],
+                [
+                  "DAL",
+                  "Dallas",
+                  "TX",
+                  "South",
+                  "DALLAS FAA AP",
+                  "Dallas County"
+                ],
+                [
+                  "ATL",
+                  "Atlanta",
+                  "GA",
+                  "South",
+                  "ATLANTA HARTSFIELD-JACKSON INTERNATIONAL AIRPORT",
+                  "Clayton County"
+                ],
+                [
+                  "MEM",
+                  "Memphis",
+                  "TN",
+                  "South",
+                  "MEMPHIS INTERNATIONAL AP",
+                  "Shelby County"
+                ],
+                [
+                  "DEN",
+                  "Denver",
+                  "CO",
+                  "West",
+                  "DENVER INTL AP",
+                  "Denver County"
+                ],
+                [
+                  "PHX",
+                  "Phoenix",
+                  "AZ",
+                  "West",
+                  "PHOENIX AIRPORT",
+                  "Maricopa County"
+                ]
+              ],
+              "what_counts": "Each hub sits at its city's main airport weather station (Dallas: Love Field). Its county is the one containing the station's coordinates. Regions follow the US Census Bureau's regions.",
+              "notes": []
+            }
+          ],
+          "footnote": {
+            "sources": [
+              "noaa_station_acis",
+              "fema_nri",
+              "iem_warning_archive"
+            ],
+            "period": "2016-2025",
+            "data_as_of": "2026-11-24",
+            "confidence": "high",
+            "confidence_reason": "FEMA's county map and the warning archive name the same county for all 12 hubs."
+          },
+          "caveats": [
+            "I haven't estimated Seattle from nearby hubs, because weather at a different location would not describe that site."
+          ],
+          "hubs_ranked": [],
+          "is_what_if": false,
+          "evidence": [
+            "R1"
+          ],
+          "error": null,
+          "error_code": null,
+          "trace": {
+            "model": "claude-sonnet-5-5",
+            "tool_calls": [
+              {
+                "id": "R1",
+                "name": "list_hubs",
+                "input": {
+                  "region": "all"
+                }
+              }
+            ],
+            "repaired": false,
+            "repair_problems": [],
+            "rejected_answer": null,
+            "latency_ms": 4015,
+            "usage": {
+              "input_tokens": 6,
+              "output_tokens": 322,
+              "cache_read_input_tokens": 8418,
+              "cache_creation_input_tokens": 1828,
+              "cost_usd": 0.008644
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
