@@ -31,6 +31,15 @@ The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_
 
 `wra serve` listens on this machine only (127.0.0.1, port 8000); `--host` and `--port` change that. The page sends `POST /api/chat` with `{"session_id": null, "message": "..."}` and gets back the validated reply; sending that reply's `session_id` with the next message makes it a follow-up. Every reply has the same shape. Its HTTP status is 200 unless it is an error: 409 while the conversation's last question is still being answered, 404 for a conversation the server no longer holds (after a restart), 502 when the model could not give a validated answer, 500 for a bug in the agent's own code. A malformed request gets 422 with FastAPI's validation message instead of a reply. `GET /api/hubs` lists the hubs and `GET /healthz` checks the server; neither calls the model. FastAPI's generated reference for the API is at `/docs`.
 
+### Checking the page by hand before a demo
+
+Three things the page does have no automated test: the question put back in the box after a failure, the reset when the server no longer holds the conversation, and "New conversation". This check covers them in about three minutes, with one paid question.
+
+1. Start `uv run wra serve` and open http://127.0.0.1:8000/. Ask "Which hubs are most exposed overall?". While "Working" shows, Ask and New conversation are greyed out. The answer appears with its table, its data and confidence lines, and a "How this was computed" panel.
+2. Stop the server (Ctrl+C) and start it again; leave the page open. Send "And which is the least exposed?". The page shows "New conversation. Your question is back in the box: send it again, reworded if it was a follow-up." and the question is back in the box. No model call is made.
+3. Click New conversation. The answers clear; the text in the box stays.
+4. Stop the server. Send any question. The page shows "The server could not be reached. The question is back in the box." and the question is back in the box.
+
 `wra rank` takes `overall`, `winter`, `flood`, `severe_storm` or `hurricane`, an optional `--region` (`midwest`, `south`, `west`) and `--top N`. None of these commands uses the network. The scoring rules (weights, warning types, bands, confidence thresholds) are in `config/scoring.toml`.
 
 `uv run wra ingest --refresh` fetches everything again from the public services first (48 requests, about 90 seconds). It is not needed to run the project: the responses fetched on 2026-11-24 are stored under `data/raw/`.

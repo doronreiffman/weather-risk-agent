@@ -7,13 +7,13 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 ## Queue
 
 - [q13] Answers use terms without explaining them, such as "trace day" (owner, milestone 4 page check). Settle it before milestone 5's paid runs, so they measure the final wording. → `docs/ASSUMPTIONS.md` O15
-- [q16] Settle how the page's own logic is checked: "New conversation", the question kept in the box, the reset after a 404 (handoff review; owner: next session). → `.claude/OPEN_ISSUES.md`, "The page's own logic has no automated test"
 - [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. Measures verdict length. → `docs/PLAN.md` section 13, `docs/ASSUMPTIONS.md` O14
 - [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. → `docs/PLAN.md` section 13
 - [q8] Bonuses, ask first: score-change alert, voice. → `docs/PLAN.md` section 13
 
 ## Done / Dropped
 
+- [q16] How the page's own logic is checked. Done 2026-11-24. Proof: the owner chose a written check by hand; it is in `README.md`, "Checking the page by hand before a demo", added in the commit that moves this line. Running it before the demo stays open in `.claude/OPEN_ISSUES.md`.
 - [q15] Two instruction wordings from session 04. Done 2026-11-24. (a) Project `CLAUDE.md` rule 6 now says a commit message's claims hold for the tree being committed: edited on the owner's word, proof in the commit that moves this line. (b) "Or a record" in the global file's "Recheck assumptions" line: dropped on the owner's word, 2026-11-24.
 - [q14] Session 04 transcript committed. Done 2026-11-24. Proof: commit `08395e9`; the work-address check and the session-link search (`claude\.ai/code/session_[A-Za-z0-9]`) both printed 0 on the file before it was staged.
 - [q5] Milestone 4: API and chat page. Done 2026-11-24. Proof: commits `ac1912e` to `772b0d6`; `uv run pytest -q` 309 passed on `772b0d6`; a question and its follow-up by curl through the running API (the follow-up made no tool call and cited the first turn's result; 0.046 USD); the owner asked the four assignment questions in the page and reported everything looked right, and tried the server-restart path by hand; all in session `04-api.txt`.
