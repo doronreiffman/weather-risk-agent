@@ -6,12 +6,13 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. Measures verdict length. → `docs/PLAN.md` section 13, `docs/ASSUMPTIONS.md` O14
+- [q17] Session 05 transcript: commit `docs/ai-session/05-results.txt` once the owner has exported it. → `docs/ai-session/README.md`
 - [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. → `docs/PLAN.md` section 13
 - [q8] Bonuses, ask first: score-change alert, voice. → `docs/PLAN.md` section 13
 
 ## Done / Dropped
 
+- [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. Done 2026-11-25. Proof: `scripts/e2e.sh --paid` passed on `1b455ab` (354 tests in a fresh clone, 6 of 6 API questions, `wra eval --reps 3` 42 of 42, target met, about 0.05 USD; run `20261124T232102Z-claude`); `docs/EVAL_RESULTS.md`, `docs/ARCHITECTURE.md`, `docs/SUMMARY.md`; the Fable review's eight findings fixed in `1b455ab`; the owner chose Haiku 5.5 (decision log).
 - [q13] Terms explained where they appear. Done 2026-11-25. Proof: commit `cca0acd` (21 tests, 331 passed on that tree); a live `wra ask` on Denver snowfall explained "measurable" and "trace" in plain words (0.041 USD, session 05), as did the shipped model's answer in `docs/EVAL_RESULTS.md`; the owner confirmed the answers read right.
 - [q16] How the page's own logic is checked. Done 2026-11-24. Proof: the owner chose a written check by hand; it is in `README.md`, "Checking the page by hand before a demo", added in the commit that moves this line. Running it before the demo stays open in `.claude/OPEN_ISSUES.md`.
 - [q15] Two instruction wordings from session 04. Done 2026-11-24. (a) Project `CLAUDE.md` rule 6 now says a commit message's claims hold for the tree being committed: edited on the owner's word, proof in the commit that moves this line. (b) "Or a record" in the global file's "Recheck assumptions" line: dropped on the owner's word, 2026-11-24.

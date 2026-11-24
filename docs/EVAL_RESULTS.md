@@ -25,6 +25,10 @@ The first three runs used the agent as of commit `4e4ae6a`; the last used `7197f
 
 **The owner chose Haiku 5.5.** The plan's rule (section 9) was the cheapest model whose score equals the best; by that rule Opus wins by one case run. Haiku costs about one twenty-seventh as much per answer, refuses none, and its one miss is a right answer written in words (below). Every later evaluation also costs cents instead of about a dollar.
 
+## The final end-to-end run
+
+`scripts/e2e.sh --paid` on commit `1b455ab`, after the fixes from the final review, in a fresh clone with no `.env` of its own. The database was built offline and `uv run pytest -q` passed 354 tests in the clone. Through the HTTP API, the four assignment questions, the follow-up and the Seattle question all passed (6 of 6, about 0.01 USD); the follow-up named Columbus and showed the Midwest winter table. The evaluation then ran on Haiku 5.5: **42 of 42 case runs passed, no answer refused, none repaired, target met**, 0.039 USD (run `20261124T232102Z-claude`). The four assignment answers in that run follow the same lines as those quoted below; its Dallas answer names no warning types.
+
 ## What failed, and why
 
 **Haiku's two refusals were a bug in our band check.** Both came on "What if a hurricane counted double?". Haiku ran the what-if, labelled it, named Miami Very high (true in the what-if) and cited the official ranking as well. The check kept one band per hub, the last one cited, so it compared Very high with the official Moderate and refused a right answer twice. It now accepts any band a cited result gives the hub (`src/wra/agent/checks.py`, `_cited_bands`). With the fix, Haiku refused nothing.
