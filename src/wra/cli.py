@@ -60,6 +60,8 @@ def main(argv: list[str] | None = None) -> int:
     evaluate.add_argument("--agent", choices=["claude", "stub"], default="claude",
                           help="claude: the real agent, paid API calls (default); stub: answers nothing")
     evaluate.add_argument("--reps", type=int, default=1, metavar="N", help="repetitions per case (default 1)")
+    evaluate.add_argument("--require-target", action="store_true",
+                          help="exit with status 1 when the plan's target is missed (used by scripts/e2e.sh)")
 
     serve = commands.add_parser(
         "serve",
@@ -85,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "chat":
             return _chat()
         if args.command == "eval":
-            return _eval(args.agent, args.reps)
+            return _eval(args.agent, args.reps, args.require_target)
         if args.command == "serve":
             return _serve(args.host, args.port)
     except (SourceError, NoDatabase) as error:
@@ -147,9 +149,9 @@ def _rank(hazard: str, region: str, top: int | None) -> int:
     return 0 if result.ok else 1
 
 
-def _eval(agent_name: str, reps: int) -> int:
+def _eval(agent_name: str, reps: int, require_target: bool = False) -> int:
     from wra.evals.cases import CASES
-    from wra.evals.run import StubAgent, pinned_context, report, run_eval
+    from wra.evals.run import StubAgent, pinned_context, report, run_eval, target_met
     from wra.tools.context import load_context
 
     ctx = pinned_context(load_context())  # the agent's tools and the graders share the pinned date
@@ -162,7 +164,7 @@ def _eval(agent_name: str, reps: int) -> int:
     runs, out_dir = run_eval(agent, ctx, reps=reps, out_root=paths.root() / "evals" / "runs")
     print(report(runs, len(CASES), reps))
     print(f"Saved every conversation and check to {out_dir}.")
-    return 0
+    return 1 if require_target and not target_met(runs)[0] else 0
 
 
 def _ask(question: str) -> int:

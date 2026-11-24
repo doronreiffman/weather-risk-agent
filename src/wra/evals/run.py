@@ -115,6 +115,24 @@ def run_eval(agent: Agent, ctx: ToolContext, reps: int = 1, out_root: Path | Non
     return runs, out_dir
 
 
+ASSIGNMENT_CASES = (1, 2, 3, 4)  # the assignment's four questions (plan section 10.1)
+TARGET_SHARE = 0.9  # of all case runs (plan section 10.3)
+
+
+def target_met(runs: list[CaseRun]) -> tuple[bool, str]:
+    """Plan section 10.3: the four assignment questions pass in every repetition, and at least 90% of all
+    case runs pass. Returns whether it holds and a line saying so."""
+    assignment = [r for r in runs if r.case_id in ASSIGNMENT_CASES]
+    assignment_passed = sum(r.passed for r in assignment)
+    share = sum(r.passed for r in runs) / len(runs) if runs else 0.0
+    met = bool(assignment) and assignment_passed == len(assignment) and share >= TARGET_SHARE
+    return met, (
+        f"Target (plan section 10.3): {'met' if met else 'NOT met'}. The four assignment questions passed in "
+        f"{assignment_passed} of {len(assignment)} runs (all needed); {share:.1%} of case runs passed "
+        f"(at least {TARGET_SHARE:.0%} needed)."
+    )
+
+
 def report(runs: list[CaseRun], n_cases: int, reps: int) -> str:
     mark = {True: "pass", False: "FAIL", None: "-"}
     header = ["case", "rep", *CHECKS, "result"]
@@ -150,6 +168,7 @@ def report(runs: list[CaseRun], n_cases: int, reps: int) -> str:
         f"Time per case: {seconds:.2f} s. Tokens: {tokens_in} in, {tokens_out} out."
         + (f" Cost at list price: ${sum(costs):.2f}." if costs else "")
         + (f" {unpriced} replies ran on a model with no configured price and are not in that total." if unpriced else ""),
+        target_met(runs)[1],
     ]
     return "\n".join(lines)
 

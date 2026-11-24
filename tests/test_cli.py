@@ -126,6 +126,13 @@ def test_eval_with_the_stub_runs_every_case_and_scores_zero(scored_project, caps
     record = json.loads((runs[0] / "run.json").read_text())
     assert record["today"] == "2026-11-24" and len(record["runs"]) == 14
     assert record["runs"][0]["replies"][0]["status"] == "error"
+    assert "Target (plan section 10.3): NOT met." in out
+
+
+def test_eval_can_fail_when_the_target_is_missed(scored_project, capsys):
+    # scripts/e2e.sh relies on this exit status; without the option the score alone never fails the command.
+    assert main(["eval", "--agent", "stub", "--require-target"]) == 1
+    assert "Target (plan section 10.3): NOT met." in capsys.readouterr().out
 
 
 def test_serve_listens_on_this_machine_only_unless_told_otherwise(scored_project, monkeypatch):

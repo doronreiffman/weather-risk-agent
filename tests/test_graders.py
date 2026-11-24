@@ -217,3 +217,35 @@ def test_a_follow_up_may_reuse_the_earlier_result(ctx):
     checks = {c.name: c for c in grade(ctx, BY_ID[5], correct(ctx, 5))}
     assert correct(ctx, 5)[-1].trace.tool_calls == []
     assert checks["tool"].passed is True and checks["numbers"].passed is True
+
+
+# --- the target over a whole run (plan section 10.3) ---------------------------------------
+
+
+def _runs(failed: set[tuple[int, int]], reps: int = 3):
+    """Fourteen cases times `reps`, passing except the (case, rep) pairs in `failed`."""
+    from wra.evals.run import CaseRun
+
+    return [CaseRun(case.id, rep, (case.id, rep) not in failed, False, 1.0, [], [])
+            for case in CASES for rep in range(reps)]  # fmt: skip
+
+
+def test_the_target_is_met_when_every_case_run_passes():
+    from wra.evals.run import target_met
+
+    met, text = target_met(_runs(set()))
+    assert met and text.startswith("Target (plan section 10.3): met.")
+
+
+def test_one_failed_assignment_question_misses_the_target_even_above_90_percent():
+    from wra.evals.run import target_met
+
+    met, text = target_met(_runs({(3, 1)}))  # 41 of 42 passed, but the Denver question failed once
+    assert not met and "11 of 12 runs" in text
+
+
+def test_the_target_needs_90_percent_of_all_case_runs():
+    from wra.evals.run import target_met
+
+    assert target_met(_runs({(c, 0) for c in (10, 11, 12, 13)}))[0]  # 38 of 42, 90.5%
+    assert not target_met(_runs({(c, 0) for c in (9, 10, 11, 12, 13)}))[0]  # 37 of 42, 88.1%
