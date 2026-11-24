@@ -4,6 +4,7 @@ Most important first. Each line points to where the item's state lives; the stat
 
 ## Queue
 
+- [q9] Commit the session 01 transcript once the owner has re-exported it as `docs/ai-session/01-plan.txt`. → `docs/ai-session/README.md`
 - [q2] Milestone 1: data. Hub config, three ingest adapters, raw cache, SQLite. → `docs/PLAN.md` section 13
 - [q3] Milestone 2: scoring core and evaluation set, no LLM. → `docs/PLAN.md` section 13
 - [q4] Milestone 3: the agent. → `docs/PLAN.md` section 13

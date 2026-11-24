@@ -25,6 +25,12 @@ Python with `uv` and `pytest`.
 10. **Bonuses** (deployment, score-change alert, voice, in that order) start only after the final end-to-end check passes, and only after asking.
 11. **Measure before proposing.** Before proposing a number, check whether data already in hand can measure it. A number that confirms the expected answer gets checked hardest.
 
+## Gotchas and settled points
+
+- The shell is zsh: an unquoted `$VAR` is not split into words. Feed a loop with `while read -r a b c` over a here-doc. A loop that broke this way sent empty coordinates and got plausible-looking data back.
+- This repository commits with a repo-local personal address. The machine-wide git identity is the owner's work address, and it stays out of every tracked file and commit. Generators copy it (`uv init` did), so before each commit `git diff --cached | grep -i -c -F "$(git config --global user.email | cut -d@ -f2)"` prints 0.
+- The owner's one-month package-age rule stays npm-only here (owner 2026-11-24). Python packages install at their current versions.
+
 ## Sessions are a deliverable
 
 At the end of each milestone, remind the owner to run `/export` into `docs/ai-session/` (numbered `01-plan.txt`, `02-...`) before `/clear`, and add one line for that session to `docs/ai-session/README.md`. `docs/ai-session/` stays tracked by git.
