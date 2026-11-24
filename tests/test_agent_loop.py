@@ -80,6 +80,7 @@ def test_an_invalid_answer_gets_one_repair(ctx):
     assert reply.status == "answered" and reply.trace.repaired
     repair = client.requests[2]["messages"][-1]
     assert repair["role"] == "user" and "R9" in repair["content"]
+    assert any("R9" in p for p in reply.trace.repair_problems)
 
 
 def test_an_answer_invalid_twice_gives_a_clear_error(ctx):

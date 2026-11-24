@@ -76,7 +76,8 @@ def correct(ctx, case_id: int) -> list[AgentReply]:
         8: [setup_overall, r("answered", "In the what-if Miami led.", [rank(changes=HURRICANE_X2)], ["MIA"], True),
             r("answered", "Back to the official weights: Minneapolis leads.", [rank()], ["MSP", "MEM"])],
         9: [r("answered", "Minneapolis, Memphis and Denver.", [rank(top_n=3)], ["MSP", "MEM", "DEN"])],
-        10: [r("answered", "Time under warning times a weight per hazard.", [("get_methodology", {})])],
+        10: [r("answered", "Days under warning, weighted 1 for winter, flood and storms; hurricanes count 5 days "
+                           "per event.", [("get_methodology", {})])],
         11: [r("out_of_scope", "We have no Seattle hub.", [("list_hubs", {"region": "all"})])],
         12: [r("out_of_scope", "Forecasts are outside what this tool covers.")],
         13: [r("out_of_scope", "The score covers four hazards; earthquake risk is not one of them.",
@@ -172,6 +173,26 @@ def test_a_wrong_or_unnamed_band_fails_mentions(ctx, verdict):
 def test_a_number_inside_another_number_is_not_a_mention(ctx):
     answer = reply(ctx, "answered", "Denver had measurable snowfall on 17.1% of days.", [snow()])
     assert failing(ctx, 3, [answer]) == {"mentions"}
+
+
+def test_the_first_run_s_dallas_answer_passes(ctx):
+    # Verbatim from the first evaluation run (2026-11-24); it failed the earlier rule that no other band
+    # may be named anywhere, because a caveat mentions Moderate.
+    answer = reply(ctx, "answered",
+                   "Dallas is in the **High** band, but only just: it scores 2.02 expected disruption days a year, "
+                   "and High starts at 2. It ranks 6th of 12.", [("explain_hub", {"hub_id": "DAL"})],
+                   caveats=["Because Dallas is so close to the 2-day cutoff, one quieter year could drop it to "
+                            "Moderate, so don't treat the High label as firm."])  # fmt: skip
+    assert failing(ctx, 4, [answer]) == set()
+
+
+def test_the_first_run_s_methodology_answer_passes_and_without_the_figures_fails(ctx):
+    verdict = ("Winter weather, flooding and severe storms each count 1 disruption day for every day the hub was "
+               "under a qualifying National Weather Service warning (2016–2025). Hurricanes count **5** disruption "
+               "days per event, based on FEMA's long-run hurricane frequency for the hub's county.")  # fmt: skip
+    assert failing(ctx, 10, [reply(ctx, "answered", verdict, [("get_methodology", {})])]) == set()
+    vague = "Each hazard's time under warning is weighted, and hurricanes count more."
+    assert failing(ctx, 10, [reply(ctx, "answered", vague, [("get_methodology", {})])]) == {"mentions"}
 
 
 def test_low_confidence_is_not_a_band(ctx):

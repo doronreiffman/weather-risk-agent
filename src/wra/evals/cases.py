@@ -97,7 +97,7 @@ class Case:
     hubs: HubsCheck | None = None
     is_what_if: bool | None = None
     required: list[str | Callable[[ToolContext], str]] = field(default_factory=list)  # whole words or numbers
-    band_of: str | None = None  # this hub's real band must be named, and no other band
+    band_of: str | None = None  # the first band the verdict names must be this hub's real band (owner, 2026-11-24)
     forbidden: list[str] = field(default_factory=lambda: list(FORBIDDEN_EVERYWHERE))
     pinned: dict[str, Any] = field(default_factory=dict)  # figures in the matching tool result's data
     shows_table: bool = True  # whether the expected tool's table must be among the reply's tables
@@ -122,6 +122,11 @@ def _pair_order(hub_ids: tuple[str, ...], hazard: str):
 def expected_band(ctx: ToolContext, hub_id: str) -> str:
     """Banded on the figure as the tools show it, rounded."""
     return band(round(ctx.scores()[hub_id].edd, DECIMALS), ctx.config.band_cutoffs)
+
+
+def _weights_as_figures(ctx: ToolContext) -> list[str]:
+    """Each distinct weight, as a whole figure: today 1 (the three warning hazards) and 5 (hurricanes)."""
+    return list(dict.fromkeys(f"{w:g}" for w in ctx.config.weights.values()))
 
 
 def _city(order, index: int):
@@ -172,7 +177,7 @@ CASES = [
          calls=[ExpectedCall("rank_hubs", {"hazard": "overall", "region": "all", "weight_changes": OFFICIAL})],
          hubs=HubsCheck("exact", _order("overall", top=3))),
     Case(10, ["How is the score calculated, and what are the weights?"], "Methodology comes from the tool.",
-         "answered", calls=[ExpectedCall("get_methodology", {})], required=["weight"]),
+         "answered", calls=[ExpectedCall("get_methodology", {})], required=[_weights_as_figures]),
     Case(11, ["How exposed is our Seattle hub?"], "Out of scope: no such hub.", "out_of_scope",
          allowed_tools=REFERENCE_TOOLS, required=["Seattle"], shows_table=False),
     Case(12, ["Will it snow in Chicago next week?"], "Out of scope: forecast.", "out_of_scope",

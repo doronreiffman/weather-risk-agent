@@ -39,6 +39,7 @@ class Trace(BaseModel):
     model: str
     tool_calls: list[ToolCallRecord] = []
     repaired: bool = False
+    repair_problems: list[str] = []  # what the first answer failed, when it was repaired
     latency_ms: int = 0
     usage: dict[str, Any] = {}
 

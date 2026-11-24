@@ -109,18 +109,23 @@ def _numbers(ctx: ToolContext, case: Case, last: AgentReply, matching) -> Check:
 
 def _mentions(ctx: ToolContext, case: Case, last: AgentReply) -> Check:
     text = " ".join([last.verdict, *last.caveats])
-    required = [w(ctx) if callable(w) else w for w in case.required]
+    required = []
+    for w in case.required:  # a callable may give one word or several
+        value = w(ctx) if callable(w) else w
+        required += value if isinstance(value, list) else [value]
     missing = [w for w in required if not _has(text, w)]
     present = [w for w in case.forbidden if w.lower() in text.lower()]
     problems = ([f"missing {missing}"] if missing else []) + ([f"forbidden {present}"] if present else [])
     if case.band_of:
+        # The first band the verdict names is its claim; a later or caveated mention of a neighbouring
+        # band ("one quieter year could drop it to Moderate") is allowed (owner, 2026-11-24).
         want = expected_band(ctx, case.band_of)
-        named = _bands_named(text)
+        first = _first_band(last.verdict)
         required.append(want)
-        if want not in named:
-            problems.append(f"band {want!r} not named (bands named: {sorted(named) or 'none'})")
-        elif named - {want}:
-            problems.append(f"another band named as well: {sorted(named - {want})}")
+        if first is None:
+            problems.append(f"the verdict names no band; expected {want!r}")
+        elif first != want:
+            problems.append(f"the first band the verdict names is {first!r}; expected {want!r}")
     return Check("mentions", not problems, "; ".join(problems) or f"has {required or 'nothing required'}")
 
 
@@ -129,17 +134,18 @@ def _has(text: str, word: str) -> bool:
     return re.search(rf"(?<![\w.]){re.escape(word)}(?!\w|\.\d)", text, flags=re.IGNORECASE) is not None
 
 
-def _bands_named(text: str) -> set[str]:
-    """Band labels written as the tools write them, capitalised. "High" inside "Very high" is not High;
-    "Low confidence" is the confidence label, not a band."""
-    named = set()
+def _first_band(text: str) -> str | None:
+    """The first band label in the text, written as the tools write it, capitalised. "High" inside
+    "Very high" is not High; "Low confidence" is the confidence label, not a band."""
+    first = None
     for label in BAND_LABELS:
         pattern = rf"(?<![\w])(?<!Very ){re.escape(label)}(?![\w])"
         if label == "Low":
             pattern += r"(?! confidence)"
-        if re.search(pattern, text):
-            named.add(label)
-    return named
+        match = re.search(pattern, text)
+        if match and (first is None or match.start() < first[0]):
+            first = (match.start(), label)
+    return first[1] if first else None
 
 
 def _in_order(got: list[str], expected: list[str]) -> bool:

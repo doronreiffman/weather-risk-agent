@@ -100,10 +100,11 @@ class ClaudeAgent:
         calls: list[ToolCallRecord] = []
         model = self.settings.model
         repaired = False
+        repair_problems: list[str] = []
 
         def trace() -> Trace:
             cost = self.settings.cost(model, usage)
-            return Trace(model=model, tool_calls=calls, repaired=repaired,
+            return Trace(model=model, tool_calls=calls, repaired=repaired, repair_problems=repair_problems,
                          latency_ms=int(1000 * (time.monotonic() - started)),
                          usage={**usage, "cost_usd": None if cost is None else round(cost, 6)})  # fmt: skip
 
@@ -137,6 +138,7 @@ class ClaudeAgent:
             if repaired:
                 return fail("The answer failed validation twice: " + "; ".join(problems))
             repaired = True
+            repair_problems = problems
             session.messages.append({"role": "user", "content": REPAIR.format(problems="\n- ".join(problems))})
         return fail(f"No final answer within {self.settings.max_model_calls} model calls.")
 
