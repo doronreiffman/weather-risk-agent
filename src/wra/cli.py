@@ -1,7 +1,7 @@
 """Command-line entry point.
 
-Subcommands are added one milestone at a time (docs/PLAN.md, section 13).
-So far: ingest, data-report, rank, ask, chat, eval. To come: serve.
+Subcommands, added one milestone at a time (docs/PLAN.md, section 13):
+ingest, data-report, rank, ask, chat, eval, serve.
 """
 
 import argparse
@@ -61,6 +61,17 @@ def main(argv: list[str] | None = None) -> int:
                           help="claude: the real agent, paid API calls (default); stub: answers nothing")
     evaluate.add_argument("--reps", type=int, default=1, metavar="N", help="repetitions per case (default 1)")
 
+    serve = commands.add_parser(
+        "serve",
+        help="run the chat page and its API (each question is a paid API call)",
+        description="Serve the chat page at / and the API under /api from one process; conversations live in "
+        "memory until the server stops. Needs ANTHROPIC_API_KEY in .env.",
+    )
+    serve.add_argument("--host", default="127.0.0.1",
+                       help="address to listen on (default 127.0.0.1: this machine only, so nobody else can spend "
+                            "the API credit)")  # fmt: skip
+    serve.add_argument("--port", type=int, default=8000, help="port to listen on (default 8000)")
+
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
@@ -75,6 +86,8 @@ def main(argv: list[str] | None = None) -> int:
             return _chat()
         if args.command == "eval":
             return _eval(args.agent, args.reps)
+        if args.command == "serve":
+            return _serve(args.host, args.port)
     except (SourceError, NoDatabase) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
@@ -177,6 +190,21 @@ def _chat() -> int:
         reply = agent.answer(session, question)
         session = reply.session_id
         _print_reply(reply)
+    return 0
+
+
+def _serve(host: str, port: int) -> int:
+    import uvicorn
+
+    from wra.agent.loop import ClaudeAgent
+    from wra.api.app import create_app
+    from wra.tools.context import load_context
+
+    ctx = load_context()
+    app = create_app(ClaudeAgent(ctx), ctx)  # one agent for the process: every conversation lives in it
+    print(f"Chat page at http://{host}:{port}/ . Each question is a paid API call. Ctrl-C stops the server.",
+          flush=True)  # fmt: skip
+    uvicorn.run(app, host=host, port=port)
     return 0
 
 

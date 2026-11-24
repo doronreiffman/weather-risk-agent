@@ -126,3 +126,23 @@ def test_eval_with_the_stub_runs_every_case_and_scores_zero(scored_project, caps
     record = json.loads((runs[0] / "run.json").read_text())
     assert record["today"] == "2026-11-24" and len(record["runs"]) == 14
     assert record["runs"][0]["replies"][0]["status"] == "error"
+
+
+def test_serve_listens_on_this_machine_only_unless_told_otherwise(scored_project, monkeypatch):
+    import shutil
+
+    import uvicorn
+    from fastapi.testclient import TestClient
+
+    import wra.agent.loop
+    from conftest import REPO
+
+    shutil.copy(REPO / "config" / "agent.toml", scored_project / "config" / "agent.toml")
+    monkeypatch.setattr(wra.agent.loop, "AnthropicClient", lambda settings: object())  # no .env, no network
+    ran = {}
+    monkeypatch.setattr(uvicorn, "run", lambda app, **options: ran.update(app=app, **options))
+    assert main(["serve"]) == 0
+    assert (ran["host"], ran["port"]) == ("127.0.0.1", 8000)
+    assert TestClient(ran["app"]).get("/healthz").json() == {"status": "ok", "hubs": 12}
+    assert main(["serve", "--host", "0.0.0.0", "--port", "8123"]) == 0
+    assert (ran["host"], ran["port"]) == ("0.0.0.0", 8123)
