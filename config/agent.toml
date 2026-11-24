@@ -6,7 +6,8 @@ effort = "medium"           # Opus 5.5's own default, set explicitly; thinking c
 max_tokens = 16000          # per model call; non-streaming
 max_model_calls = 6         # per user message (plan section 8.4)
 timeout_seconds = 60        # per model call; measured calls take 4 to 8 seconds (owner, 2026-11-24)
-max_retries = 1             # so a stuck answer ends in a plain error within about two minutes
+max_retries = 1             # per model call, made by the agent loop, not the SDK, so it fits the limit below
+message_time_limit_seconds = 90  # per user message, all model calls and the retry included (owner, milestone 4)
 
 # Server-side refusal fallback: when the model's safety system declines, the
 # API re-runs the request on a substitute model chosen by the refusal's category.

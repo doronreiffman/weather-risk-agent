@@ -13,6 +13,10 @@ from pydantic import BaseModel, ConfigDict
 from wra.tools.envelope import Display
 
 Status = Literal["answered", "out_of_scope", "no_data", "needs_clarification", "error"]
+# Why a reply is an error. The API sends busy as 409, unknown_conversation as 404 and the rest as 502
+# (owner, milestone 4); the message in `error` is for people, the code for programs.
+ErrorCode = Literal["busy", "unknown_conversation", "model_call_failed", "time_limit", "declined", "cut_off",
+                    "invalid_twice", "too_many_calls"]  # fmt: skip
 
 
 class FinalAnswer(BaseModel):
@@ -67,6 +71,7 @@ class AgentReply(BaseModel):
     is_what_if: bool = False
     evidence: list[str] = []  # the result ids the answer cites; their tables are `tables`
     error: str | None = None  # a plain message when status is "error"
+    error_code: ErrorCode | None = None  # which failure, when status is "error"
     trace: Trace
 
 

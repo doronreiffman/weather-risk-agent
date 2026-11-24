@@ -87,6 +87,7 @@ def test_an_answer_invalid_twice_gives_a_clear_error(ctx):
     a, _ = agent(ctx, tool("rank_hubs", WINTER_MIDWEST), final(evidence=["R9"]), final(evidence=["R9"]))
     reply = a.answer(None, "Which hubs in the Midwest are most exposed to winter disruption?")
     assert reply.status == "error" and "failed validation twice" in reply.error
+    assert reply.error_code == "invalid_twice"
     assert reply.verdict == "" and reply.tables == []
 
 
@@ -101,7 +102,7 @@ def test_an_ungrounded_number_triggers_a_repair(ctx):
 def test_a_declined_reply_is_an_error(ctx):
     a, _ = agent(ctx, response("refusal"))
     reply = a.answer(None, "Which hubs are most exposed?")
-    assert reply.status == "error" and "declined" in reply.error
+    assert reply.status == "error" and "declined" in reply.error and reply.error_code == "declined"
 
 
 # --- more ways an answer can go wrong ------------------------------------------------------
@@ -109,7 +110,8 @@ def test_a_declined_reply_is_an_error(ctx):
 
 def test_a_reply_cut_off_at_the_token_limit_is_an_error(ctx):
     a, _ = agent(ctx, response("max_tokens", SimpleNamespace(type="text", text='{"status": "ans')))
-    assert "cut off" in a.answer(None, "Which hubs are most exposed?").error
+    reply = a.answer(None, "Which hubs are most exposed?")
+    assert "cut off" in reply.error and reply.error_code == "cut_off"
 
 
 def test_text_that_is_not_an_answer_object_is_repaired(ctx):
@@ -138,13 +140,14 @@ def test_a_what_if_must_be_flagged(ctx):
 def test_the_model_call_limit_ends_in_an_error(ctx):
     a, _ = agent(ctx, *[tool("list_hubs", {"region": "all"}, f"toolu_{n}") for n in range(6)])
     reply = a.answer(None, "Which hubs are there?")
-    assert reply.status == "error" and "6 model calls" in reply.error
+    assert reply.status == "error" and "6 model calls" in reply.error and reply.error_code == "too_many_calls"
 
 
 def test_an_api_failure_is_an_error_naming_only_its_kind(ctx):
-    a, _ = agent(ctx, ConnectionError("secret request details"))
+    a, client = agent(ctx, ConnectionError("secret request details"))
     reply = a.answer(None, "Which hubs are most exposed?")
     assert reply.status == "error" and "ConnectionError" in reply.error and "secret" not in reply.error
+    assert reply.error_code == "model_call_failed" and len(client.requests) == 1  # not an SDK error: no retry
 
 
 # --- conversations and the no-data case ----------------------------------------------------
@@ -342,7 +345,7 @@ def test_the_real_client_uses_the_configured_timeout_and_retries(monkeypatch):
     monkeypatch.setattr(dotenv, "load_dotenv", lambda *a, **k: None)  # no .env is read in tests
     monkeypatch.setattr(anthropic, "Anthropic", lambda **kwargs: made.update(kwargs))
     AnthropicClient(load_settings(REPO / "config" / "agent.toml"))
-    assert made == {"timeout": 60.0, "max_retries": 1}
+    assert made == {"timeout": 60.0, "max_retries": 0}  # the loop makes the one retry, within the message's time
 
 
 def test_a_second_message_while_the_first_is_answered_is_refused(ctx):
@@ -359,12 +362,128 @@ def test_a_second_message_while_the_first_is_answered_is_refused(ctx):
     client = Slow(tool("rank_hubs", WINTER_MIDWEST), final())
     a = ClaudeAgent(ctx, load_settings(REPO / "config" / "agent.toml"), client)
     replies = {}
-    first = threading.Thread(target=lambda: replies.update(first=a.answer("s1", "Which hubs?")))
+    first = threading.Thread(target=lambda: replies.update(first=a.answer(None, "Which hubs?")))
     first.start()
     started.wait(5)
-    replies["second"] = a.answer("s1", "Which hubs, again?")
+    (session_id,) = a.sessions
+    replies["second"] = a.answer(session_id, "Which hubs, again?")
     release.set()
     first.join(5)
     assert replies["second"].status == "error" and "still being answered" in replies["second"].error
+    assert replies["second"].error_code == "busy"
     assert replies["first"].status == "answered"
-    assert [m["role"] for m in a.sessions["s1"].messages] == ["user", "assistant", "user", "assistant"]
+    assert [m["role"] for m in a.sessions[session_id].messages] == ["user", "assistant", "user", "assistant"]
+
+
+# --- milestone 4: unknown conversations and the time limit per message -----------------------
+
+
+def test_an_unknown_conversation_is_refused_without_a_model_call(ctx):
+    a, client = agent(ctx, final())
+    reply = a.answer("from-before-a-restart", "And which is the least exposed?")
+    assert reply.status == "error" and reply.error_code == "unknown_conversation"
+    assert reply.session_id == "from-before-a-restart" and "no longer on the server" in reply.error
+    assert client.requests == [] and a.sessions == {}
+
+
+class Clock:
+    """Stands in for the loop's time module: calls on the fake model move it on, sleeps are recorded."""
+
+    def __init__(self):
+        self.now, self.slept = 0.0, []
+
+    def monotonic(self):
+        return self.now
+
+    def sleep(self, seconds):
+        self.slept.append(seconds)
+        self.now += seconds
+
+
+@pytest.fixture
+def clock(monkeypatch):
+    import wra.agent.loop
+
+    fake = Clock()
+    monkeypatch.setattr(wra.agent.loop, "time", fake)
+    return fake
+
+
+class Timed(Scripted):
+    """Each call takes the given number of seconds on the fake clock."""
+
+    def __init__(self, clock, seconds, *responses):
+        super().__init__(*responses)
+        self.clock, self.seconds = clock, list(seconds)
+
+    def create(self, **request):
+        self.clock.now += self.seconds.pop(0)
+        return super().create(**request)
+
+
+def timed(ctx, clock, seconds, *responses):
+    client = Timed(clock, seconds, *responses)
+    return ClaudeAgent(ctx, load_settings(REPO / "config" / "agent.toml"), client), client
+
+
+def _request():
+    import httpx2
+
+    return httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
+
+
+def timeout_error():
+    import anthropic
+
+    return anthropic.APITimeoutError(request=_request())
+
+
+def rate_limited(retry_after):
+    import anthropic
+    import httpx2
+
+    reply = httpx2.Response(429, headers={"retry-after": retry_after}, request=_request())
+    return anthropic.RateLimitError("rate limited", response=reply, body=None)
+
+
+def test_each_call_waits_at_most_the_time_left_in_the_message(ctx, clock):
+    a, client = timed(ctx, clock, [50, 5], tool("rank_hubs", WINTER_MIDWEST), final())
+    assert a.answer(None, "Which hubs in the Midwest are most exposed?").status == "answered"
+    assert [r["timeout"] for r in client.requests] == [60, 40]  # 60 s per call, but only 40 s of the 90 were left
+
+
+def test_no_model_call_starts_after_the_message_time_limit(ctx, clock):
+    a, client = timed(ctx, clock, [50, 45, 1], tool("list_hubs", {"region": "all"}, "toolu_1"),
+                      tool("list_hubs", {"region": "all"}, "toolu_2"), final())  # fmt: skip
+    reply = a.answer(None, "Which hubs are there?")
+    assert reply.status == "error" and reply.error_code == "time_limit" and "90-second limit" in reply.error
+    assert len(client.requests) == 2
+    session = a.sessions[reply.session_id]
+    assert session.messages == [] and session.results == {} and not session.busy.locked()
+
+
+def test_a_timed_out_call_is_retried_once_within_the_time_left(ctx, clock):
+    a, client = timed(ctx, clock, [60, 5, 5], timeout_error(), tool("rank_hubs", WINTER_MIDWEST), final())
+    reply = a.answer(None, "Which hubs in the Midwest are most exposed?")
+    assert reply.status == "answered" and clock.slept == [0.5]
+    assert [r["timeout"] for r in client.requests] == [60, 29.5, 24.5]
+
+
+def test_a_second_failure_of_the_same_call_ends_the_message(ctx, clock):
+    a, client = timed(ctx, clock, [60, 20], timeout_error(), timeout_error(), final())
+    reply = a.answer(None, "Which hubs are most exposed?")
+    assert reply.error_code == "model_call_failed" and "APITimeoutError" in reply.error
+    assert len(client.requests) == 2
+
+
+def test_a_wait_the_api_asks_for_is_kept_when_it_fits(ctx, clock):
+    a, client = timed(ctx, clock, [1, 1, 1], rate_limited("2"), tool("rank_hubs", WINTER_MIDWEST), final())
+    assert a.answer(None, "Which hubs in the Midwest are most exposed?").status == "answered"
+    assert clock.slept == [2.0] and len(client.requests) == 3
+
+
+def test_a_wait_longer_than_the_time_left_ends_the_message_at_once(ctx, clock):
+    a, client = timed(ctx, clock, [1], rate_limited("120"), final())
+    reply = a.answer(None, "Which hubs are most exposed?")
+    assert reply.error_code == "model_call_failed" and "120 seconds" in reply.error
+    assert clock.slept == [] and len(client.requests) == 1

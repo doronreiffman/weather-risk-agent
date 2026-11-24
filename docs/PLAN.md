@@ -649,6 +649,12 @@ Changes forced by reality are appended here, newest last.
 - *The evaluation report breaks errors and repairs down by kind (section 10.3),* read from each reply's trace, which now also keeps the rejected first answer and what it failed.
 - *More modules under `agent/` than section 11 listed.* `checks.py` (the checks of section 8.4), `settings.py` and `tooldefs.py` beside `schemas.py`, `prompt.py`, `loop.py`, `grounding.py` and `render.py`.
 
+**2026-11-24, milestone 4. What the API build changed.**
+
+- *The reply names its failure (section 8.5).* A reply with status `error` carries `error_code` (busy, unknown_conversation, model_call_failed, time_limit, declined, cut_off, invalid_twice, too_many_calls) beside its plain message, so the API can choose an HTTP status without reading the text.
+- *The API does not create a conversation for an id it does not hold (section 7.1, step 2: "finds or creates the session").* A null id starts a conversation; an unknown id is refused without a model call (owner). `docs/ASSUMPTIONS.md`, milestone 4 section, point 1.
+- *A time limit per message, and the retry moved from the SDK into the loop (section 8.4, "other limits").* 90 seconds per message, all calls included (owner). Decision log, same date.
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks
