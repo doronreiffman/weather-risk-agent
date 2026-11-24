@@ -6,8 +6,9 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q5] Milestone 4: API and chat page. → `docs/PLAN.md` section 13
-- [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. → `docs/PLAN.md` section 13
+- [q12] Commit the session 03 transcript once the owner has exported it as `docs/ai-session/03-scoring-and-agent.txt`. → `docs/ai-session/README.md`
+- [q5] Milestone 4: API and chat page. The page footer carries FEMA's full notice. → `docs/PLAN.md` section 13, `docs/ASSUMPTIONS.md` O2
+- [q6] Milestone 5: results, documents, fresh-context review, final end-to-end check. Measures verdict length. → `docs/PLAN.md` section 13, `docs/ASSUMPTIONS.md` O14
 - [q10] Deployment to a public URL, ask first. The assignment calls it preferred, so it stands apart from the bonuses. → `docs/PLAN.md` section 13
 - [q8] Bonuses, ask first: score-change alert, voice. → `docs/PLAN.md` section 13
 

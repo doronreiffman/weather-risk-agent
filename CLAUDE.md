@@ -23,7 +23,8 @@ Python with `uv` and `pytest`.
 8. **Ask rather than guess, and push back** when there is a better approach.
 9. **Match the model to the task** and say which was picked and why: Fable for open design questions and the final whole-diff review, Opus for implementation and per-milestone review, Sonnet for small, fully specified tasks. The main session's model and effort level are the owner's to switch, so say when they should change.
 10. **Bonuses** (deployment, score-change alert, voice, in that order) start only after the final end-to-end check passes, and only after asking.
-11. **Measure before proposing.** Before proposing a number, check whether data already in hand can measure it. A number that confirms the expected answer gets checked hardest.
+11. **Measure before proposing.** Before proposing a number, check whether data already in hand can measure it. A number that confirms the expected answer gets checked hardest. A measuring script is checked against a hand count of a few cases before its number is reported.
+12. **Paid calls are the owner's to approve.** `wra ask`, `wra chat` and `wra eval` (unless `--agent stub`) spend the owner's API credit. Ask before each full `wra eval` run and report its measured cost. Tests use a scripted fake model and never call the API.
 
 ## Gotchas and settled points
 
