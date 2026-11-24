@@ -1,0 +1,106 @@
+# The twelve fictional hubs (docs/PLAN.md, section 6). Each sits at its city's
+# main airport; Dallas uses Love Field.
+#
+# Only identity is typed here. Where a hub sits is read from the data sources
+# at ingest and never typed: coordinates from the station's own metadata, the
+# county from FEMA's county layer, the warning zones from the warning archive.
+# `uv run wra data-report` prints what was resolved.
+#
+# station: the airport's id at the NOAA station service (ACIS).
+# tz:      the hub's time zone, used to assign warning hours to calendar years.
+
+[[hub]]
+id = "ORD"
+city = "Chicago"
+state = "IL"
+region = "midwest"
+station = "ORD"
+tz = "America/Chicago"
+
+[[hub]]
+id = "MSP"
+city = "Minneapolis"
+state = "MN"
+region = "midwest"
+station = "MSP"
+tz = "America/Chicago"
+
+[[hub]]
+id = "MCI"
+city = "Kansas City"
+state = "MO"
+region = "midwest"
+station = "MCI"
+tz = "America/Chicago"
+
+[[hub]]
+id = "IND"
+city = "Indianapolis"
+state = "IN"
+region = "midwest"
+station = "IND"
+tz = "America/Indiana/Indianapolis"
+
+[[hub]]
+id = "CMH"
+city = "Columbus"
+state = "OH"
+region = "midwest"
+station = "CMH"
+tz = "America/New_York"
+
+[[hub]]
+id = "MIA"
+city = "Miami"
+state = "FL"
+region = "south"
+station = "MIA"
+tz = "America/New_York"
+
+[[hub]]
+id = "IAH"
+city = "Houston"
+state = "TX"
+region = "south"
+station = "IAH"
+tz = "America/Chicago"
+
+[[hub]]
+id = "DAL"
+city = "Dallas"
+state = "TX"
+region = "south"
+station = "DAL"
+tz = "America/Chicago"
+
+[[hub]]
+id = "ATL"
+city = "Atlanta"
+state = "GA"
+region = "south"
+station = "ATL"
+tz = "America/New_York"
+
+[[hub]]
+id = "MEM"
+city = "Memphis"
+state = "TN"
+region = "south"
+station = "MEM"
+tz = "America/Chicago"
+
+[[hub]]
+id = "DEN"
+city = "Denver"
+state = "CO"
+region = "west"
+station = "DEN"
+tz = "America/Denver"
+
+[[hub]]
+id = "PHX"
+city = "Phoenix"
+state = "AZ"
+region = "west"
+station = "PHX"
+tz = "America/Phoenix"
