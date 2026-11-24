@@ -623,6 +623,11 @@ Changes forced by reality are appended here, newest last.
 - *Drawn-area warnings need reconciling with their county row (section 5.2).* A drawn-area row keeps the warning's first planned end, while an early cancellation or an extension shows only in the county row. Scoring in milestone 2 has to choose which end to use; open point O12 holds the figures and a proposed rule.
 - *Lesson:* the data report earned its place. The O'Hare and Atlanta counties and the event count surfaced only because every hub's resolved location and figures were printed and read before any score was built on them. The independent review found the last two items by checking the stored data against itself.
 
+**2026-11-24, milestone 2. What the scoring build changed.**
+
+- *Coastal flood warnings are not scored (section 5.2).* Planned: flood counts flash flood warnings plus coastal flood warnings for the hub's zone. The only two coastal ones, at Houston in 2016, warned of flooding on Galveston Bay and the Gulf beaches, not at the airport. The owner removed them at the review; they stay a supporting figure. Decision log, same date.
+- *A module the layout did not list (section 11).* `src/wra/stored.py` reads the database into plain values once, so the scoring core and the tools never run SQL and can be tested on hand-built inputs.
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks

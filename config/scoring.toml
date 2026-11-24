@@ -1,0 +1,87 @@
+# How the risk score is computed (docs/PLAN.md, section 5). The scoring code
+# reads every rule from here; nothing below is repeated in code.
+#
+# The score is Expected Disruption Days per year (EDD), summed over four hazards:
+#   warning hazards: days under a qualifying warning per year x weight
+#   hurricane:       FEMA hurricane events per year for the hub's county x weight
+
+[period]
+# The ten full years the warning figures cover. Must match the period the
+# database was built for (its meta table); the loader stops if they differ.
+start_year = 2016
+end_year = 2025
+
+# Which warnings count, per hazard. Warnings only (significance W); watches and
+# advisories never count.
+#   zone_codes:    warnings issued for the hub's forecast zone (zone rows whose
+#                  area code has Z as its third letter, for example TXZ119).
+#   polygon_codes: warnings whose drawn area covered the hub (polygon rows). The
+#                  county row of the same warning can only shorten it: the hub's
+#                  warning ends at the earlier of the two ends (open point O12,
+#                  settled 2026-11-24).
+# Left out on purpose (assumption A3): river flood (FL) and area flood (FA)
+# warnings, cold and wind-chill warnings, high-wind warnings. Coastal flood (CF)
+# warnings were left out at the milestone 2 review (open point O10): they are
+# issued for a whole forecast zone, while coastal flooding stays at the shore.
+
+[hazards.winter]
+label = "Winter weather"
+weight = 1.0
+zone_codes = ["WS", "BZ", "IS", "LE"]   # winter storm, blizzard, ice storm, lake effect snow
+polygon_codes = []
+
+[hazards.flood]
+label = "Flooding"
+weight = 1.0
+zone_codes = []
+polygon_codes = ["FF"]                  # flash flood
+
+[hazards.severe_storm]
+label = "Severe storms"
+weight = 1.0
+zone_codes = []
+polygon_codes = ["TO", "SV"]            # tornado, severe thunderstorm
+
+[hazards.hurricane]
+label = "Hurricanes"
+weight = 5.0                            # disruption days per event (plan section 5.3)
+fema_field = "HRCN_AFREQ"               # FEMA's annualised frequency, tropical storms included
+# FEMA gives no figure where it rates hurricanes "Not Applicable" (the county lies
+# outside the area a hurricane can reach). That counts as zero and is not missing
+# data (open point O11, settled 2026-11-24).
+fema_minimum = 0.01                     # FEMA's assumed minimum for reachable land with no storm on record
+fema_period = "1851-2024"
+
+[supporting]
+# Shown beside the score, never added to it.
+tropical_zone_codes = ["HU", "TR", "SS"]   # hurricane, tropical storm, storm surge warnings
+coastal_flood_zone_codes = ["CF"]          # coastal flood warnings for the hub's zone
+
+[supporting.fema_cross_check]
+# FEMA's own annualised frequencies for the three warning hazards, as an
+# independent check on the warning figures.
+winter = ["WNTW_AFREQ", "ISTM_AFREQ"]
+flood = ["IFLD_AFREQ", "CFLD_AFREQ"]
+severe_storm = ["TRND_AFREQ", "HAIL_AFREQ", "SWND_AFREQ"]
+
+[bands]
+# Four bands in disruption days per year: Low, Moderate, High, Very high.
+# cutoffs = [moderate_from, high_from, very_high_from]
+# Fixed at the milestone 2 review from the twelve real figures, with the
+# owner's sign-off and an entry in docs/DECISIONS.md. Empty until then.
+cutoffs = []
+
+[confidence]
+# Plan section 5.6.
+high_min_coverage = 0.98
+low_below_coverage = 0.90
+low_above_failed_gap_share = 0.5         # more than half the gaps fail separation -> low
+stability_factors = [0.5, 2.0]          # each weight halved and doubled
+stability_top_n = 3
+
+[daily_stats]
+# Measured station records (NOAA ACIS). Missing days are left out of the percentage.
+snowfall_measurable_in = 0.1
+precipitation_measurable_in = 0.01      # any recorded amount; settled 2026-11-24
+high_max_missing_share = 0.02
+medium_max_missing_share = 0.10
