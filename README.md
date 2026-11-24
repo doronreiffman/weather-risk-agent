@@ -16,18 +16,22 @@ uv run wra rank overall    # the ranking of all twelve hubs, with bands and conf
 uv run wra rank winter --region midwest
 uv run wra eval --agent stub   # runs the fourteen evaluation cases; a stub agent scores 0 of 14
 uv run pytest -q
+scripts/e2e.sh             # the end-to-end check, free part: clones the last commit, builds offline, runs the tests there
 ```
 
-The agent needs an Anthropic API key. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`; `.env` is git-ignored. These commands make paid API calls:
+The agent needs an Anthropic API key. Copy `.env.example` to `.env` and fill in `ANTHROPIC_API_KEY`; `.env` is git-ignored. `WRA_ENV_FILE` names another file instead; the end-to-end script's clone uses it to read the original repository's `.env` without copying it. These commands make paid API calls:
 
 ```
 uv run wra serve           # the chat page at http://127.0.0.1:8000/ and its API; every question is paid
 uv run wra ask "Which hubs in the Midwest are most exposed to winter disruption?"
 uv run wra chat            # a conversation in the terminal, follow-ups included
 uv run wra eval            # all fourteen cases through the real agent; 0.53 USD at list price on 2026-11-24
+scripts/e2e.sh --paid      # the whole end-to-end check: six questions through the API, then wra eval --reps 3
 ```
 
 The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_EFFORT` override them. One question gets about 90 seconds, all model calls included, before it ends in a plain error.
+
+`wra eval` ends with a line saying whether the plan's target was met: the four assignment questions pass in every repetition, and at least 90% of all case runs pass. `--require-target` makes the command fail when it was not. `scripts/e2e.sh --paid` starts the server on port 8765 (`WRA_E2E_PORT` changes it), asks the four assignment questions, a follow-up and an out-of-scope question through the HTTP API, checks each reply, then runs `wra eval --reps 3 --require-target` and copies its record into `evals/runs/`.
 
 `wra serve` listens on this machine only (127.0.0.1, port 8000); `--host` and `--port` change that. The page sends `POST /api/chat` with `{"session_id": null, "message": "..."}` and gets back the validated reply; sending that reply's `session_id` with the next message makes it a follow-up. Every reply has the same shape. Its HTTP status is 200 unless it is an error: 409 while the conversation's last question is still being answered, 404 for a conversation the server no longer holds (after a restart), 502 when the model could not give a validated answer, 500 for a bug in the agent's own code. A malformed request gets 422 with FastAPI's validation message instead of a reply. `GET /api/hubs` lists the hubs and `GET /healthz` checks the server; neither calls the model. FastAPI's generated reference for the API is at `/docs`.
 

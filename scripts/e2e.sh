@@ -73,6 +73,8 @@ uv run python -m wra.evals.e2e "http://127.0.0.1:$port"
 step "6. The evaluation, three repetitions, against the plan's target"
 eval_status=0
 uv run wra eval --reps 3 --require-target || eval_status=$?
-mkdir -p "$repo/evals/runs"
-cp -R evals/runs/. "$repo/evals/runs/"  # keep the run record in the original repository; git ignores it
+if [ -d evals/runs ]; then  # keep the run record in the original repository; git ignores it
+  mkdir -p "$repo/evals/runs"
+  cp -R evals/runs/. "$repo/evals/runs/"
+fi
 exit "$eval_status"
