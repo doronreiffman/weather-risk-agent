@@ -601,6 +601,16 @@ Changes forced by reality are appended here, newest last.
 - *Now:* count time under warning; all three warning weights are 1.0; the hurricane weight stays at 5.0, which the Miami and Houston records support; band cut-offs are fixed at the milestone 2 review. Dallas will probably not come out "high", and the agent will say so.
 - *Lesson:* a number that happens to confirm the expected answer is the one to check hardest. The figures behind this entry are in `docs/ASSUMPTIONS.md`.
 
+**2026-11-24, start of milestone 1. The order of work, re-checked against the assignment.**
+
+- *Asked by the owner:* re-evaluate the priorities against the brief before starting milestone 1.
+- *What holds:* the order of milestones 1 to 5. The assignment's hard requirements (a chat page, an API behind it, a schema between the model and the code, an evaluation set) are all met only at the end of milestone 4, and each earlier milestone is on the path to it. Milestone 1 has nothing to cut: the four assignment questions between them need all three sources.
+- *What changes:*
+  1. Inside milestones 2 and 3, the tools behind the four assignment questions (rank, compare, explain, daily statistics) are built and checked first. What-if, the methodology tool and the weight-stability test follow.
+  2. The README's run instructions are brought up to date at the end of every milestone, not only in milestone 5, so the repository can be handed in from any milestone boundary.
+  3. Deployment gets its own line in the work queue, ahead of the alert and voice. The assignment calls a public URL "preferred" and the other two "bonus". It still starts only after the final check and only after asking. Until then the build stays easy to deploy: settings come from environment variables and the database is built from committed files.
+- *Not changed:* the cut order in section 13.
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks
