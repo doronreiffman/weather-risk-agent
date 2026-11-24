@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub Weather Risk</title>
+<style>
+  :root {
+    --bg: #fafaf8; --surface: #ffffff; --text: #1d1d1b; --muted: #5d5d58; --line: #dcdcd6;
+    --accent: #1f5f8b; --warn-bg: #fff4e5; --warn-line: #e0a458; --error-bg: #fdecec; --error-line: #d07070;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161615; --surface: #1f1f1d; --text: #ecece8; --muted: #a8a8a0; --line: #3a3a36;
+      --accent: #7fb8e0; --warn-bg: #3a2f1f; --warn-line: #a07a40; --error-bg: #3a2222; --error-line: #a05555;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .page { max-width: 880px; margin: 0 auto; padding: 16px; }
+  header { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+  h1 { font-size: 1.4rem; margin: 8px 0 4px; }
+  header p { margin: 0; color: var(--muted); max-width: 60ch; }
+  button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line);
+           background: var(--surface); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  #log { margin: 24px 0; display: flex; flex-direction: column; gap: 16px; }
+  .question { align-self: flex-end; max-width: 80%; background: var(--surface); border: 1px solid var(--line);
+              border-radius: 10px; padding: 8px 12px; white-space: pre-wrap; }
+  .answer { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; }
+  .answer.error { background: var(--error-bg); border-color: var(--error-line); }
+  .label { display: inline-block; font-size: 0.85rem; font-weight: 600; padding: 2px 8px; border-radius: 4px;
+           background: var(--warn-bg); border: 1px solid var(--warn-line); margin: 0 6px 8px 0; }
+  .verdict { margin: 0 0 8px; }
+  .caveats { margin: 0 0 8px; padding-left: 20px; color: var(--muted); }
+  figure { margin: 16px 0 0; }
+  figcaption { font-weight: 600; margin-bottom: 6px; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 0.9rem; }
+  th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); }
+  .what, .note, .footnote p { font-size: 0.85rem; color: var(--muted); margin: 6px 0 0; }
+  .footnote { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
+  details { margin-top: 12px; font-size: 0.85rem; }
+  summary { cursor: pointer; color: var(--accent); }
+  dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  pre { margin: 2px 0 6px; white-space: pre-wrap; word-break: break-word; background: var(--bg);
+        border: 1px solid var(--line); border-radius: 4px; padding: 6px; }
+  .notice { color: var(--muted); text-align: center; font-size: 0.9rem; }
+  form { display: flex; gap: 8px; align-items: flex-end; }
+  textarea { flex: 1; font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line);
+             background: var(--surface); color: var(--text); resize: vertical; min-height: 3em; }
+  #working { color: var(--muted); margin: 8px 0 0; }
+  #working::after { content: ""; animation: dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+  footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div>
+      <h1>Hub weather risk</h1>
+      <p>Ask which hubs are most exposed to winter storms, floods, severe storms and hurricanes, how two hubs
+        compare, or why a hub ranks where it does. Figures come from stored weather records, and an answer
+        that gives figures shows their sources, period and confidence.</p>
+    </div>
+    <button id="new" type="button">New conversation</button>
+  </header>
+
+  <main id="log" aria-live="polite"></main>
+
+  <form id="ask">
+    <textarea id="message" rows="2" maxlength="2000" required
+              placeholder="Which hubs in the Midwest are most exposed to winter disruption?"></textarea>
+    <button id="send" class="primary" type="submit">Ask</button>
+  </form>
+  <p id="working" hidden>Working: the agent is looking up the figures and checking its answer</p>
+
+  <footer>
+    <p>This product uses the Federal Emergency Management Agency's National Risk Index dataset API or downloadable datasets but is not endorsed by FEMA. The Federal Government or FEMA cannot vouch for the data or analyses derived from these data after the data have been retrieved from the Agency's website(s).</p>
+    <p>Weather warnings: National Weather Service, from the Iowa Environmental Mesonet archive. Station records: NOAA, through the ACIS service.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+// The page shows only what the API's reply holds. It computes no figure: tables, footnotes and trace
+// values are written exactly as the server sends them.
+
+const log = document.getElementById("log");
+const form = document.getElementById("ask");
+const box = document.getElementById("message");
+const send = document.getElementById("send");
+const working = document.getElementById("working");
+let sessionId = null;
+
+const LABELS = { out_of_scope: "Out of scope", no_data: "No data for that period",
+                 needs_clarification: "Needs clarification" };
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined && text !== null) node.textContent = String(text);
+  return node;
+}
+
+// The model may write **bold** and nothing else (the system prompt says so). Everything is escaped
+// first and only then is **...** turned into <strong>, so no text in a reply can become markup.
+function boldOnly(text) {
+  const escaped = String(text).replace(/[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  return escaped.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
+function rich(tag, className, text) {
+  const node = el(tag, className);
+  node.innerHTML = boldOnly(text);
+  return node;
+}
+
+function tableBlock(t) {
+  const figure = el("figure");
+  figure.append(el("figcaption", null, t.title));
+  const table = el("table");
+  const head = table.createTHead().insertRow();
+  t.columns.forEach((c) => head.append(el("th", null, c)));
+  const body = table.createTBody();
+  t.rows.forEach((row) => {
+    const tr = body.insertRow();
+    row.forEach((cell) => tr.append(el("td", null, cell)));
+  });
+  const scroll = el("div", "scroll");
+  scroll.append(table);
+  figure.append(scroll, el("p", "what", t.what_counts));
+  (t.notes || []).forEach((n) => figure.append(el("p", "note", "Note: " + n)));
+  return figure;
+}
+
+function footnoteBlock(f) {
+  const block = el("div", "footnote");
+  block.append(el("p", null, "Data: " + f.sources.join("; ") + ". Period: " + f.period + ". Data as of " +
+                  f.data_as_of + "."));
+  block.append(el("p", null, "Confidence: " + f.confidence + ". " + f.confidence_reason));
+  return block;
+}
+
+function traceBlock(reply) {
+  const t = reply.trace;
+  const details = el("details");
+  details.append(el("summary", null, "How this was computed"));
+  const list = el("dl");
+  const item = (term, value) => { list.append(el("dt", null, term)); list.append(value); };
+  item("Model", el("dd", null, t.model));
+  const calls = el("dd");
+  if (t.tool_calls.length === 0) calls.textContent = "none in this turn";
+  t.tool_calls.forEach((c) => {
+    calls.append(el("div", null, c.id + "  " + c.name));
+    calls.append(el("pre", null, JSON.stringify(c.input, null, 2)));
+  });
+  item("Tool calls", calls);
+  item("Results cited", el("dd", null, reply.evidence.length ? reply.evidence.join(", ") : "none"));
+  item("Repaired", el("dd", null, t.repaired ? "yes, after the first answer failed a check" : "no"));
+  if (t.repair_problems.length) {
+    const problems = el("dd");
+    t.repair_problems.forEach((p) => problems.append(el("div", null, p)));
+    item("First answer failed", problems);
+  }
+  if (t.rejected_answer) {
+    const first = el("dd");
+    first.append(el("pre", null, t.rejected_answer));
+    item("First answer", first);
+  }
+  item("Time", el("dd", null, t.latency_ms + " ms"));
+  const usage = el("dd");
+  Object.entries(t.usage).forEach(([key, value]) => usage.append(el("div", null, key + ": " + value)));
+  item("Tokens and cost (USD, list price)", usage);
+  details.append(list);
+  return details;
+}
+
+function showQuestion(text) {
+  log.append(el("div", "question", text));
+}
+
+function showReply(reply) {
+  const card = el("article", "answer");
+  if (reply.status === "error") {
+    card.classList.add("error");
+    card.append(el("p", "verdict", reply.error || "The agent could not answer."));
+  } else {
+    if (reply.is_what_if) card.append(el("span", "label", "What-if, not the official ranking"));
+    if (LABELS[reply.status]) card.append(el("span", "label", LABELS[reply.status]));
+    card.append(rich("p", "verdict", reply.verdict));
+    if (reply.caveats.length) {
+      const list = el("ul", "caveats");
+      reply.caveats.forEach((c) => list.append(rich("li", null, c)));
+      card.append(list);
+    }
+    reply.tables.forEach((t) => card.append(tableBlock(t)));
+    if (reply.footnote) card.append(footnoteBlock(reply.footnote));
+  }
+  card.append(traceBlock(reply));
+  log.append(card);
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function showNotice(text) {
+  const notice = el("p", "notice", text);
+  log.append(notice);
+  notice.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+function setWorking(on) {
+  send.disabled = on;
+  working.hidden = !on;
+}
+
+async function ask(message) {
+  showQuestion(message);
+  setWorking(true);
+  let response = null, reply = null;
+  try {
+    response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, message }),
+    });
+    reply = await response.json().catch(() => null);
+  } catch (error) {
+    reply = null;
+  }
+  setWorking(false);
+
+  if (!reply || !reply.trace) {  // not a reply from the agent: the server is down, or the request was refused
+    box.value = message;
+    showNotice(response ? "The server did not accept the question (HTTP " + response.status + "). It is back in the box."
+                        : "The server could not be reached. The question is back in the box.");
+    return;
+  }
+  showReply(reply);
+  if (reply.status !== "error") {
+    sessionId = reply.session_id;
+  } else if (reply.error_code === "unknown_conversation") {
+    sessionId = null;  // the server restarted: the next question starts a new conversation
+    box.value = message;
+    showNotice("New conversation. Your question is back in the box: send it again, reworded if it was a follow-up.");
+  } else {
+    sessionId = reply.session_id;  // the failed turn left the conversation as it was
+    box.value = message;
+  }
+  box.focus();
+}
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const message = box.value.trim();
+  if (!message || send.disabled) return;
+  box.value = "";
+  ask(message);
+});
+
+box.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    form.requestSubmit();
+  }
+});
+
+document.getElementById("new").addEventListener("click", () => {
+  sessionId = null;
+  log.replaceChildren();
+  box.focus();
+});
+</script>
+</body>
+</html>

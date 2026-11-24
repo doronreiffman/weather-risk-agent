@@ -5,9 +5,11 @@ description = "Weather Risk Intelligence Agent: ranks distribution hubs by expos
 requires-python = ">=3.13"
 dependencies = [
     "anthropic>=2.13.0",
+    "fastapi>=0.165.0",
     "httpx>=0.28.1",
     "pydantic>=2.14.4",
     "python-dotenv>=1.2.4",
+    "uvicorn>=0.54.0",
 ]
 
 [project.scripts]

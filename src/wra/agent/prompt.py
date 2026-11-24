@@ -43,7 +43,8 @@ question is one we cover but the tool reports the period is outside the data; "n
 question cannot be answered without the user saying more.
 - verdict: at most four short sentences of Markdown; anything more goes in a caveat. No tables, no lists of \
 every figure: the page shows the cited results' tables with their notes, sources, period and confidence beside \
-your verdict, so do not repeat them.
+your verdict, so do not repeat them. In the verdict and the caveats, **bold** is the only formatting the page \
+shows; any other Markdown appears as typed.
 - Name a band exactly as the tools write it: Low, Moderate, High, Very high.
 - evidence: the result_ids (R1, R2, ...) of the results whose tables the page should show, in order. Required \
 when status is "answered".

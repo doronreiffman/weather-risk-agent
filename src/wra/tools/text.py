@@ -10,7 +10,7 @@ def as_text(result: ToolResult) -> str:
 
 
 def display_text(d: Display) -> str:
-    cells = [d.columns] + [["" if c is None else _cell(c) for c in row] for row in d.rows]
+    cells = [d.columns] + [[cell_text(c) for c in row] for row in d.rows]
     widths = [max(len(row[i]) for row in cells) for i in range(len(d.columns))]
     lines = [d.title, ""]
     for n, row in enumerate(cells):
@@ -30,8 +30,11 @@ def footnote_text(p) -> str:
     ])  # fmt: skip
 
 
-def _cell(value) -> str:
-    """Figures as the tool gives them, padded to two decimals: 2.9 shows as 2.90, FEMA's 0.0115 stays 0.0115."""
+def cell_text(value) -> str:
+    """Figures as the tool gives them, padded to two decimals: 2.9 shows as 2.90, FEMA's 0.0115 stays 0.0115.
+    The command line and the chat page both show cells this way; an empty cell is blank."""
+    if value is None:
+        return ""
     if isinstance(value, float):
         return f"{value:.2f}" if round(value, 2) == value else str(value)
     return str(value)
