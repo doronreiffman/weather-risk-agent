@@ -54,7 +54,10 @@ class ScoringConfig:
     tropical_zone_codes: tuple[str, ...]
     coastal_flood_zone_codes: tuple[str, ...]
     fema_cross_check: dict[str, tuple[str, ...]]
-    band_cutoffs: tuple[float, ...]  # empty until the milestone 2 review
+    band_cutoffs: tuple[float, ...]
+    bands_apply_to: str  # 'overall': bands label a hub's overall figure only
+    winter_note: str
+    known_limits: tuple[str, ...]
     confidence: ConfidenceRules
     daily: DailyStatsRules
 
@@ -98,6 +101,9 @@ def _build(raw: dict) -> ScoringConfig:
     if cutoffs and (len(cutoffs) != len(BAND_LABELS) - 1 or list(cutoffs) != sorted(set(cutoffs)) or cutoffs[0] <= 0):
         raise ConfigError(f"band cutoffs must be empty or {len(BAND_LABELS) - 1} positive ascending numbers: {cutoffs}")
 
+    if raw["bands"]["applies_to"] != "overall":
+        raise ConfigError("bands applies_to must be 'overall' (owner, 2026-11-24)")
+
     period = raw["period"]
     if period["start_year"] > period["end_year"]:
         raise ConfigError("period start_year is after end_year")
@@ -115,6 +121,9 @@ def _build(raw: dict) -> ScoringConfig:
         coastal_flood_zone_codes=tuple(raw["supporting"]["coastal_flood_zone_codes"]),
         fema_cross_check={k: tuple(v) for k, v in raw["supporting"]["fema_cross_check"].items()},
         band_cutoffs=cutoffs,
+        bands_apply_to=raw["bands"]["applies_to"],
+        winter_note=raw["notes"]["winter_aftermath"],
+        known_limits=tuple(raw["notes"]["known_limits"]),
         confidence=ConfidenceRules(
             high_min_coverage=float(conf["high_min_coverage"]),
             low_below_coverage=float(conf["low_below_coverage"]),

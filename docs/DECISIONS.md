@@ -55,3 +55,15 @@ Short entries for choices that shape the rest of the build. Details and evidence
 **Decision:** Coastal flood warnings leave the flood score. Flood counts flash flood warnings whose drawn area covered the hub. Zone-issued warnings still count for winter weather.
 **Why:** The plan counted any coastal flood warning for the hub's forecast zone. The only two in ten years, at Houston in 2016, went to the whole Harris zone, and their text names flooding only along Galveston Bay and the Gulf beaches. A snowstorm covers a zone; coastal flooding stays at the shore, so a zone match overstates it. This is the same reasoning that already scores flash floods and storms from drawn areas, not county rows. Rejected: keeping them as the approved rule said (Houston's flood figure 0.72 instead of 0.47 days a year, 4th overall instead of 7th).
 **Context:** Owner's choice at the milestone 2 review. Evidence in `docs/ASSUMPTIONS.md`, milestone 2 section, point 3. `config/scoring.toml`.
+
+## 2026-11-24 — Band cut-offs at 1, 2 and 3 days a year, for overall figures only
+
+**Decision:** A hub's overall figure is Low below 1 expected disruption day a year, Moderate from 1, High from 2 and Very high from 3. Single-hazard figures get no band. The cut-offs do not move.
+**Why:** The twelve figures run from 0.42 (Phoenix) to 2.90 (Minneapolis). Equal one-day steps are the plainest round grid at that scale, chosen without aiming at any hub. Very high is empty today, which leaves room for a hub worse than any we have. Dallas (2.02) is High by 0.02 days, so its answer says how close that is. Bands on single hazards were rejected because a hub could then be Moderate on every hazard and High overall. Rejected cut-offs: 1 / 2.5 / 4 (only Minneapolis High) and 1 / 3 / 5 (no hub High); also rejected: no bands at all.
+**Context:** Owner's choice at the milestone 2 review, from the ranking in `docs/ASSUMPTIONS.md`, milestone 2 section. `config/scoring.toml`.
+
+## 2026-11-24 — Weights stay equal; winter's longer road effect is shown as a fixed note
+
+**Decision:** Winter, flood and severe storms keep weight 1.0. Wherever winter figures count, code adds a note that winter's road effect outlasts its warning and the score may understate it, and an overall ranking reports its top three with winter counted double.
+**Why:** The owner asked whether some hazards disrupt more than others. Published studies, checked against their text, show winter's effect on truck speeds lasts longest after the event (FHWA-HOP-16-044, 2016: almost 8 mph below normal four hours after ice and snow) and that hurricane power cuts run longest (PNNL-33340, 2022). None measures disruption in days per day under warning, so none gives a weight. With winter at 1.5 or 2.0 Minneapolis stays first and the same five hubs stay on top. Rejected: winter at 1.5 or 2.0 as a stated judgment.
+**Context:** Owner's choice on 2026-11-24. Evidence in `docs/ASSUMPTIONS.md`, milestone 2 section. Replaces nothing: it confirms the weights in the entry "Count time under warning, with equal weights for the three warning hazards".

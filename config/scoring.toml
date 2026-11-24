@@ -66,10 +66,30 @@ severe_storm = ["TRND_AFREQ", "HAIL_AFREQ", "SWND_AFREQ"]
 
 [bands]
 # Four bands in disruption days per year: Low, Moderate, High, Very high.
-# cutoffs = [moderate_from, high_from, very_high_from]
-# Fixed at the milestone 2 review from the twelve real figures, with the
-# owner's sign-off and an entry in docs/DECISIONS.md. Empty until then.
-cutoffs = []
+# cutoffs = [moderate_from, high_from, very_high_from]; a figure on a cut-off
+# takes the higher band. Fixed by the owner at the milestone 2 review
+# (docs/DECISIONS.md, 2026-11-24). They do not move.
+cutoffs = [1.0, 2.0, 3.0]
+# Bands label a hub's overall figure only, never a single hazard's.
+applies_to = "overall"
+
+[notes]
+# Fixed text that code puts under a table; the model never writes it.
+# Shown wherever winter figures count: winter and overall rankings, and any
+# explanation or comparison that includes winter (owner, 2026-11-24).
+winter_aftermath = """Winter's effect on roads outlasts the warning more than other weather does: \
+in FHWA's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds \
+were still almost 8 mph below normal four hours after ice and snow events. This score counts only \
+time under warning, so it may understate winter next to floods and storms."""
+# Listed by the methodology tool (plan section 5.7).
+known_limits = [
+    "A warning is a forecast that conditions will be dangerous, not a record that a hub closed.",
+    "The score is in day-equivalents under the stated weights, not a prediction of closure days.",
+    "It counts the time a warning was in force and nothing after it.",
+    "Ten years is a short record: yearly figures swing widely, so hubs with close figures cannot be told apart.",
+    "Flood exposure at a real site depends on the exact parcel; the score sees only the hub's location and county.",
+    "Exposure means weather at the location only. Hub importance, upgrade costs and investment choices are outside the score.",
+]
 
 [confidence]
 # Plan section 5.6.

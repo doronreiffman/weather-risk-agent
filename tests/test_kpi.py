@@ -39,12 +39,15 @@ def test_the_config_holds_the_agreed_weights_and_period():
     # Flood is flash flood warnings only: coastal flood left the score at the review (O10).
     assert (CONFIG.hazards["flood"].zone_codes, CONFIG.hazards["flood"].polygon_codes) == ((), ("FF",))
     assert CONFIG.coastal_flood_zone_codes == ("CF",)
+    # Fixed by the owner at the milestone 2 review.
+    assert CONFIG.band_cutoffs == (1.0, 2.0, 3.0) and CONFIG.bands_apply_to == "overall"
+    assert "FHWA-HOP-16-044" in CONFIG.winter_note
 
 
 def test_a_config_with_cutoffs_out_of_order_is_refused(tmp_path):
     text = CONFIG_FILE.read_text()
     bad = tmp_path / "scoring.toml"
-    bad.write_text(text.replace("cutoffs = []", "cutoffs = [5, 2, 10]"))
+    bad.write_text(text.replace("cutoffs = [1.0, 2.0, 3.0]", "cutoffs = [2.0, 1.0, 3.0]"))
     with pytest.raises(ConfigError, match="ascending"):
         load_scoring_config(bad)
 
