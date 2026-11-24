@@ -12,6 +12,7 @@ from wra.tools.common import (
     HazardOrOverall,
     Region,
     band_text,
+    clear_text,
     edd_what_counts,
     hazard_label,
     provenance,
@@ -155,6 +156,7 @@ def _display(ctx, args, rows, weights, stab, scores) -> Display:
     columns.append("Clear of next")
     for row, r in zip(body, rows):
         row.append(clear(r["clear_of_next"]))
+    what_counts += " " + clear_text("Clear of next", "the gap to the next hub", args.hazard == "hurricane")
     if args.weight_changes:
         columns.append("Official rank")
         for row, r in zip(body, rows):

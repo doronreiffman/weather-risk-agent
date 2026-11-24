@@ -11,9 +11,9 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict
 
 SOURCE_NAMES = {
-    "iem_warning_archive": "National Weather Service warnings, from the Iowa Environmental Mesonet archive",
+    "iem_warning_archive": "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive",
     "fema_nri": "FEMA National Risk Index",
-    "noaa_station_acis": "NOAA airport station observations, through the ACIS service",
+    "noaa_station_acis": "NOAA airport station observations, through ACIS, the data service of NOAA's Regional Climate Centers",
 }
 
 # The Weather Service's names for the warning codes the score counts or shows.

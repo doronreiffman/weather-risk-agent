@@ -96,15 +96,19 @@ def _display(ctx: ToolContext, d: dict, snow: bool) -> Display:
     meeting = f"Days with {amount}" if d["threshold"] == "measurable" else f"Days with a trace or {amount}"
     kind = f"measurable {what}" if d["threshold"] == "measurable" else f"a trace or more of {what}"
     station = ctx.data.hubs[d["hub_id"]].station_name
+    # A trace is "less than the smallest measurable amount" (NWS NOWData FAQ). No cutoff is stated, because
+    # Weather Service sources differ on it: under 0.05 or under 0.1 inch for snow, 0.005 or 0.01 for rain.
     if snow:
         what_counts = (
             f"Measured at the {station} station. Measurable snowfall is {d['threshold_in']:g} inch or more in a "
-            "day. Trace days are counted apart. Missing days are left out of the percentage."
+            "day. A trace means snow fell, but too little to measure; trace days are counted apart. "
+            "Missing days are left out of the percentage."
         )
     else:
         what_counts = (
             f"Measured at the {station} station. A day with precipitation means {d['threshold_in']:g} inch or more, "
-            "any recorded amount. Trace days are counted apart. Missing days are left out of the percentage. "
+            "any recorded amount. A trace means some rain or snow fell, but too little to measure; trace days are "
+            "counted apart. Missing days are left out of the percentage. "
             "This describes the weather at the station, not disruption."
         )
     return Display(

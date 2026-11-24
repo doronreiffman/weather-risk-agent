@@ -9,7 +9,7 @@ from conftest import REPO
 from wra.scoring.config import load_scoring_config
 from wra.stored import load_stored
 from wra.tools.context import ToolContext
-from wra.tools.envelope import ToolResult
+from wra.tools.envelope import SOURCE_NAMES, ToolResult
 from wra.tools.registry import TOOLS, run_tool
 
 OVERALL_ORDER = ["MSP", "MEM", "DEN", "MCI", "ORD", "DAL", "IAH", "MIA", "IND", "ATL", "CMH", "PHX"]
@@ -247,3 +247,110 @@ def test_a_hub_without_a_fema_hurricane_figure_says_why(ctx):
     hurricane = next(h for h in result.data["hazards"] if h["hazard"] == "hurricane")
     assert hurricane["edd"] == 0.0 and "Not Applicable" in hurricane["note"]
     assert any("Not Applicable" in note for note in result.display.notes)
+
+
+# --- plain words: every term an analyst may not know is explained where it appears (O15) ----
+
+
+MIA_IAH = {"hub_ids": ["MIA", "IAH"], "hazards": ["hurricane", "flood"]}
+
+
+def test_the_snowfall_table_says_what_a_trace_is(ctx):
+    what = run_tool(ctx, "daily_weather_stats", stats_args()).display.what_counts
+    assert "A trace means snow fell, but too little to measure; trace days are counted apart." in what
+
+
+def test_the_rain_table_says_what_a_trace_is(ctx):
+    what = run_tool(ctx, "daily_weather_stats", stats_args(hub_id="IAH", metric="precipitation")).display.what_counts
+    assert "A trace means some rain or snow fell, but too little to measure; trace days are counted apart." in what
+
+
+def test_a_ranking_says_what_clear_of_next_means(ctx):
+    what = run_tool(ctx, "rank_hubs", rank_args(hazard="winter", region="midwest")).display.what_counts
+    assert "Clear of next: yes when the gap to the next hub is bigger than the uncertainty in the two hubs' " in what
+    assert "Not testable" not in what  # no hurricane figure in this table
+
+
+def test_a_hurricane_ranking_says_why_its_gaps_are_not_testable(ctx):
+    result = run_tool(ctx, "rank_hubs", rank_args(hazard="hurricane"))
+    assert set(column(result, "Clear of next")) == {"not testable"}
+    assert "Not testable: FEMA gives one long-run hurricane figure with no yearly values." in result.display.what_counts
+
+
+def test_a_comparison_says_what_clear_of_the_highest_means(ctx):
+    what = run_tool(ctx, "compare_hubs", MIA_IAH).display.what_counts
+    assert "Clear of the highest: yes when the gap below the most exposed hub is bigger than the uncertainty" in what
+    assert "Not testable: FEMA gives one long-run hurricane figure" in what
+
+
+def test_the_zone_notes_say_what_a_forecast_zone_is(ctx):
+    notes = run_tool(ctx, "compare_hubs", MIA_IAH).display.notes
+    zone_notes = [n for n in notes if "zone" in n]
+    assert len(zone_notes) == 2  # tropical warnings, and Houston's coastal flood warnings
+    assert all("forecast zone (a Weather Service warning area, usually a county or part of one)" in n for n in zone_notes)
+
+
+def test_the_methodology_says_what_watches_advisories_and_the_left_out_flood_warnings_are(ctx):
+    not_scored = run_tool(ctx, "get_methodology", {}).data["not_scored"]
+    for words in [
+        "Watches (the hazard is possible, not certain)",
+        "advisories (less serious than a warning)",
+        "river flood warnings (a river forecast to rise above its flood level at a set point)",
+        "area flood warnings (flooding that builds slowly over a wide area)",
+    ]:
+        assert words in not_scored
+
+
+def test_the_score_line_lists_the_warnings_it_counts(ctx):
+    what = run_tool(ctx, "rank_hubs", rank_args()).display.what_counts
+    assert (
+        "Warnings counted: winter weather: Winter Storm, Blizzard, Ice Storm, Lake Effect Snow; "
+        "flooding: Flash Flood; severe storms: Tornado, Severe Thunderstorm."
+    ) in what
+
+
+def test_the_explanation_says_whose_calendar_years(ctx):
+    what = run_tool(ctx, "explain_hub", {"hub_id": "DAL"}).display.what_counts
+    assert "Years are calendar years in the hub's own time zone." in what
+
+
+def test_the_confidence_line_says_what_data_coverage_is(ctx):
+    reason = run_tool(ctx, "rank_hubs", rank_args()).provenance.confidence_reason
+    assert reason.startswith("Data coverage 100% (the share of the records these figures need that the data holds).")
+
+
+def test_the_winter_note_names_the_agency_in_full(ctx):
+    assert "the Federal Highway Administration's Regional Assessment" in ctx.config.winter_note
+
+
+def test_the_sources_say_who_runs_them():
+    assert SOURCE_NAMES["iem_warning_archive"] == (
+        "National Weather Service warnings, from Iowa State University's Iowa Environmental Mesonet archive"
+    )
+    assert SOURCE_NAMES["noaa_station_acis"] == (
+        "NOAA airport station observations, through ACIS, the data service of NOAA's Regional Climate Centers"
+    )
+
+
+RETIRED_TERMS = ["day-equivalent", "qualifying", "local calendar", "FHWA's", "ACIS service"]
+
+
+@pytest.mark.parametrize(
+    "name, args",
+    [
+        ("list_hubs", {"region": "all"}),
+        ("rank_hubs", rank_args()),
+        ("rank_hubs", rank_args(hazard="hurricane")),
+        ("compare_hubs", {"hub_ids": ["MIA", "IAH"], "hazards": ["overall", "hurricane", "flood"]}),
+        ("explain_hub", {"hub_id": "DAL"}),
+        ("daily_weather_stats", stats_args()),
+        ("daily_weather_stats", stats_args(hub_id="IAH", metric="precipitation")),
+        ("get_methodology", {}),
+    ],
+)
+def test_no_tool_text_uses_a_retired_term(ctx, name, args):
+    r = run_tool(ctx, name, args)
+    d, p = r.display, r.provenance
+    text = " ".join([d.title, *d.columns, d.what_counts, *d.notes, p.confidence_reason, *map(SOURCE_NAMES.get, p.sources),
+                     json.dumps(r.data)])  # fmt: skip
+    assert [t for t in RETIRED_TERMS if t in text] == []

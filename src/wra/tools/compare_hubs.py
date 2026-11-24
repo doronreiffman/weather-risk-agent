@@ -4,9 +4,21 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from wra.scoring.confidence import decide, gap_test
 from wra.scoring.kpi import band, rank
-from wra.tools.common import HazardOrOverall, check_hubs, edd_what_counts, hazard_label, provenance, r2, winter_counts
+from wra.tools.common import (
+    HazardOrOverall,
+    check_hubs,
+    clear_text,
+    edd_what_counts,
+    hazard_label,
+    provenance,
+    r2,
+    winter_counts,
+)
 from wra.tools.context import ToolContext
 from wra.tools.envelope import Display, ToolResult
+
+# Public zones "usually are the same as counties but in many cases are subsets of counties" (weather.gov/gis/publiczones).
+FORECAST_ZONE = "forecast zone (a Weather Service warning area, usually a county or part of one)"
 
 DESCRIPTION = (
     "Compare two to four hubs on one or more hazards (or overall). For each hazard, every hub's figure is "
@@ -85,7 +97,8 @@ def _display(ctx, args, results, supporting) -> Display:
     names = " and ".join(ctx.data.hubs[h].city for h in args.hub_ids)
     what_counts = (
         f"{edd_what_counts(ctx, cfg.weights)} Rate: days a year under warning; for hurricanes, FEMA events a year "
-        f"(record {cfg.fema_period}); none for overall. Bands label overall figures only."
+        f"(record {cfg.fema_period}); none for overall. Bands label overall figures only. "
+        + clear_text("Clear of the highest", "the gap below the most exposed hub", "hurricane" in args.hazards)
     )
     notes = []
     if winter_counts(list(args.hazards)):
@@ -94,7 +107,7 @@ def _display(ctx, args, results, supporting) -> Display:
         tropical = ", ".join(f"{ctx.data.hubs[h].city} {supporting[h]['tropical_warning_days_a_year']}" for h in args.hub_ids)
         notes.append(
             f"Not scored, shown beside FEMA's long-run figure: days a year under Hurricane, Tropical Storm or "
-            f"Storm Surge Warnings for the hub's zone, {cfg.first_year} to {cfg.last_year}: {tropical}."
+            f"Storm Surge Warnings for the hub's {FORECAST_ZONE}, {cfg.first_year} to {cfg.last_year}: {tropical}."
         )
         notes += [
             f"{ctx.label(h)}: {scores[h].hazards['hurricane'].note}"
@@ -108,7 +121,7 @@ def _display(ctx, args, results, supporting) -> Display:
             if supporting[h]["coastal_flood_warning_days_a_year"]
         )
         notes.append(
-            f"Not scored: days a year under Coastal Flood Warnings for the hub's whole forecast zone, "
+            f"Not scored: days a year under Coastal Flood Warnings for the hub's whole {FORECAST_ZONE}, "
             f"{cfg.first_year} to {cfg.last_year}: {coastal}. Coastal flooding stays at the shore, while the "
             f"warning covers the zone, so these are left out of the flood figure."
         )

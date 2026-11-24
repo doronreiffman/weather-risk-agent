@@ -46,8 +46,12 @@ def get_methodology(ctx: ToolContext, args: MethodologyArgs) -> ToolResult:
         "fema_release": ctx.data.fema_release,
         "known_limits": list(cfg.known_limits),
         "winter_note": cfg.winter_note,
-        "not_scored": "Watches, advisories, river and area flood warnings, coastal flood warnings, cold and "
-        "wind-chill warnings, high-wind warnings, heat, wildfire, earthquakes.",
+        # Meanings from the Weather Service's own pages: weather.gov/otx/Watch_Warning_Advisory_Definitions,
+        # weather.gov/safety/flood-watch-warning and weather.gov/bmx/outreach_flw (read 2026-11-24).
+        "not_scored": "Watches (the hazard is possible, not certain), advisories (less serious than a warning), "
+        "river flood warnings (a river forecast to rise above its flood level at a set point), area flood warnings "
+        "(flooding that builds slowly over a wide area), coastal flood warnings, cold and wind-chill warnings, "
+        "high-wind warnings, heat, wildfire, earthquakes.",
     }
     return ToolResult(
         ok=True,

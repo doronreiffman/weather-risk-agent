@@ -8,6 +8,7 @@ import pytest
 
 from conftest import REPO
 from wra.agent.loop import ClaudeAgent
+from wra.agent.prompt import system_prompt
 from wra.agent.settings import load_settings
 from wra.scoring.config import load_scoring_config
 from wra.stored import load_stored
@@ -557,3 +558,11 @@ def test_a_wait_longer_than_the_time_left_ends_the_message_at_once(ctx, clock):
     reply = a.answer(None, "Which hubs are most exposed?")
     assert reply.error_code == "model_call_failed" and "120 seconds" in reply.error
     assert clock.slept == [] and len(client.requests) == 1
+
+
+def test_the_prompt_asks_for_unfamiliar_terms_to_be_explained_in_plain_words(ctx):
+    # Owner, milestone 4 page check: no jargon without its meaning (ASSUMPTIONS O15). Whether the model
+    # follows it is read by hand in a live answer; this pins the instruction itself.
+    prompt = system_prompt(ctx)
+    assert "say what it means in plain words in the same sentence" in prompt
+    assert "Spell out an abbreviation the first time you use it." in prompt

@@ -111,7 +111,7 @@ def _display(ctx, d, score) -> Display:
         rows=body,
         what_counts=(
             f"{edd_what_counts(ctx, cfg.weights)} Rate: days a year under warning; for hurricanes, FEMA events a "
-            f"year (record {cfg.fema_period}). Years are local calendar years. {band_text(ctx)}"
+            f"year (record {cfg.fema_period}). Years are calendar years in the hub's own time zone. {band_text(ctx)}"
         ),
         notes=notes,
     )

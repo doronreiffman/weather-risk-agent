@@ -122,7 +122,7 @@ def decide(
     high = coverage >= rules.high_min_coverage and not failed and not untestable and not set_moves
     label = "low" if low else "high" if high else "medium"
 
-    parts = [f"Data coverage {coverage:.0%}."]
+    parts = [f"Data coverage {coverage:.0%} (the share of the records these figures need that the data holds)."]
     if tested and not failed:
         parts.append("Every gap tested is larger than the hubs' year-to-year swings.")
     elif failed:

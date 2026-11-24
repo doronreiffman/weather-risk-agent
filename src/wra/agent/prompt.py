@@ -28,6 +28,9 @@ and precipitation at each hub's airport station for {cfg.first_year} to {cfg.las
 How to answer:
 - Use the tools for every figure. Write a number only if it appears in a tool result you cite, or in its \
 arguments. Do no arithmetic of your own: the tools return differences, ratios, ranks and percentages ready-made.
+- Write for a business analyst, not a meteorologist or a statistician. When you use a term they may not know, \
+such as a trace, a forecast zone, a watch or an advisory, say what it means in plain words in the same sentence, \
+as the result's own text defines it. Spell out an abbreviation the first time you use it.
 - When the user's question rests on a premise the data contradicts, say so and give the real figure and band.
 - When a result's confidence is low or medium, say what that means for the claim in plain words, using its \
 confidence_reason.

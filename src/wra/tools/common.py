@@ -2,6 +2,7 @@
 
 from typing import Literal
 
+from wra.scoring.config import WARNING_HAZARDS
 from wra.scoring.kpi import DECIMALS
 from wra.tools.context import ToolContext
 from wra.tools.envelope import WARNING_NAMES, Provenance
@@ -75,12 +76,24 @@ def winter_counts(hazards: list[str]) -> bool:
 
 def edd_what_counts(ctx: ToolContext, weights: dict[str, float]) -> str:
     w = weights
+    counted = "; ".join(f"{ctx.config.hazards[h].label.lower()}: {warning_types(ctx, h)}" for h in WARNING_HAZARDS)
     return (
-        f"Expected disruption days a year: days a year under a qualifying National Weather Service warning "
+        f"Expected disruption days a year: days a year under a National Weather Service warning "
         f"that covered the hub, {ctx.config.first_year} to {ctx.config.last_year}, times its weight "
         f"(winter {w['winter']:g}, flood {w['flood']:g}, severe storms {w['severe_storm']:g}), plus FEMA "
-        f"hurricane events a year times {w['hurricane']:g}."
+        f"hurricane events a year times {w['hurricane']:g}. Warnings counted: {counted}."
     )
+
+
+def clear_text(column: str, gap: str, untestable: bool) -> str:
+    """What the yes/no column of a ranking or comparison means; the test is gap_test in scoring/confidence.py."""
+    text = (
+        f"{column}: yes when {gap} is bigger than the uncertainty in the two hubs' averages, worked out from how "
+        "much each hub's figure moved from year to year; no when it is not, so their order is not settled."
+    )
+    if untestable:
+        text += " Not testable: FEMA gives one long-run hurricane figure with no yearly values."
+    return text
 
 
 def band_text(ctx: ToolContext) -> str:

@@ -78,13 +78,14 @@ applies_to = "overall"
 # Shown wherever winter figures count: winter and overall rankings, and any
 # explanation or comparison that includes winter (owner, 2026-11-24).
 winter_aftermath = """Winter's effect on roads outlasts the warning more than other weather does: \
-in FHWA's Regional Assessment of Weather Impacts on Freight (FHWA-HOP-16-044, 2016), average speeds \
+in the Federal Highway Administration's Regional Assessment of Weather Impacts on Freight \
+(FHWA-HOP-16-044, 2016), average speeds \
 were still almost 8 mph below normal four hours after ice and snow events. This score counts only \
 time under warning, so it may understate winter next to floods and storms."""
 # Listed by the methodology tool (plan section 5.7).
 known_limits = [
     "A warning is a forecast that conditions will be dangerous, not a record that a hub closed.",
-    "The score is in day-equivalents under the stated weights, not a prediction of closure days.",
+    "The score is days under warning times the stated weights, plus a set number of days per hurricane. It does not predict how many days a hub will close.",
     "It counts the time a warning was in force and nothing after it.",
     "Ten years is a short record: yearly figures swing widely, so hubs with close figures cannot be told apart.",
     "Flood exposure at a real site depends on the exact parcel; the score sees only the hub's location and county.",
