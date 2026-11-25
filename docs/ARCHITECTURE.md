@@ -109,6 +109,8 @@ Every result carries a label (high, medium, low) and a one-line reason from `src
 
 `src/wra/api/app.py` serves `POST /api/chat` (`{"session_id": null or an id, "message": "..."}`), `GET /api/hubs` and `GET /healthz` (no model call), the page at `GET /`, and FastAPI's reference at `/docs`. Table cells go out as text (2.9 as 2.90), so the page formats no figure. `wra serve` listens on 127.0.0.1, port 8000, so only this machine can spend the API credit.
 
+On any other address it runs in public mode (`src/wra/api/public.py`, design in `docs/DEPLOY_DESIGN.md`). The mode follows the listen address, not a flag, so it cannot be forgotten. Without `WRA_ACCESS_CODE` the server refuses to start; with it, every route but `/healthz` needs HTTP Basic sign-in (username `analyst`, the code as password, both compared as UTF-8 bytes in constant time), and the agent gets a daily limit (`src/wra/agent/limits.py`, 100 questions a UTC day), which it checks after the busy and unknown-conversation refusals and before any model call. The agent holds at most 200 conversations in either mode and drops the least recently used. The public site runs in the image the `Dockerfile` builds, with the database built inside it.
+
 The page (`src/wra/api/static/index.html`) is one file with inline script and styles, using plain `fetch`; a test checks it loads nothing from outside (`tests/test_api.py`). It escapes all reply text, then turns `**...**` into bold. It shows the verdict, caveats, tables, the data and confidence lines, and a "How this was computed" panel from the trace.
 
 ## How failures surface
@@ -122,7 +124,9 @@ Every agent reply has the same body. The status comes from `error_code`, never f
 | 404 | the server does not hold this conversation | `unknown_conversation` |
 | 502 | the model side failed | `model_call_failed`, `time_limit`, `declined`, `cut_off`, `invalid_twice`, `too_many_calls` |
 | 500 | a bug in our own code; the turn is removed | `internal_error` |
+| 429 | public mode: the day's question limit is used up; no model call | `daily_limit` |
 | 422 | a malformed request: FastAPI's message, not a reply; no model call | none |
+| 401 | public mode: no sign-in, or a wrong one; a short message, not a reply; no model call | none |
 
 ## The evaluation
 

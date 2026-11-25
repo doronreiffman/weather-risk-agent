@@ -35,6 +35,12 @@ The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_
 
 `wra serve` listens on this machine only (127.0.0.1, port 8000); `--host` and `--port` change that. The page sends `POST /api/chat` with `{"session_id": null, "message": "..."}` and gets back the validated reply; sending that reply's `session_id` with the next message makes it a follow-up. Every reply has the same shape. Its HTTP status is 200 unless it is an error: 409 while the conversation's last question is still being answered, 404 for a conversation the server no longer holds (after a restart), 502 when the model could not give a validated answer, 500 for a bug in the agent's own code. A malformed request gets 422 with FastAPI's validation message instead of a reply. `GET /api/hubs` lists the hubs and `GET /healthz` checks the server; neither calls the model. FastAPI's generated reference for the API is at `/docs`.
 
+### Public mode
+
+`wra serve` on any address but 127.0.0.1, localhost or ::1 runs in public mode, the way the public demo runs. It needs an access code in `WRA_ACCESS_CODE` and refuses to start without one (exit status 2). Every route but `/healthz` then asks for sign-in in the browser's own box: the username `analyst` and the access code as the password. At most 100 questions a day (UTC) reach the model; past that a question gets a plain message, HTTP 429 and no model call. In either mode the server holds at most 200 conversations and drops the one used least recently. Both limits are in `config/agent.toml`. The daily count is kept in memory and starts again whenever the server restarts, so run the public site with a key from a separate Anthropic workspace that has its own monthly spending limit: that limit is the ceiling on spend.
+
+The public site runs the image the `Dockerfile` builds: the database is built inside it, and `.dockerignore` keeps `.env` out. The design is in [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md).
+
 ### Checking the page by hand before a demo
 
 Three things the page does have no automated test: the question put back in the box after a failure, the reset when the server no longer holds the conversation, and "New conversation". This check covers them in about three minutes, with one paid question.
@@ -43,6 +49,13 @@ Three things the page does have no automated test: the question put back in the 
 2. Stop the server (Ctrl+C) and start it again; leave the page open. Send "And which is the least exposed?". The page shows "New conversation. Your question is back in the box: send it again, reworded if it was a follow-up." and the question is back in the box. No model call is made.
 3. Click New conversation. The answers clear; the text in the box stays.
 4. Stop the server. Send any question. The page shows "The server could not be reached. The question is back in the box." and the question is back in the box.
+
+### Interview day
+
+- **The day before:** run `scripts/e2e.sh` (free: a fresh clone, the database built offline, the tests), so the laptop backup is proven. Open the public URL, sign in and ask one question (paid, under a cent on Haiku).
+- **Fifteen minutes before:** open the public URL so it wakes, and ask one question.
+- **If the public URL fails:** `uv run wra serve`, open http://127.0.0.1:8000/ and share the screen.
+- Keep the access code at hand, outside the repository.
 
 `wra rank` takes `overall`, `winter`, `flood`, `severe_storm` or `hurricane`, an optional `--region` (`midwest`, `south`, `west`) and `--top N`. None of these commands uses the network. The scoring rules (weights, warning types, bands, confidence thresholds) are in `config/scoring.toml`.
 

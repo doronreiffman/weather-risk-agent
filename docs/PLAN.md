@@ -670,6 +670,10 @@ Changes forced by reality are appended here, newest last.
 - *Three check fixes from the comparison (owner).* `docs/ASSUMPTIONS.md`, milestone 5 section.
 - *Fixes from the final whole-repository review (owner).* A prompt line, the snowfall share's precision, labelled confidence reasons, each hazard's order as a checked field of the answer (`hazard_orders`) with a code-written lead note under comparisons, and three end-to-end script fixes. `docs/ASSUMPTIONS.md`, milestone 5 section, point 6.
 
+**2026-11-25, after milestone 5. The public URL (section 13's first bonus, owner).**
+
+- *Deployed as designed in `docs/DEPLOY_DESIGN.md` and built from `docs/DEPLOY_PLAN.md`.* Public mode follows the listen address and refuses to start without an access code; HTTP Basic sign-in; 100 questions a day and 200 conversations held; a Koyeb free instance built from a Dockerfile. Section 13's note that a public URL "needs an access guard before it goes up" is met by the sign-in, the daily limit and a separate workspace with its own spending limit. The decision log entry of 2026-11-25 says why.
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks

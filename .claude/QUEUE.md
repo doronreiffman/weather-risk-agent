@@ -6,7 +6,7 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q10] Deployment to a public URL, on a Koyeb free instance. Design approved by the owner 2026-11-25; plan written, awaiting the owner's review and choice of how to run it. → `docs/DEPLOY_PLAN.md`, `docs/DEPLOY_DESIGN.md`
+- [q10] Deployment to a public URL, on a Koyeb free instance. Building on branch `public-url` (owner: run it here, natively). → `docs/DEPLOY_PLAN.md` and its ledger, `docs/DEPLOY_DESIGN.md`
 - [q8] Bonuses, ask first: score-change alert, voice. Owner 2026-11-25: not now; the public URL comes first. → `docs/PLAN.md` section 13
 - [q22] Owner decision: one line in `~/.claude/output-styles/plain.md`: anything the owner must do (steps, a command, a question) goes in full in the turn's final message, since text between tool calls can scroll past unseen (session 06: the page-check steps were written mid-turn and the owner never saw them). Edit only on the owner's word. → `~/.claude/output-styles/plain.md`
 

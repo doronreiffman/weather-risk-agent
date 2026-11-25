@@ -189,3 +189,7 @@ Expected: all pass.
 ## Deviations
 
 (Changes reality forces during the build are appended here.)
+
+- *Setup.* The build ran on a branch, `public-url`, in the main checkout rather than a separate worktree: one task at a time, and the git-ignored database and `.env` live in this checkout.
+- *Task 3, the tests.* The plan's second container test, reading the Dockerfile's text, was dropped: it would only prove the file says what it says. The image is checked by building and running it (step 5). The `.dockerignore` test stays, since removing `.env` from that list is a security bug.
+- *Task 3, the measured start.* At Koyeb's free size (`--cpus=0.1 --memory=512m`) the image took 41.7 to 43.7 s to its first healthy reply, against the design's estimate of 15 to 30 s; 2.8 s at one CPU. Importing Anthropic's SDK is 1.12 of the 2.10 processor seconds at one CPU. Reported to the owner before Task 5; no change to the plan.

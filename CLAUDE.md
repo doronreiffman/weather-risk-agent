@@ -20,7 +20,7 @@ Python with `uv` and `pytest`.
 4. **The evaluation set exists before the agent does:** 10 to 15 questions: the four from the assignment, a couple of follow-ups, and a couple the agent should flag as out of scope (for example, a city with no hub). Each has automatic checks: the right hubs at the top, the right tool called, numbers that match the tool output. One command runs it and prints a score.
 5. **Say what we don't know.** The agent's answers state the data period, the sources and the confidence.
 6. **Small commits with clear messages.** A commit message claims only what was actually run, on the tree being committed: with other changes still uncommitted, stash them before the run or name the tree the run covered.
-7. **Secrets live only in the git-ignored `.env`.** Work from `.env.example`. `.env` itself stays unread and unprinted; `.claude/settings.json` denies it.
+7. **Secrets live only in the git-ignored `.env`,** and for the public site in the host's secret settings: the demo key and the access code (owner, 2026-11-25). Work from `.env.example`. `.env` itself stays unread and unprinted; `.claude/settings.json` denies it.
 8. **Ask rather than guess, and push back** when there is a better approach.
 9. **Match the model to the task** and say which was picked and why: Fable for open design questions and the final whole-diff review, Opus for implementation and per-milestone review, Sonnet for small, fully specified tasks. The main session's model and effort level are the owner's to switch, so say when they should change.
 10. **Bonuses** (deployment, score-change alert, voice, in that order) start only after the final end-to-end check passes, and only after asking.
