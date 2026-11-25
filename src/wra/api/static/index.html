@@ -277,6 +277,42 @@ fresh.addEventListener("click", () => {
   log.replaceChildren();
   box.focus();
 });
+
+// SPEECH BEGIN
+// Spoken questions (docs/VOICE_DESIGN.md): the browser turns speech into text, the words go only into the box,
+// and only Ask sends them. The two functions below use nothing outside themselves, so the tests run them in Node.
+
+// The box's text when listening began, then the heard words. parts holds every result so far, so each result
+// rebuilds the box from that text: adding each result's words to the box would repeat them. The cut is the
+// server's limit, which the box's maxlength does not apply to text a script writes.
+function joinHeard(text, parts, limit) {
+  const heard = parts.map((part) => part.trim()).filter((part) => part !== "").join(" ");
+  if (heard === "") return text;
+  const joined = text === "" || /\s$/.test(text) ? text + heard : text + " " + heard;
+  return joined.slice(0, limit);
+}
+
+// The browser's failure code in plain words; the empty string means the page says nothing.
+function speechProblem(code) {
+  switch (code) {
+    case "not-allowed":
+      return "The microphone is blocked for this site. Allow it in the browser's site settings, or type the question.";
+    case "service-not-allowed":
+    case "language-not-supported":
+      return "This browser cannot turn speech into text here. Type the question.";
+    case "network":
+      return "The browser could not reach its speech service. Type the question.";
+    case "no-speech":
+      return "Nothing was heard. Press Speak to try again.";
+    case "audio-capture":
+      return "No working microphone was found. Type the question.";
+    case "aborted":
+      return "";
+    default:
+      return "Speech stopped (" + code + "). Type the question.";
+  }
+}
+// SPEECH END
 </script>
 </body>
 </html>
