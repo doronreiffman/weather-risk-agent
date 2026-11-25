@@ -6,12 +6,13 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q21] Run the README's page check by hand (owner; one paid question, under a cent on Haiku). Owner 2026-11-25: running it now, on the local server. → `.claude/OPEN_ISSUES.md`, "The page's own logic has no automated test"
 - [q10] Deployment to a public URL. Owner 2026-11-25: go, design first, for the owner's approval before anything is built. The assignment calls it preferred, so it stands apart from the bonuses. A public URL spends the owner's API credit on every message, so it needs an access guard. → `docs/PLAN.md` section 13
 - [q8] Bonuses, ask first: score-change alert, voice. Owner 2026-11-25: not now; the public URL comes first. → `docs/PLAN.md` section 13
+- [q22] Owner decision: one line in `~/.claude/output-styles/plain.md`: anything the owner must do (steps, a command, a question) goes in full in the turn's final message, since text between tool calls can scroll past unseen (session 06: the page-check steps were written mid-turn and the owner never saw them). Edit only on the owner's word. → `~/.claude/output-styles/plain.md`
 
 ## Done / Dropped
 
+- [q21] The README's page check, run by hand. Done 2026-11-25. Proof: the owner ran the four steps against `wra serve` on `4bc1367` and reported all four passed (session 06). Rerunning it stays in `.claude/OPEN_ISSUES.md`.
 - [q19] The queue guard refuses a line under Done / Dropped without "Done <date>" or "dropped" (owner's go 2026-11-25). Done 2026-11-25. Proof: the commit that moves this line, with the guard's first tests (`tests/test_queue_guard.py`, 7 tests; the two for the new rule failed before the change); `uv run pytest -q` 367 passed on that tree, and the guard checked this file with the new rule when the commit was made.
 - [q20] Two global `~/.claude/CLAUDE.md` lines from session 05 (owner's go 2026-11-25). Done 2026-11-25. Proof: (a) "A subagent returns a document as text", after the `gh` line under Working habits; (b) folded into Safety's "Before any commit": stage every file the commit message names. That folder's own auto-sync commits it.
 - [q18] Final end-to-end check re-run on the shipped code. Done 2026-11-25. Proof: `scripts/e2e.sh --paid` passed on `27c5b6d` (360 tests in a fresh clone, 6 of 6 API questions, `wra eval --reps 3` 42 of 42, none refused or repaired, target met; 0.043 USD for the evaluation from its run record plus about 0.01 for the API questions); the owner ran it with `!` after the auto-mode permission check refused it again. Run record `20261124T234915Z-claude` and the doc updates are in the commit that moves this line.
