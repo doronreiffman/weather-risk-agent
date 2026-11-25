@@ -19,3 +19,6 @@ data/wra.sqlite
 # Evaluation run records. A run a results document cites is added on purpose
 # (git add -f), so reviewers can audit it (owner, 2026-11-24).
 evals/runs/
+
+# Git worktrees for building a plan beside the main checkout (session 08).
+.worktrees/
