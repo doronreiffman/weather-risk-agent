@@ -172,3 +172,17 @@ def test_the_page_never_holds_audio():
     # The browser turns speech into text; the page never has audio to upload
     text = page()
     assert "getUserMedia" not in text and "MediaRecorder" not in text
+
+
+def test_listening_that_ends_by_itself_leaves_focus_on_speak():
+    # When the browser ends listening while focus is on Speak, an Enter meant for Stop must not land in the box,
+    # where it would send words the analyst has not read (docs/VOICE_DESIGN.md, the first anti-goal)
+    assert "document.activeElement !== speak" in speech_code()
+
+
+def test_late_events_and_stop_are_guarded():
+    # One guard in each of the three handlers (result, error, end): a recognition that is no longer current is
+    # ignored. Stop ends the browser's listening too, so its words cannot arrive later.
+    code = speech_code()
+    assert code.count("if (rec !== current) return;") == 3
+    assert ".abort()" in code

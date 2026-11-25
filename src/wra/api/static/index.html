@@ -234,7 +234,7 @@ function setWorking(on) {
   speak.disabled = on;  // listening starts only between answers, so the two never share the box
   fresh.disabled = on;  // a new conversation mid-answer would be undone when the answer arrives
   working.hidden = !on;
-  if (on) speechStatus.hidden = true;  // a sent question clears an old "Check the words" line
+  if (on) speechStatus.textContent = "";  // a sent question clears an old "Check the words" line
 }
 
 async function ask(message) {
@@ -334,49 +334,56 @@ const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let spokenBase = "";  // the box's text when listening began
 let current = null;  // the recognition now listening, or null; whatever any other one sends is ignored
 
-// Listening is over: Ask follows its rule again, the box takes typing with the cursor at the end, and the
-// status line says text, or goes when text is empty.
-function endListening(text) {
+// Listening is over, whatever state it was in: Ask follows its rule again, the box takes typing, and the status
+// line says text ("" leaves it empty). Focus goes into the box with the cursor at the end, except when the browser
+// ended listening while focus was on Speak: it stays there, so an Enter meant for Stop presses Speak and cannot
+// send words the analyst has not read.
+function endListening(text, stopPressed) {
   current = null;
   listening = false;
   syncAsk();
   box.readOnly = false;
   speak.textContent = "Speak";
   speechStatus.textContent = text;
-  speechStatus.hidden = text === "";
-  box.focus();
-  box.setSelectionRange(box.value.length, box.value.length);
+  if (stopPressed || document.activeElement !== speak) {
+    box.focus();
+    box.setSelectionRange(box.value.length, box.value.length);
+  }
 }
 
-// A pause or Stop: words added are for the analyst to check before pressing Ask.
-function finishListening() {
-  endListening(box.value !== spokenBase ? "Check the words, then press Ask." : "");
+// A pause, Stop, or a stop the browser started: words added are for the analyst to check before pressing Ask.
+function finishListening(stopPressed) {
+  endListening(box.value !== spokenBase ? "Check the words, then press Ask." : "", stopPressed);
 }
 
 function startListening() {
   spokenBase = box.value;
-  const rec = new Recognition();  // a new one for each press
-  rec.lang = "en-US";
-  rec.continuous = false;  // one utterance per press
-  rec.interimResults = true;  // the words show while they are heard
-  rec.addEventListener("result", (event) => {
-    if (rec !== current) return;
-    box.value = joinHeard(spokenBase, Array.from(event.results, (r) => r[0].transcript), box.maxLength);
-  });
-  rec.addEventListener("error", (event) => {
-    if (rec === current) endListening(speechProblem(event.error));
-  });
-  rec.addEventListener("end", () => {
-    if (rec === current) finishListening();
-  });
-  current = rec;
-  listening = true;
-  syncAsk();
-  box.readOnly = true;  // so the next result cannot overwrite a correction half made
-  speak.textContent = "Stop";
-  speechStatus.textContent = "Listening. Pause when you have finished, or press Stop.";
-  speechStatus.hidden = false;
-  try {
+  try {  // a browser whose recogniser fails to build or to start ends like any other failure
+    const rec = new Recognition();  // a new one for each press
+    rec.lang = "en-US";
+    rec.continuous = false;  // one utterance per press
+    rec.interimResults = true;  // the words show while they are heard
+    rec.addEventListener("result", (event) => {
+      if (rec !== current) return;
+      box.value = joinHeard(spokenBase, Array.from(event.results, (r) => r[0].transcript), box.maxLength);
+      box.scrollTop = box.scrollHeight;  // the newest words stay in sight in the two-row box
+    });
+    rec.addEventListener("error", (event) => {
+      if (rec !== current) return;
+      const problem = speechProblem(event.error);
+      if (problem === "") finishListening();  // "aborted" the page did not cause: as a pause
+      else endListening(problem);
+    });
+    rec.addEventListener("end", () => {
+      if (rec !== current) return;
+      finishListening();
+    });
+    current = rec;
+    listening = true;
+    syncAsk();
+    box.readOnly = true;  // so the next result cannot overwrite a correction half made
+    speak.textContent = "Stop";
+    speechStatus.textContent = "Listening. Pause when you have finished, or press Stop.";
     rec.start();
   } catch (error) {
     endListening(speechProblem(error.name));
@@ -386,13 +393,14 @@ function startListening() {
 if (Recognition) {
   speak.hidden = false;
   speechNotice.hidden = false;
+  speechStatus.hidden = false;  // shown once and never hidden, so screen readers announce each new line
   speak.addEventListener("click", () => {
     if (current === null) {
       startListening();
       return;
     }
     const stopped = current;  // Stop: the page is back to normal at once, without waiting for the browser
-    finishListening();
+    finishListening(true);  // pressed Stop, so into the box to check the words
     stopped.abort();
   });
 }
