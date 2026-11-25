@@ -6,12 +6,13 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q8] The score-change alert (bonus; the owner chose it over voice, 2026-11-25): its first runs on GitHub. → `.claude/OPEN_ISSUES.md` "The score-change alert"; `docs/ALERT_DESIGN.md` section 6
+- [q29] The score-change alert's first scheduled run, Thursday 2026-11-26 07:23 UTC: read its steps (it should fetch, not demo) and its result. → `.claude/OPEN_ISSUES.md` "The score-change alert", first entry
 - [q28] Voice in the chat, the assignment's third bonus: the owner asked for a design first (2026-11-25, against the advice to drop it); nothing is built before the owner approves the design. → the design, once written; `docs/PLAN.md` section 13
 - [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console; disable the score-change workflow on GitHub, `docs/ALERT_DESIGN.md` section 6, step 6). → `docs/DEPLOY_DESIGN.md` section 6, step 6
 
 ## Done / Dropped
 
+- [q8] The score-change alert's first runs on GitHub. Done 2026-11-25. Proof: the owner ran `docs/ALERT_DESIGN.md` section 6, step 4 on `1aa140e` and reported all passed; read with `gh`: https://github.com/doronreiffman/weather-risk-agent/actions/runs/45550573054 and https://github.com/doronreiffman/weather-risk-agent/actions/runs/45550690524 (demo: fetch skipped, one issue, #1, assigned to the owner, closed by the owner) and https://github.com/doronreiffman/weather-risk-agent/actions/runs/45550901788 (real: fresh data fetched, no issue). The scheduled run is q29.
 - [q25] Session 07 transcript committed. Done 2026-11-25. Proof: commit `c94e9a4`; before staging, the scan (work email domain, the employer's, colleagues' and work systems' names from the global instructions, the owner's other project folder names, key-like text, session links) counted 0 on every term, and a control run of the same loop found three known terms; the work-address check printed 0 on the staged file. Nothing was reworded.
 - [q26] Rule 11 in project `CLAUDE.md` gains: a claim that "only", "none" or "every" case does something is counted over all the cases (owner's yes 2026-11-25). Done 2026-11-25. Proof: the commit that moves this line.
 - [q27] The zsh gotcha in project `CLAUDE.md` gains the loop variable `path` (owner's yes 2026-11-25). Done 2026-11-25. Proof: the commit that moves this line; checked first with `zsh -f -c 'for path in a b; do :; done; ...'`, which left `PATH` as `b` and `ls` not found.
