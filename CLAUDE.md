@@ -32,7 +32,10 @@ Python with `uv` and `pytest`.
 - The shell is zsh: an unquoted `$VAR` is not split into words. Feed a loop with `while read -r a b c` over a here-doc. A loop that broke this way sent empty coordinates and got plausible-looking data back.
 - This repository commits with a repo-local personal address. The machine-wide git identity is the owner's work address, and it stays out of every tracked file and commit. Generators copy it (`uv init` did), so before each commit `git diff --cached | grep -i -c -F "$(git config --global user.email | cut -d@ -f2)"` prints 0.
 - The owner's one-month package-age rule stays npm-only here (owner 2026-11-24). Python packages install at their current versions.
+- Pushes go to the owner's personal GitHub account (`origin`, public). Git takes its credentials from `gh`, which has two accounts signed in, the work one usually active: `gh auth switch --hostname github.com` before the push and again after, each its own message; the toggle names no account. Every push to `main` redeploys the public site on Render, which restarts it and resets open conversations.
 
 ## Sessions are a deliverable
 
 At the end of each milestone, remind the owner to run `/export` into `docs/ai-session/` (numbered `01-plan.txt`, `02-...`) before `/clear`, and add one line for that session to `docs/ai-session/README.md`. `docs/ai-session/` stays tracked by git.
+
+The repository is public, so every transcript is published. Replies name only this project: exports collapse commands but print replies in full (session 06 named another of the owner's projects in a question). Before a transcript is committed, it gets the scan of `docs/DEPLOY_DESIGN.md` 5.7, counts only.

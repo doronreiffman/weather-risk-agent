@@ -6,9 +6,10 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console). → `docs/DEPLOY_DESIGN.md` section 6, step 6
-- [q8] Bonuses, ask first: score-change alert, voice. Owner 2026-11-25: not now; the public URL comes first. → `docs/PLAN.md` section 13
+- [q24] Session 06 transcript: once the owner has exported it, scan it (counts only), reword the one reference to another of the owner's projects (in a question Claude wrote), commit it alone and push. Its index line is written. → `docs/ai-session/README.md`, `CLAUDE.md` "Sessions are a deliverable"
+- [q8] Bonuses: score-change alert, voice. Owner 2026-11-25: wants to try one. Claude's view, given the brief's "a narrow scope done well": the alert fits the design (fetch fresh data, recompute, compare with the stored scores); voice is browser logic checked only by hand. Design first, for the owner's approval. → `docs/PLAN.md` section 13
 - [q22] Owner decision: one line in `~/.claude/output-styles/plain.md`: anything the owner must do (steps, a command, a question) goes in full in the turn's final message, since text between tool calls can scroll past unseen (session 06: the page-check steps were written mid-turn and the owner never saw them). Edit only on the owner's word. → `~/.claude/output-styles/plain.md`
+- [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console). → `docs/DEPLOY_DESIGN.md` section 6, step 6
 
 ## Done / Dropped
 
