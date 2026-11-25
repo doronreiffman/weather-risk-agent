@@ -32,3 +32,8 @@ def raw_dir() -> Path:
 
 def database() -> Path:
     return root() / "data" / "wra.sqlite"
+
+
+def reviewed_scores() -> Path:
+    """The ranking as last reviewed, which the score-change alert compares with (docs/ALERT_DESIGN.md 5.2)."""
+    return root() / "data" / "reviewed_scores.json"

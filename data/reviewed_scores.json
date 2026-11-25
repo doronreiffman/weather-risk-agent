@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "confidence": "low",
+  "inputs": {"band_cutoffs": [1.0, 2.0, 3.0], "data_as_of": "2026-11-24", "fema_release": "December 2025", "period": "2016-2025", "weights": {"flood": 1.0, "hurricane": 5.0, "severe_storm": 1.0, "winter": 1.0}},
+  "hubs": [
+    {"hub_id": "MSP", "city": "Minneapolis", "label": "Minneapolis (MSP)", "rank": 1, "value": 2.9, "band": "High", "hazards": {"winter": 2.71, "flood": 0.06, "severe_storm": 0.13, "hurricane": 0.0}},
+    {"hub_id": "MEM", "city": "Memphis", "label": "Memphis (MEM)", "rank": 2, "value": 2.44, "band": "High", "hazards": {"winter": 1.31, "flood": 0.73, "severe_storm": 0.28, "hurricane": 0.12}},
+    {"hub_id": "DEN", "city": "Denver", "label": "Denver (DEN)", "rank": 3, "value": 2.21, "band": "High", "hazards": {"winter": 2.07, "flood": 0.02, "severe_storm": 0.12, "hurricane": 0.0}},
+    {"hub_id": "MCI", "city": "Kansas City", "label": "Kansas City (MCI)", "rank": 4, "value": 2.2, "band": "High", "hazards": {"winter": 1.44, "flood": 0.43, "severe_storm": 0.32, "hurricane": 0.0}},
+    {"hub_id": "ORD", "city": "Chicago", "label": "Chicago (ORD)", "rank": 5, "value": 2.03, "band": "High", "hazards": {"winter": 1.4, "flood": 0.33, "severe_storm": 0.25, "hurricane": 0.05}},
+    {"hub_id": "DAL", "city": "Dallas", "label": "Dallas (DAL)", "rank": 6, "value": 2.02, "band": "High", "hazards": {"winter": 0.94, "flood": 0.63, "severe_storm": 0.39, "hurricane": 0.06}},
+    {"hub_id": "IAH", "city": "Houston", "label": "Houston (IAH)", "rank": 7, "value": 1.96, "band": "Moderate", "hazards": {"winter": 0.39, "flood": 0.47, "severe_storm": 0.19, "hurricane": 0.92}},
+    {"hub_id": "MIA", "city": "Miami", "label": "Miami (MIA)", "rank": 8, "value": 1.85, "band": "Moderate", "hazards": {"winter": 0.0, "flood": 0.21, "severe_storm": 0.12, "hurricane": 1.52}},
+    {"hub_id": "IND", "city": "Indianapolis", "label": "Indianapolis (IND)", "rank": 9, "value": 1.56, "band": "Moderate", "hazards": {"winter": 1.16, "flood": 0.18, "severe_storm": 0.18, "hurricane": 0.04}},
+    {"hub_id": "ATL", "city": "Atlanta", "label": "Atlanta (ATL)", "rank": 10, "value": 1.24, "band": "Moderate", "hazards": {"winter": 0.27, "flood": 0.56, "severe_storm": 0.17, "hurricane": 0.24}},
+    {"hub_id": "CMH", "city": "Columbus", "label": "Columbus (CMH)", "rank": 11, "value": 0.99, "band": "Low", "hazards": {"winter": 0.66, "flood": 0.13, "severe_storm": 0.17, "hurricane": 0.03}},
+    {"hub_id": "PHX", "city": "Phoenix", "label": "Phoenix (PHX)", "rank": 12, "value": 0.42, "band": "Low", "hazards": {"winter": 0.0, "flood": 0.17, "severe_storm": 0.2, "hurricane": 0.06}}
+  ]
+}

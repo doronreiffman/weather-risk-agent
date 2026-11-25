@@ -174,3 +174,93 @@ def test_the_demo_on_the_committed_data(real_db):
     assert "hurricane weight 5 → 10" in body
     assert "This says that figures differ, not why. A hiccup at a source can look like a change, so run the job again first." in body
     assert re.search(r"Change id: demo-[0-9a-f]{12}\n?$", body)
+
+
+# --- The command, `wra alert` (plan Task 2) ---
+
+
+@pytest.fixture
+def alert_project(tmp_path, monkeypatch, real_db):
+    """A project folder holding the repository's config and the database built from the committed raw data."""
+    import shutil
+
+    shutil.copytree(REPO / "config", tmp_path / "config")
+    (tmp_path / "data").mkdir()
+    shutil.copy(real_db, tmp_path / "data" / "wra.sqlite")
+    monkeypatch.setenv("WRA_ROOT", str(tmp_path))
+    return tmp_path
+
+
+def test_accept_writes_the_saved_copy_and_then_there_is_no_change(alert_project, capsys):
+    from wra.cli import main
+
+    assert main(["alert", "--accept"]) == 0
+    assert "Saved today's ranking as the reviewed one: data/reviewed_scores.json." in capsys.readouterr().out
+    assert (alert_project / "data" / "reviewed_scores.json").exists()
+    out = alert_project / "out"
+    assert main(["alert", "--out", str(out)]) == 0
+    assert capsys.readouterr().out.strip() == "No change since the ranking was last reviewed (data as of 2026-11-24)."
+    assert (out / "result").read_text().strip() == "no_change"
+
+
+def test_accept_and_demo_together_are_refused(alert_project, capsys):
+    from wra.cli import main
+
+    assert main(["alert", "--accept", "--demo"]) == 2
+    assert capsys.readouterr().err.startswith("error: --accept and --demo cannot be used together.")
+    assert not (alert_project / "data" / "reviewed_scores.json").exists()
+
+
+def test_alert_without_a_saved_copy_is_a_plain_error(alert_project, capsys):
+    from wra.cli import main
+
+    out = alert_project / "out"
+    assert main(["alert", "--out", str(out)]) == 1
+    assert capsys.readouterr().err.startswith("error: no reviewed ranking at data/reviewed_scores.json.")
+    assert not (out / "result").exists()
+
+
+def test_alert_with_a_broken_saved_copy_is_a_plain_error(alert_project, capsys):
+    from wra.cli import main
+
+    (alert_project / "data" / "reviewed_scores.json").write_text("{")
+    out = alert_project / "out"
+    assert main(["alert", "--out", str(out)]) == 1
+    assert capsys.readouterr().err.startswith("error: the reviewed ranking at data/reviewed_scores.json cannot be read (")
+    assert not (out / "result").exists()
+
+
+def test_alert_without_a_database_fails_and_writes_no_result(alert_project, capsys):
+    from wra.cli import main
+
+    assert main(["alert", "--accept"]) == 0
+    (alert_project / "data" / "wra.sqlite").unlink()
+    capsys.readouterr()
+    out = alert_project / "out"
+    assert main(["alert", "--out", str(out)]) == 1
+    assert capsys.readouterr().err.startswith("error:")
+    assert not (out / "result").exists()
+
+
+def test_demo_writes_the_job_files(alert_project, capsys):
+    from wra.cli import main
+
+    assert main(["alert", "--accept"]) == 0
+    capsys.readouterr()
+    out = alert_project / "out"
+    assert main(["alert", "--demo", "--out", str(out)]) == 0
+    printed = capsys.readouterr().out
+    assert (out / "result").read_text().strip() == "change"
+    title = (out / "title.txt").read_text().strip()
+    assert title.startswith("[DEMO] ") and printed.startswith(title)
+    cid = (out / "change_id").read_text().strip()
+    assert cid.startswith("demo-")
+    assert (out / "body.md").read_text().rstrip().endswith(f"Change id: {cid}")
+
+
+def test_the_committed_saved_copy_matches_the_committed_data(real_db):
+    from wra.tools.context import load_context
+
+    ctx = load_context(real_db, REPO / "config" / "scoring.toml")
+    saved = from_json((REPO / "data" / "reviewed_scores.json").read_text())
+    assert saved == current_snapshot(ctx), 'data/raw or config/scoring.toml changed without "uv run wra alert --accept"'

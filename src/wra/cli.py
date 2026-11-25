@@ -1,11 +1,12 @@
 """Command-line entry point.
 
 Subcommands, added one milestone at a time (docs/PLAN.md, section 13):
-ingest, data-report, rank, ask, chat, eval, serve.
+ingest, data-report, rank, ask, chat, eval, serve, alert.
 """
 
 import argparse
 import sys
+from pathlib import Path
 
 from wra import __version__, paths
 from wra.hubs import load_hubs
@@ -75,6 +76,20 @@ def main(argv: list[str] | None = None) -> int:
                             "sign-in and caps questions a day")  # fmt: skip
     serve.add_argument("--port", type=int, default=8000, help="port to listen on (default 8000)")
 
+    alert = commands.add_parser(
+        "alert",
+        help="compare today's ranking with the last reviewed one: no network, no model",
+        description="Compare the overall ranking with the reviewed copy in data/reviewed_scores.json and print "
+        "'No change' or the alert's title and body (docs/ALERT_DESIGN.md). The weekly GitHub job runs it after a "
+        "fresh fetch and opens an issue on a change.",
+    )
+    alert.add_argument("--accept", action="store_true",
+                       help="save today's ranking as the reviewed one; commit it with the change that caused it")
+    alert.add_argument("--demo", action="store_true",
+                       help="compare with the hurricane weight doubled instead: a labelled demonstration")
+    alert.add_argument("--out", type=Path, default=None, metavar="DIR",
+                       help="also write the result for the GitHub job: result, title.txt, body.md, change_id")  # fmt: skip
+
     args = parser.parse_args(argv)
     try:
         if args.command == "ingest":
@@ -91,6 +106,8 @@ def main(argv: list[str] | None = None) -> int:
             return _eval(args.agent, args.reps, args.require_target)
         if args.command == "serve":
             return _serve(args.host, args.port)
+        if args.command == "alert":
+            return _alert(args.accept, args.demo, args.out)
     except (SourceError, NoDatabase) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
@@ -223,6 +240,51 @@ def _serve(host: str, port: int) -> int:
     if public:
         print(f"Public mode: sign-in required, at most {settings.daily_question_limit} questions a day.", flush=True)
     uvicorn.run(app, host=host, port=port)
+    return 0
+
+
+def _alert(accept: bool, demo: bool, out: Path | None) -> int:
+    """The score-change alert (docs/ALERT_DESIGN.md 5.3). Exit 0 for "no change" and for a change; anything that
+    could not compare exits non-zero and writes no result, so a failure never reads as "no change"."""
+    from wra.alert import DEMO_CHANGES, change_id, compare, current_snapshot, from_json, message, to_json
+    from wra.scoring.config import HAZARDS
+    from wra.tools.context import load_context
+
+    if accept and demo:
+        print("error: --accept and --demo cannot be used together.", file=sys.stderr)
+        return 2
+    saved_path = paths.reviewed_scores()
+    shown = saved_path.relative_to(paths.root())
+    ctx = load_context()  # a missing database raises NoDatabase, which main turns into an error line
+    if accept:
+        saved_path.write_text(to_json(current_snapshot(ctx)))
+        print(f"Saved today's ranking as the reviewed one: {shown}. Commit it with the change that caused it.")
+        return 0
+    if not saved_path.exists():
+        print(f'error: no reviewed ranking at {shown}. Run "uv run wra alert --accept" once the ranking is reviewed.',
+              file=sys.stderr)  # fmt: skip
+        return 1
+    try:
+        saved = from_json(saved_path.read_text())
+    except ValueError as error:
+        print(f"error: the reviewed ranking at {shown} cannot be read ({error}).", file=sys.stderr)
+        return 1
+
+    diff = compare(saved, current_snapshot(ctx, DEMO_CHANGES if demo else None))
+    if out is not None:
+        out.mkdir(parents=True, exist_ok=True)
+    if diff.is_empty:
+        print(f"No change since the ranking was last reviewed (data as of {saved.inputs.get('data_as_of')}).")
+        if out is not None:
+            (out / "result").write_text("no_change\n")
+        return 0
+    title, body = message(diff, {h: ctx.config.hazards[h].label for h in HAZARDS}, demo)
+    print(f"{title}\n\n{body}", end="")
+    if out is not None:
+        (out / "title.txt").write_text(title + "\n")
+        (out / "body.md").write_text(body)
+        (out / "change_id").write_text(change_id(diff, demo) + "\n")
+        (out / "result").write_text("change\n")  # written last: "change" only once the files it names exist
     return 0
 
 
