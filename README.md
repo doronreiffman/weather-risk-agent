@@ -14,6 +14,7 @@ An agent that helps a logistics company's analysts decide which distribution hub
 2. [docs/SUMMARY.md](docs/SUMMARY.md): for the analysts' manager: the ranking, what it counts and what it cannot tell.
 3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the components and how they talk, the repository structure, the data storage choice.
 4. [docs/EVAL_RESULTS.md](docs/EVAL_RESULTS.md): the evaluation, the model choice, the four example answers and the limits.
+5. [docs/ai-session/](docs/ai-session/): the full AI sessions, eight in all, plan included, with an index of what each covered.
 
 The record behind them: [docs/DECISIONS.md](docs/DECISIONS.md) (why each choice was made), [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) (what the data showed and what is assumed), [docs/PLAN.md](docs/PLAN.md) (the approved plan and how the build departed from it), [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md) (the public site), [docs/ALERT_DESIGN.md](docs/ALERT_DESIGN.md) (the score-change alert), [docs/VOICE_DESIGN.md](docs/VOICE_DESIGN.md) (spoken questions) and [docs/ai-session/](docs/ai-session/) (the full AI sessions).
 

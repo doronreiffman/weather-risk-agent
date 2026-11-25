@@ -22,3 +22,6 @@ evals/runs/
 
 # Git worktrees for building a plan beside the main checkout (session 08).
 .worktrees/
+
+# macOS folder settings.
+.DS_Store
