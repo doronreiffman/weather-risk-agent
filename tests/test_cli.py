@@ -136,20 +136,49 @@ def test_eval_can_fail_when_the_target_is_missed(scored_project, capsys):
 
 
 def test_serve_listens_on_this_machine_only_unless_told_otherwise(scored_project, monkeypatch):
-    import shutil
-
     import uvicorn
     from fastapi.testclient import TestClient
 
     import wra.agent.loop
     from conftest import REPO
+    from test_agent_loop import WINTER_MIDWEST, Scripted, final, tool
 
-    shutil.copy(REPO / "config" / "agent.toml", scored_project / "config" / "agent.toml")
-    monkeypatch.setattr(wra.agent.loop, "AnthropicClient", lambda settings: object())  # no .env, no network
+    # a day's limit of 0, so a question that reaches the model shows the limit is off
+    config = (REPO / "config" / "agent.toml").read_text()
+    assert "daily_question_limit = 100" in config
+    (scored_project / "config" / "agent.toml").write_text(config.replace("daily_question_limit = 100",
+                                                                         "daily_question_limit = 0"))  # fmt: skip
+    # no .env, no network: each server gets a scripted model that answers one question
+    monkeypatch.setattr(wra.agent.loop, "AnthropicClient",
+                        lambda settings: Scripted(tool("rank_hubs", WINTER_MIDWEST), final()))  # fmt: skip
     ran = {}
     monkeypatch.setattr(uvicorn, "run", lambda app, **options: ran.update(app=app, **options))
+    question = {"session_id": None, "message": "Which hubs in the Midwest are most exposed to winter disruption?"}
+
+    monkeypatch.delenv("WRA_ACCESS_CODE", raising=False)
     assert main(["serve"]) == 0
     assert (ran["host"], ran["port"]) == ("127.0.0.1", 8000)
-    assert TestClient(ran["app"]).get("/healthz").json() == {"status": "ok", "hubs": 12}
+    local = TestClient(ran["app"])
+    assert local.get("/healthz").json() == {"status": "ok", "hubs": 12}
+    assert local.get("/").status_code == 200  # no sign-in on this machine
+    assert local.post("/api/chat", json=question).json()["status"] == "answered"  # and no daily limit
+
+    monkeypatch.setenv("WRA_ACCESS_CODE", "test-code")
     assert main(["serve", "--host", "0.0.0.0", "--port", "8123"]) == 0
     assert (ran["host"], ran["port"]) == ("0.0.0.0", 8123)
+    public = TestClient(ran["app"])
+    assert public.get("/healthz").status_code == 200
+    assert public.get("/").status_code == 401
+    r = public.post("/api/chat", json=question, auth=("analyst", "test-code"))
+    assert r.status_code == 429 and r.json()["error_code"] == "daily_limit"
+
+
+def test_serve_refuses_to_go_public_without_an_access_code(scored_project, monkeypatch, capsys):
+    import uvicorn
+
+    ran = {}
+    monkeypatch.setattr(uvicorn, "run", lambda app, **options: ran.update(app=app, **options))
+    monkeypatch.delenv("WRA_ACCESS_CODE", raising=False)
+    assert main(["serve", "--host", "0.0.0.0"]) == 2
+    assert ran == {}
+    assert "WRA_ACCESS_CODE" in capsys.readouterr().err

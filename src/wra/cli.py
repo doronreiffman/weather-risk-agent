@@ -71,7 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     serve.add_argument("--host", default="127.0.0.1",
                        help="address to listen on (default 127.0.0.1: this machine only, so nobody else can spend "
-                            "the API credit)")  # fmt: skip
+                            "the API credit). Any other address is public mode: it needs WRA_ACCESS_CODE, asks for "
+                            "sign-in and caps questions a day")  # fmt: skip
     serve.add_argument("--port", type=int, default=8000, help="port to listen on (default 8000)")
 
     args = parser.parse_args(argv)
@@ -198,14 +199,29 @@ def _chat() -> int:
 def _serve(host: str, port: int) -> int:
     import uvicorn
 
+    from wra.agent.limits import DailyLimit
     from wra.agent.loop import ClaudeAgent
+    from wra.agent.settings import load_settings
     from wra.api.app import create_app
+    from wra.api.public import access_code_from_env, is_public
     from wra.tools.context import load_context
 
+    public = is_public(host)
+    code = access_code_from_env() if public else None
+    if public and code is None:  # fail closed: a missing secret stops the deploy instead of opening the site
+        print(f"error: listening on {host} makes the server public, and WRA_ACCESS_CODE is not set. Set it, or "
+              "listen on 127.0.0.1.", file=sys.stderr)  # fmt: skip
+        return 2
+
     ctx = load_context()
-    app = create_app(ClaudeAgent(ctx), ctx)  # one agent for the process: every conversation lives in it
+    settings = load_settings()
+    admit = DailyLimit(settings.daily_question_limit).admit if public else None
+    agent = ClaudeAgent(ctx, settings, admit=admit)  # one agent for the process: every conversation lives in it
+    app = create_app(agent, ctx, access_code=code)
     print(f"Chat page at http://{host}:{port}/ . Each question is a paid API call. Ctrl-C stops the server.",
           flush=True)  # fmt: skip
+    if public:
+        print(f"Public mode: sign-in required, at most {settings.daily_question_limit} questions a day.", flush=True)
     uvicorn.run(app, host=host, port=port)
     return 0
 

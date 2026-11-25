@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, StringConstraints
 
 from wra.agent.schemas import Agent, AgentReply
+from wra.api.public import add_door
 from wra.tools.context import ToolContext
 from wra.tools.envelope import SOURCE_NAMES
 from wra.tools.registry import run_tool
@@ -53,8 +54,11 @@ def for_page(reply: AgentReply) -> dict[str, Any]:
     return body
 
 
-def create_app(agent: Agent, ctx: ToolContext) -> FastAPI:
+def create_app(agent: Agent, ctx: ToolContext, access_code: str | None = None) -> FastAPI:
+    """`access_code` puts the public site's sign-in in front of every route but /healthz (api/public.py)."""
     app = FastAPI(title="Weather Risk Intelligence Agent")
+    if access_code:
+        add_door(app, access_code)
     errors = {code: {"model": AgentReply, "description": text} for code, text in [
         (404, "The conversation is no longer on the server; nothing was sent to the model."),
         (409, "The conversation's last question is still being answered."),
