@@ -4,11 +4,11 @@
 
 **Grade: demo** (from the approved design): safe for one to two weeks of light use by the owner and a few reviewers; not production.
 
-**Goal:** the chat page and its API on a public Koyeb URL behind a sign-in, with a daily cap on paid questions, while the local run stays exactly as it is.
+**Goal:** the chat page and its API on a public URL (Render, since the host change in the design's section 9) behind a sign-in, with a daily cap on paid questions, while the local run stays exactly as it is.
 
 **Architecture:** The server decides public mode from the address it listens on. In public mode it refuses to start without `WRA_ACCESS_CODE`, puts HTTP Basic authentication in front of every route but `/healthz`, and gives the agent a daily question limit. The agent drops its least recently used conversation past 200 in both modes. A Dockerfile builds the database into the image; Koyeb builds it from the public GitHub repository.
 
-**Tech Stack:** Python 3.13, FastAPI, uvicorn, uv 0.11.0, pytest, Docker, Koyeb, GitHub (`gh`).
+**Tech Stack:** Python 3.13, FastAPI, uvicorn, uv 0.11.0, pytest, Docker, Render (first Koyeb), GitHub (`gh`).
 
 **Spec:** `docs/DEPLOY_DESIGN.md` (approved 2026-11-25). Read it with this plan.
 
@@ -180,11 +180,11 @@ Expected: all pass.
 ### Task 6: Deploy and check (the owner clicks; the main session gives the steps and checks)
 
 - [ ] **Step 1: The demo key (owner).** In the Anthropic Console: a new workspace for the demo; its monthly spending limit (5 USD proposed); a key scoped to it. Kept out of every file.
-- [ ] **Step 2: The service (owner).** On Koyeb: an account (card, $29 hold cancelled at once); connect the personal GitHub account; a web service from `weather-risk-agent`, built from the Dockerfile, on the free instance, port 8000, health check on `/healthz`; secrets `ANTHROPIC_API_KEY` (the demo key) and `WRA_ACCESS_CODE` (a code the owner picks: long, random, letters and digits only, since nothing limits sign-in attempts and plain ASCII avoids any doubt about how a browser encodes other characters). Field names as Koyeb's form shows them; Claude does not drive the browser. The health check must allow for a start of about 40 seconds (Task 3's measurement): if Koyeb's form has a grace period or initial delay, set it to at least 90 seconds.
+- [ ] **Step 2: The service (owner).** On Render (design section 9): an account; connect the personal GitHub account, granting `weather-risk-agent` only; a new web service from that repository, branch `main`, runtime Docker (it reads the Dockerfile), the paid 512 MB instance ($7 a month, billed by the second), health check path `/healthz`; environment variables `ANTHROPIC_API_KEY` (the demo key) and `WRA_ACCESS_CODE` (a code the owner picks: long, random, letters and digits only, since nothing limits sign-in attempts and plain ASCII avoids any doubt about how a browser encodes other characters). No port setting: Render sets `PORT` (10000 by default) and the Dockerfile listens on it. Field names as Render's form shows them; Claude does not drive the browser.
 - [ ] **Step 3: Free checks (main session).** `curl -s <URL>/healthz` gives `{"status":"ok","hubs":12}`; `curl -s -o /dev/null -w '%{http_code}' <URL>/` gives 401; `curl -sI http://<host>/` (plain http) redirects to https before any sign-in is asked; `curl -s -o /dev/null -w '%{http_code}' -H 'Host: x/healthz?' <URL>/api/hubs` is not 200.
 - [ ] **Step 4: The owner's checks in the browser** (one paid question, under a cent): the sign-in box appears; a wrong code is refused; README page-check steps 1 and 3 pass (steps 2 and 4 stop the server, so they stay local-only).
-- [ ] **Step 5: The wake-up wait.** After at least an hour with no traffic: `curl -s -o /dev/null -w '%{http_code} %{time_total}\n' <URL>/healthz`, on two separate idle spells. Report both to the owner with the Task 3 figure, for the host decision in design goal 2.
-- [ ] **Step 6: Record it.** README "Public demo": the URL, the username `analyst`, the code sent separately, the limits, the measured wait. The message to the reviewers names the username as well as the code: the browser's box asks for both, and not every browser shows the realm text. `.claude/QUEUE.md`: q10 to Done with its proof; the host re-evaluation as its own line if the owner wants one. Commit, then push with Task 5's steps 3 to 5.
+- [ ] **Step 5: (dropped with the host change.)** It measured the wait after an idle hour on Koyeb's free instance; Render's paid instance does not sleep.
+- [ ] **Step 6: Record it.** README "Public demo": the URL, the username `analyst`, the code sent separately, the limits, and that the site is taken down after the interview. The message to the reviewers names the username as well as the code: the browser's box asks for both, and not every browser shows the realm text. `.claude/QUEUE.md`: q10 to Done with its proof, and a new line for taking the site down after the interview (delete the Render service, revoke the demo key). Commit, then push with Task 5's steps 3 to 5.
 
 ## Deviations
 
@@ -195,3 +195,5 @@ Expected: all pass.
 - *Task 3, the measured start.* At Koyeb's free size (`--cpus=0.1 --memory=512m`) the image took 41.7 to 43.7 s to its first healthy reply, against the design's estimate of 15 to 30 s; 2.8 s at one CPU. Importing Anthropic's SDK is 1.12 of the 2.10 processor seconds at one CPU. Reported to the owner before Task 5; no change to the plan.
 - *Task 2, the serve test.* It checks behaviour instead of recording `ClaudeAgent`'s arguments: with a day's limit of 0 in its config, the local server answers a question and the public one refuses it with 429.
 - *The whole-branch review (Fable, on `5298304..38a991e`): no critical finding, two important.* (1) Three documents described the site as already running; reworded to "built to run". (2) The plan had no step to bring `main` up to the build before the push; added to Task 5 step 2. Also from it: the README's `wra rank` and `wra ingest --refresh` paragraphs had sat under the page-check subsection since it was added (queue q16), and now under "Interview day"; moved back into "Run it". And four additions to Task 6: the username in the message to reviewers, a long random code in plain letters and digits, a health-check grace period for the 40-second start, and two more free checks (the https redirect and a forged `Host` header).
+- *After the review, on the owner's word:* the sign-in compares the path the router serves (`request.scope["path"]`) instead of a URL rebuilt from the `Host` header, with three forged-host tests (commit `88342f0`).
+- *Task 5 done; then the host changed to Render's paid instance (owner), before Task 6 began.* The reasons and sources are in the design's section 9. Task 6 step 2 is rewritten for Render and step 5 is dropped; nothing in Tasks 1 to 5 changes, since the image is host-agnostic and Render builds from a Dockerfile.

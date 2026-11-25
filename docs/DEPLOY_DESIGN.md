@@ -2,7 +2,7 @@
 
 **Grade: demo.** Safe for one to two weeks of light use by the owner and a few reviewers. Not production: no user accounts, no monitoring, one instance.
 
-Status: **approved by the owner on 2026-11-25.** Queue item q10. Facts marked "read 2026-11-25" were checked that day on the source named; anything else is marked. A fresh reviewer read it as its builder; its questions and the owner's answers are folded in (section 8).
+Status: **approved by the owner on 2026-11-25; the host changed to Render the same day, after the build (section 9).** Queue item q10. Facts marked "read 2026-11-25" were checked that day on the source named; anything else is marked. A fresh reviewer read it as its builder; its questions and the owner's answers are folded in (section 8).
 
 ## 1. Why, and for whom
 
@@ -170,5 +170,13 @@ The Dockerfile's exact lines and how the port reaches the server; the sign-in re
 | Does accepting the station data's unconfirmed terms extend to a public repository? | Yes, change nothing (owner). |
 | The demo key in Koyeb's secret settings, an exception to rule 7? | Approved (owner). |
 | Which names does the scan search for, and where does the list live? | Those in the owner's global instructions, plus any the owner adds in a file outside the repository; counts only (Claude's call). |
+
+## 9. Revision after the build: the host is Render (owner, 2026-11-25)
+
+**Decision:** the public site runs on Render's paid 512 MB instance ("Less than 1 CPU $7/month 512 MB RAM 0.5c-512mb", render.com/pricing), built from the repository's Dockerfile, instead of Koyeb's free instance.
+
+**Why:** three things learned after Koyeb was chosen. (1) The image took 41.7 to 43.7 s to start at Koyeb's free size, measured locally (`docs/DEPLOY_PLAN.md`, Task 3), not the few seconds Koyeb was chosen on; every reviewer arriving after an idle hour would wait that long. (2) A Koyeb sign-up starts on its Pro plan ("When signing up, the selected plan is Pro, so you will be charged the pro-rated amount for Pro", koyeb.com/docs/faqs/pricing; Pro is "$29 /mo +compute", koyeb.com/pricing) unless switched to Starter. (3) The owner wants the simple option. Render's paid instance never sleeps ("To remove the Free instance limitations described below, you can upgrade your service to any paid compute plan", render.com/docs/free), its compute is "prorated to the second" on a base plan of "$0 /mo + compute" (render.com/pricing), so two weeks cost about $3.30, and it "fully supports Docker-based deploys" (render.com/docs/docker). Koyeb's paid eco-micro (about $1.25 for two weeks) was rejected for the Pro-plan default and the card hold. All read 2026-11-25.
+
+**What it supersedes:** the Koyeb facts in section 3, the choice in section 4, the Koyeb lines of 5.6 and section 6, and goal 2's wait after an idle hour, which no longer happens. Render passes the port in `PORT` ("The default value of PORT is 10000 for all Render web services", render.com/docs/web-services), which the Dockerfile's `${PORT:-8000}` already reads, and its dashboard has a health check path setting (render.com/docs/health-checks). Everything else stands: public mode, the door, both limits, the image, going public on GitHub.
 
 **Claude's calls, for the owner to check:** a public repository; public mode decided by where the server listens, failing closed without the code; the browser's own sign-in box rather than a code field on the page; 100 questions a day and 200 conversations held; a 5 USD monthly limit on the demo workspace; the question cap only in public mode and in the API layer; HTTP 401 for the door and 429 with `daily_limit` for the cap; a Dockerfile, with the database built into the image.

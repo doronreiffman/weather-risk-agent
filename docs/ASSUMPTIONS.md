@@ -100,8 +100,8 @@ Re-grading the saved answers with fixes 2 and 3 changed exactly two case runs, b
 
 The design is `docs/DEPLOY_DESIGN.md`; the owner's answers to its review are in its section 8.
 
-1. **The daily count starts again on every restart.** It lives in memory, and the free instance stops after an idle hour, so the limit of 100 bounds a burst, not a calendar day. The ceiling on spend is the separate Anthropic workspace's monthly limit. Accepted at demo grade.
-2. **A start after an idle hour is slow on the free instance.** Measured locally in the image at Koyeb's free size (0.1 of a CPU, 512 MB): 41.7 to 43.7 seconds to the first healthy reply over three runs; 2.8 seconds at one CPU, where importing Anthropic's SDK is 1.12 of 2.10 processor seconds. The owner re-evaluates the host once the wait is measured on Koyeb itself.
+1. **The daily count starts again on every restart.** It lives in memory, so a deploy or a crash resets it, and the ceiling on spend is the separate Anthropic workspace's monthly limit. Accepted at demo grade.
+2. **The host is Render's paid instance, which never sleeps (owner).** Koyeb's free instance was chosen first; at its size (0.1 of a CPU, 512 MB) the image took 41.7 to 43.7 seconds to start, measured locally over three runs (2.8 seconds at one CPU, where importing Anthropic's SDK is 1.12 of 2.10 processor seconds), and every reviewer after an idle hour would have waited that long. `docs/DEPLOY_DESIGN.md` section 9.
 3. **The repository goes public under the owner's personal account,** with the personal email address on every commit left as it is (changing it would change every commit id the documents cite) and the station data published with it (O1).
 
 ## Assumptions

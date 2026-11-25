@@ -672,7 +672,8 @@ Changes forced by reality are appended here, newest last.
 
 **2026-11-25, after milestone 5. The public URL (section 13's first bonus, owner).**
 
-- *Designed in `docs/DEPLOY_DESIGN.md` and built from `docs/DEPLOY_PLAN.md`; going public on GitHub and the deploy are that plan's Tasks 5 and 6.* Public mode follows the listen address and refuses to start without an access code; HTTP Basic sign-in; 100 questions a day and 200 conversations held; an image built from a Dockerfile, for a Koyeb free instance. Section 13's note that a public URL "needs an access guard before it goes up" is met by the sign-in and the daily limit, with a separate workspace and its own spending limit as the ceiling (an owner step in Task 6). The decision log entry of 2026-11-25 says why.
+- *Designed in `docs/DEPLOY_DESIGN.md` and built from `docs/DEPLOY_PLAN.md`; going public on GitHub and the deploy are that plan's Tasks 5 and 6.* Public mode follows the listen address and refuses to start without an access code; HTTP Basic sign-in; 100 questions a day and 200 conversations held; an image built from a Dockerfile, for a Koyeb free instance. Section 13's note that a public URL "needs an access guard before it goes up" is met by the sign-in and the daily limit, with a separate workspace and its own spending limit as the ceiling (an owner step in Task 6).
+- *The host changed to Render's paid instance after the build (owner).* `docs/DEPLOY_DESIGN.md` section 9 and the decision log say why. The decision log entry of 2026-11-25 says why.
 
 ---
 

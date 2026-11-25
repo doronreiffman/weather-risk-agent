@@ -2,8 +2,8 @@
 
 `wra serve` hands `DailyLimit(n).admit` to the agent only in public mode, so `wra ask`, `wra chat` and
 `wra eval` never meet it. The count lives in memory: it starts again on a new UTC day, and also whenever the
-process restarts, which on the free host is after every idle hour. The hard ceiling is the demo workspace's
-monthly spending limit at Anthropic.
+process restarts (a deploy or a crash). The hard ceiling is the demo workspace's monthly spending limit at
+Anthropic.
 """
 
 import threading
