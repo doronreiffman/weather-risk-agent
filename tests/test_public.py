@@ -75,6 +75,16 @@ def test_malformed_sign_in_headers_get_401(ctx, headers):
     assert http.get("/", headers=headers).status_code == 401
 
 
+@pytest.mark.parametrize("host", ["x/healthz?", "x/healthz#", "x/healthz"])
+def test_a_forged_host_header_does_not_open_the_door(ctx, host):
+    # the door must decide on the path the router serves, not on a URL rebuilt from the Host header, where a
+    # host of "x/healthz?" turns "/api/hubs" into a query string after "/healthz" (whole-branch review)
+    http, model = served(ctx, final())
+    assert http.get("/api/hubs", headers={"Host": host}).status_code == 401
+    r = http.post("/api/chat", json={"session_id": None, "message": QUESTION}, headers={"Host": host})
+    assert r.status_code == 401 and model.requests == []
+
+
 def test_no_door_without_an_access_code(ctx):
     http, _ = served(ctx, access_code=None)
     assert http.get("/").status_code == 200

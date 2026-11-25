@@ -51,7 +51,9 @@ def credentials_ok(header: str | None, access_code: str) -> bool:
 def add_door(app: FastAPI, access_code: str) -> None:
     @app.middleware("http")
     async def door(request: Request, call_next):
-        if request.url.path in OPEN_PATHS or credentials_ok(request.headers.get("authorization"), access_code):
+        # the path the router serves, never request.url.path: that URL is rebuilt with the Host header, so it
+        # stays safe only while the web framework keeps validating that header (whole-branch review)
+        if request.scope["path"] in OPEN_PATHS or credentials_ok(request.headers.get("authorization"), access_code):
             return await call_next(request)
         return JSONResponse({"detail": f"Sign in with the username {USERNAME} and the access code."},
                             status_code=401, headers=SIGN_IN)  # fmt: skip
