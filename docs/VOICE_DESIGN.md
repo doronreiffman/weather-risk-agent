@@ -2,7 +2,7 @@
 
 **Grade: demo.** The plan's "interview take-home prototype" (`docs/PLAN.md`, top), the grade `docs/ALERT_DESIGN.md` also took. One button on the chat page, checked by a few tests and a check by hand. Not production: English only, desktop browsers, and no promise about how well any browser hears.
 
-Status: **Draft, not approved.** Written by Fable on 2026-11-25 for queue item q28; the owner picked approach A and answered section 8's questions the same day. Nothing is built before the owner approves it. "Read" means the words were read that day on the page named (MDN pages as their source text in MDN's own repository). "Measured" means run that day on this repository or against the public site. Anything not checked is marked UNVERIFIED. Sources are numbered S1 to S23 at the end of section 3.
+Status: **approved by the owner on 2026-11-25.** Written by Fable on 2026-11-25 for queue item q28; the owner picked approach A and answered section 8's questions the same day. "Read" means the words were read that day on the page named (MDN pages as their source text in MDN's own repository). "Measured" means run that day on this repository or against the public site. Anything not checked is marked UNVERIFIED. Sources are numbered S1 to S23 at the end of section 3.
 
 **Size: a small change.** One file of the page, a few tests, and steps added to the README's check by hand. No server code, no new dependency, no secret, no new paid call.
 
