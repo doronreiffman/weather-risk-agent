@@ -1,4 +1,4 @@
-"""Spoken questions on the chat page (docs/VOICE_DESIGN.md, docs/VOICE_PLAN.md). The two speech functions run in
+"""Spoken questions on the chat page (docs/VOICE_DESIGN.md, docs/VOICE_PLAN.md). The three speech functions run in
 Node, as boldOnly's test does (tests/test_api.py); the rest of the speech code is read as text. No browser, no
 microphone and no model call."""
 
@@ -160,8 +160,9 @@ def test_ask_follows_one_rule():
 def test_speech_follows_the_design():
     code = speech_code()
     for setting in ("window.SpeechRecognition || window.webkitSpeechRecognition", '.lang = "en-US"',
-                    ".continuous = false", ".interimResults = true", "box.readOnly = true", "box.readOnly = false",
-                    "joinHeard(spokenBase,", "box.maxLength"):  # fmt: skip
+                    ".continuous = true", ".interimResults = true", "box.readOnly = true", "box.readOnly = false",
+                    "joinHeard(spokenBase,", "box.maxLength", "Listening. Press Stop when you have finished.",
+                    "tidySpoken(box.value, box.maxLength)"):  # fmt: skip
         assert setting in code, setting
     text = page()
     assert f'maxlength="{MAX_MESSAGE}"' in text  # the box's limit is the server's, so the cut matches it
@@ -186,3 +187,36 @@ def test_late_events_and_stop_are_guarded():
     code = speech_code()
     assert code.count("if (rec !== current) return;") == 3
     assert ".abort()" in code
+
+
+# --- tidying the start and end of spoken words -----------------------------------------------
+
+
+def tidy_spoken(texts: list[str], limit: int) -> list[str]:
+    """tidySpoken(text, limit) for each text, in one Node run."""
+    return run_in_node(["tidySpoken"], f"{json.dumps(texts)}.map((text) => tidySpoken(text, {limit}))")
+
+
+TIDIED = [  # (the box when listening stopped, the box after); the words themselves never change
+    ("which hubs are most exposed", "Which hubs are most exposed?"),
+    ("What if a hurricane counted double", "What if a hurricane counted double?"),
+    ("is Denver snowy", "Is Denver snowy?"),
+    ("how", "How?"),
+    ("compare Miami and Houston", "Compare Miami and Houston."),
+    ("Which hubs are most exposed?", "Which hubs are most exposed?"),
+    ("compare Miami and Houston.", "Compare Miami and Houston."),
+    ("hello!", "Hello!"),
+    ("why is Dallas high  ", "Why is Dallas high?"),
+    ("3 hubs in the Midwest", "3 hubs in the Midwest."),
+    ("", ""),
+    ("   ", ""),
+]
+
+
+def test_spoken_words_are_tidied_at_the_start_and_end():
+    assert tidy_spoken([text for text, _ in TIDIED], 2000) == [after for _, after in TIDIED]
+
+
+def test_the_tidy_mark_respects_the_servers_limit():
+    assert tidy_spoken(["x" * MAX_MESSAGE, "x" * (MAX_MESSAGE - 1)], MAX_MESSAGE) == [
+        "X" + "x" * (MAX_MESSAGE - 1), "X" + "x" * (MAX_MESSAGE - 2) + "."]  # fmt: skip

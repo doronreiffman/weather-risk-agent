@@ -296,7 +296,7 @@ fresh.addEventListener("click", () => {
 
 // SPEECH BEGIN
 // Spoken questions (docs/VOICE_DESIGN.md): the browser turns speech into text, the words go only into the box,
-// and only Ask sends them. The two functions below use nothing outside themselves, so the tests run them in Node.
+// and only Ask sends them. The three functions below use nothing outside themselves, so the tests run them in Node.
 
 // The box's text when listening began, then the heard words. parts holds every result so far, so each result
 // rebuilds the box from that text: adding each result's words to the box would repeat them. The cut is the
@@ -329,6 +329,20 @@ function speechProblem(code) {
   }
 }
 
+// The browser gives bare words, so when listening stops the start gets a capital and the end a mark: "?" when the
+// first word asks, "." otherwise. The words themselves never change, and no mark goes past the server's limit.
+function tidySpoken(text, limit) {
+  const trimmed = text.replace(/\s+$/, "");
+  if (trimmed === "") return "";
+  const tidied = trimmed.charAt(0).toUpperCase() + trimmed.slice(1);  // only a lowercase letter changes
+  if (/[.?!]$/.test(tidied)) return tidied;
+  const asks = ["which", "what", "why", "how", "where", "when", "who", "whose", "whom", "is", "are", "was", "were",
+                "do", "does", "did", "can", "could", "should", "would", "will", "has", "have"];
+  const word = /\S+/.exec(tidied)[0].toLowerCase().replace(/[^a-z]/g, "");
+  const marked = tidied + (asks.includes(word) ? "?" : ".");
+  return marked.length <= limit ? marked : tidied;
+}
+
 // The wiring. A browser without speech recognition, under either name, runs none of it: the page is as before.
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 let spokenBase = "";  // the box's text when listening began
@@ -351,9 +365,15 @@ function endListening(text, stopPressed) {
   }
 }
 
-// A pause, Stop, or a stop the browser started: words added are for the analyst to check before pressing Ask.
+// Stop, or a stop the browser started (after a long silence, say): words added get their start and end tidied,
+// then are for the analyst to check before pressing Ask.
 function finishListening(stopPressed) {
-  endListening(box.value !== spokenBase ? "Check the words, then press Ask." : "", stopPressed);
+  if (box.value === spokenBase) {
+    endListening("", stopPressed);
+    return;
+  }
+  box.value = tidySpoken(box.value, box.maxLength);  // before endListening puts the cursor at the end
+  endListening("Check the words, then press Ask.", stopPressed);
 }
 
 function startListening() {
@@ -361,7 +381,7 @@ function startListening() {
   try {  // a browser whose recogniser fails to build or to start ends like any other failure
     const rec = new Recognition();  // a new one for each press
     rec.lang = "en-US";
-    rec.continuous = false;  // one utterance per press
+    rec.continuous = true;  // listening runs through pauses until Stop (the browser may still end it itself)
     rec.interimResults = true;  // the words show while they are heard
     rec.addEventListener("result", (event) => {
       if (rec !== current) return;
@@ -371,7 +391,7 @@ function startListening() {
     rec.addEventListener("error", (event) => {
       if (rec !== current) return;
       const problem = speechProblem(event.error);
-      if (problem === "") finishListening();  // "aborted" the page did not cause: as a pause
+      if (problem === "") finishListening();  // "aborted" the page did not cause: as a stop the browser started
       else endListening(problem);
     });
     rec.addEventListener("end", () => {
@@ -383,7 +403,7 @@ function startListening() {
     syncAsk();
     box.readOnly = true;  // so the next result cannot overwrite a correction half made
     speak.textContent = "Stop";
-    speechStatus.textContent = "Listening. Pause when you have finished, or press Stop.";
+    speechStatus.textContent = "Listening. Press Stop when you have finished.";
     rec.start();
   } catch (error) {
     endListening(speechProblem(error.name));
