@@ -24,6 +24,8 @@ import threading
 import time
 import traceback
 import uuid
+from collections import OrderedDict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -72,6 +74,8 @@ class AnthropicClient:
 BUSY = "The last question in this conversation is still being answered. Send this one when it has finished."
 UNKNOWN = ("This conversation is no longer on the server, probably because the server restarted. Your question "
            "was not sent; send it again to start a new conversation.")  # fmt: skip
+DAILY_LIMIT = ("Today's question limit for this demo is used up, so this question was not sent. It starts again "
+               "at midnight UTC.")  # fmt: skip
 FIRST_RETRY_PAUSE = 0.5  # seconds, the SDK's first back-off (anthropic/_constants.py, INITIAL_RETRY_DELAY)
 
 
@@ -95,11 +99,16 @@ class Session:
 class ClaudeAgent:
     name = "claude"
 
-    def __init__(self, ctx: ToolContext, settings: AgentSettings | None = None, client: ModelClient | None = None):
+    def __init__(self, ctx: ToolContext, settings: AgentSettings | None = None, client: ModelClient | None = None,
+                 admit: Callable[[], bool] | None = None):  # fmt: skip
+        """`admit`, when given, is asked before each question reaches the model; False refuses it with
+        daily_limit. Only `wra serve` in public mode gives one (docs/DEPLOY_DESIGN.md 5.3)."""
         self.ctx = ctx
         self.settings = settings or load_settings()
         self.client = client or AnthropicClient(self.settings)
-        self.sessions: dict[str, Session] = {}
+        self.admit = admit
+        # least recently used first; past `max_conversations` the first is dropped (docs/DEPLOY_DESIGN.md 5.4)
+        self.sessions: OrderedDict[str, Session] = OrderedDict()
         self._sessions_lock = threading.Lock()
         hub_ids = list(ctx.data.hubs)
         self.tools = tool_definitions(hub_ids)
@@ -133,13 +142,18 @@ class ClaudeAgent:
                 session = self.sessions.get(session_id)
                 if session is None:
                     return self._error_reply(session_id, UNKNOWN, "unknown_conversation")
+                self.sessions.move_to_end(session_id)
             else:
                 session = Session(id=uuid.uuid4().hex)
                 self.sessions[session.id] = session
+                while len(self.sessions) > self.settings.max_conversations:
+                    self.sessions.popitem(last=False)
         if not session.busy.acquire(blocking=False):
             return self._error_reply(session.id, BUSY, "busy")
         kept = len(session.messages), set(session.results)
         try:
+            if self.admit is not None and not self.admit():  # after the refusals above, so they are not counted
+                return self._error_reply(session.id, DAILY_LIMIT, "daily_limit")
             return self._answer(session, message)
         except Exception as error:  # a bug in our own code: the turn goes, as after any failure
             traceback.print_exc()  # the whole traceback to the server's or the evaluation's log; the reply names the class

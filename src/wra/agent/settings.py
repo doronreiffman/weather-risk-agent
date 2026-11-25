@@ -19,6 +19,8 @@ class AgentSettings:
     timeout_seconds: float
     max_retries: int
     message_time_limit_seconds: float
+    max_conversations: int  # held in memory; past it the least recently used is dropped
+    daily_question_limit: int  # the public site only (wra serve in public mode)
     fallback_beta: str
     fallbacks: str
     prices: dict[str, dict[str, float]]
@@ -54,6 +56,8 @@ def load_settings(path: Path | None = None) -> AgentSettings:
         timeout_seconds=float(raw["timeout_seconds"]),
         max_retries=int(raw["max_retries"]),
         message_time_limit_seconds=float(raw["message_time_limit_seconds"]),
+        max_conversations=int(raw["max_conversations"]),
+        daily_question_limit=int(raw["daily_question_limit"]),
         fallback_beta=raw["fallback_beta"],
         fallbacks=raw["fallbacks"],
         prices={model: dict(p) for model, p in raw.get("prices", {}).items()},

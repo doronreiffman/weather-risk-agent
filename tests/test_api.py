@@ -107,7 +107,8 @@ def test_a_second_message_on_a_busy_conversation_is_409(ctx):
 
 HTTP_STATUS = {"busy": 409, "unknown_conversation": 404, "model_call_failed": 502, "time_limit": 502,
                "declined": 502, "cut_off": 502, "invalid_twice": 502, "too_many_calls": 502,  # owner, milestone 4
-               "internal_error": 500}  # a bug in our own code, not the model side (Claude, after the review)
+               "internal_error": 500,  # a bug in our own code, not the model side (Claude, after the review)
+               "daily_limit": 429}  # the public site's questions a day (docs/DEPLOY_DESIGN.md 5.3)
 
 
 class Fixed:

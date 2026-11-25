@@ -7,7 +7,8 @@ lock per conversation keeps two messages on one conversation apart.
 
 HTTP status (owner, milestone 4): every reply the agent gives is sent with the same body, as 200 unless it
 is an error; busy is 409, a conversation the server does not hold is 404, and the failures on the model's
-side are 502. A bug in our own code is 500, with the same body (Claude, after the milestone 4 review). A
+side are 502. A bug in our own code is 500, with the same body (Claude, after the milestone 4 review). On
+the public site, a question past the day's limit is 429, with the same body (docs/DEPLOY_DESIGN.md 5.3). A
 malformed request gets FastAPI's 422 and its validation message, not a reply, and reaches no model.
 """
 
@@ -26,7 +27,8 @@ from wra.tools.text import cell_text
 
 PAGE = Path(__file__).parent / "static" / "index.html"
 MAX_MESSAGE = 2000  # characters; a question to this agent runs to a few hundred
-ERROR_STATUS = {"busy": 409, "unknown_conversation": 404, "internal_error": 500}  # any other error code: 502
+ERROR_STATUS = {"busy": 409, "unknown_conversation": 404, "internal_error": 500,
+                "daily_limit": 429}  # any other error code: 502  # fmt: skip
 
 
 class ChatRequest(BaseModel):
