@@ -124,3 +124,51 @@ def test_the_pages_script_parses(tmp_path):
     script.write_text(scripts[0], encoding="utf-8")
     run = subprocess.run([node, "--check", str(script)], capture_output=True, text=True)
     assert run.returncode == 0, run.stderr
+
+
+# --- the Speak button, the notice and the status line ----------------------------------------
+
+
+NOTICE = (
+    "Speech is turned into text by your browser, not by this site. To do that, the browser may send your voice to "
+    "its maker: Chrome sends it to Google. This site receives only the text, and only when you press Ask, so check "
+    "the words first, especially hub names."
+)
+
+
+def test_the_speak_button_ships_hidden_and_never_submits():
+    # type="button": a plain button inside the form, so pressing it never submits; the script shows it
+    text = page()
+    assert '<button id="speak" type="button" hidden>Speak</button>' in text
+    assert '<p id="speech-notice" hidden>' in text
+    assert '<p id="speech-status" role="status" hidden></p>' in text
+
+
+def test_the_notice_says_where_the_voice_goes():
+    assert NOTICE in " ".join(page().split())
+
+
+def test_ask_follows_one_rule():
+    # An answer arriving while listening must not re-enable Ask (docs/VOICE_DESIGN.md 5.2)
+    text = page()
+    assert text.count("send.disabled =") == 1
+    assert "send.disabled = answering || listening;" in text
+    assert "speak.disabled = on;" in text
+    assert "send.disabled" not in speech_code()
+
+
+def test_speech_follows_the_design():
+    code = speech_code()
+    for setting in ("window.SpeechRecognition || window.webkitSpeechRecognition", '.lang = "en-US"',
+                    ".continuous = false", ".interimResults = true", "box.readOnly = true", "box.readOnly = false",
+                    "joinHeard(spokenBase,", "box.maxLength"):  # fmt: skip
+        assert setting in code, setting
+    text = page()
+    assert f'maxlength="{MAX_MESSAGE}"' in text  # the box's limit is the server's, so the cut matches it
+    assert "processLocally" not in text and ".phrases" not in text  # left to the browser; no word hints
+
+
+def test_the_page_never_holds_audio():
+    # The browser turns speech into text; the page never has audio to upload
+    text = page()
+    assert "getUserMedia" not in text and "MediaRecorder" not in text

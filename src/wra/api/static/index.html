@@ -41,7 +41,7 @@
   table { border-collapse: collapse; font-size: 0.9rem; }
   th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
   th { background: var(--bg); }
-  .what, .note, .footnote p { font-size: 0.85rem; color: var(--muted); margin: 6px 0 0; }
+  .what, .note, .footnote p, #speech-notice, #speech-status { font-size: 0.85rem; color: var(--muted); margin: 6px 0 0; }
   .footnote { margin-top: 12px; padding-top: 8px; border-top: 1px solid var(--line); }
   details { margin-top: 12px; font-size: 0.85rem; }
   summary { cursor: pointer; color: var(--accent); }
@@ -77,8 +77,13 @@
   <form id="ask">
     <textarea id="message" rows="2" maxlength="2000" required
               placeholder="Which hubs in the Midwest are most exposed to winter disruption?"></textarea>
+    <button id="speak" type="button" hidden>Speak</button>
     <button id="send" class="primary" type="submit">Ask</button>
   </form>
+  <p id="speech-notice" hidden>Speech is turned into text by your browser, not by this site. To do that, the browser
+    may send your voice to its maker: Chrome sends it to Google. This site receives only the text, and only when you
+    press Ask, so check the words first, especially hub names.</p>
+  <p id="speech-status" role="status" hidden></p>
   <p id="working" hidden>Working: the agent is looking up the figures and checking its answer</p>
 
   <footer>
@@ -98,7 +103,11 @@ const box = document.getElementById("message");
 const send = document.getElementById("send");
 const working = document.getElementById("working");
 const fresh = document.getElementById("new");
+const speak = document.getElementById("speak");
+const speechNotice = document.getElementById("speech-notice");
+const speechStatus = document.getElementById("speech-status");
 let sessionId = null;
+let answering = false, listening = false;
 
 const LABELS = { out_of_scope: "Out of scope", no_data: "No data for that period",
                  needs_clarification: "Needs clarification" };
@@ -215,10 +224,17 @@ function restore(message) {  // the question back in the box, unless the user ha
   if (!box.value.trim()) box.value = message;
 }
 
+// Ask's one rule, and the only place it is set: disabled while an answer is on its way or while listening,
+// so words the browser may still change cannot be sent.
+function syncAsk() { send.disabled = answering || listening; }
+
 function setWorking(on) {
-  send.disabled = on;
+  answering = on;
+  syncAsk();
+  speak.disabled = on;  // listening starts only between answers, so the two never share the box
   fresh.disabled = on;  // a new conversation mid-answer would be undone when the answer arrives
   working.hidden = !on;
+  if (on) speechStatus.hidden = true;  // a sent question clears an old "Check the words" line
 }
 
 async function ask(message) {
@@ -311,6 +327,74 @@ function speechProblem(code) {
     default:
       return "Speech stopped (" + code + "). Type the question.";
   }
+}
+
+// The wiring. A browser without speech recognition, under either name, runs none of it: the page is as before.
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let spokenBase = "";  // the box's text when listening began
+let current = null;  // the recognition now listening, or null; whatever any other one sends is ignored
+
+// Listening is over: Ask follows its rule again, the box takes typing with the cursor at the end, and the
+// status line says text, or goes when text is empty.
+function endListening(text) {
+  current = null;
+  listening = false;
+  syncAsk();
+  box.readOnly = false;
+  speak.textContent = "Speak";
+  speechStatus.textContent = text;
+  speechStatus.hidden = text === "";
+  box.focus();
+  box.setSelectionRange(box.value.length, box.value.length);
+}
+
+// A pause or Stop: words added are for the analyst to check before pressing Ask.
+function finishListening() {
+  endListening(box.value !== spokenBase ? "Check the words, then press Ask." : "");
+}
+
+function startListening() {
+  spokenBase = box.value;
+  const rec = new Recognition();  // a new one for each press
+  rec.lang = "en-US";
+  rec.continuous = false;  // one utterance per press
+  rec.interimResults = true;  // the words show while they are heard
+  rec.addEventListener("result", (event) => {
+    if (rec !== current) return;
+    box.value = joinHeard(spokenBase, Array.from(event.results, (r) => r[0].transcript), box.maxLength);
+  });
+  rec.addEventListener("error", (event) => {
+    if (rec === current) endListening(speechProblem(event.error));
+  });
+  rec.addEventListener("end", () => {
+    if (rec === current) finishListening();
+  });
+  current = rec;
+  listening = true;
+  syncAsk();
+  box.readOnly = true;  // so the next result cannot overwrite a correction half made
+  speak.textContent = "Stop";
+  speechStatus.textContent = "Listening. Pause when you have finished, or press Stop.";
+  speechStatus.hidden = false;
+  try {
+    rec.start();
+  } catch (error) {
+    endListening(speechProblem(error.name));
+  }
+}
+
+if (Recognition) {
+  speak.hidden = false;
+  speechNotice.hidden = false;
+  speak.addEventListener("click", () => {
+    if (current === null) {
+      startListening();
+      return;
+    }
+    const stopped = current;  // Stop: the page is back to normal at once, without waiting for the browser
+    finishListening();
+    stopped.abort();
+  });
 }
 // SPEECH END
 </script>
