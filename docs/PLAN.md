@@ -675,6 +675,10 @@ Changes forced by reality are appended here, newest last.
 - *Designed in `docs/DEPLOY_DESIGN.md` and built from `docs/DEPLOY_PLAN.md`; going public on GitHub and the deploy are that plan's Tasks 5 and 6.* Public mode follows the listen address and refuses to start without an access code; HTTP Basic sign-in; 100 questions a day and 200 conversations held; an image built from a Dockerfile, for a Koyeb free instance. Section 13's note that a public URL "needs an access guard before it goes up" is met by the sign-in and the daily limit, with a separate workspace and its own spending limit as the ceiling (an owner step in Task 6).
 - *The host changed to Render's paid instance after the build (owner).* `docs/DEPLOY_DESIGN.md` section 9 and the decision log say why. The decision log entry of 2026-11-25 says why.
 
+**2026-11-25, after the public URL. The score-change alert (section 13's second bonus, owner).**
+
+- *Designed in `docs/ALERT_DESIGN.md` and built from `docs/ALERT_PLAN.md`; voice is not built (owner: the alert serves the narrow scope better).* Section 13's note said the alert would "compare with the stored scores", but none were stored: `data/reviewed_scores.json` now holds the ranking as last reviewed, and only `wra alert --accept` changes it. The alert is an issue opened by a weekly GitHub job. The National Weather Service feed that section 4.3 kept as a candidate is not used, since weather happening now is out of scope (section 2, answer 8).
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks

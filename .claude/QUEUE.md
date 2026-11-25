@@ -6,8 +6,8 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q8] Bonus: the score-change alert (owner 2026-11-25: the alert, not voice, as it serves the narrow scope better). Design approved 2026-11-25; plan, then build. Voice is not built. → `docs/ALERT_DESIGN.md`; the plan `docs/ALERT_PLAN.md` once written
-- [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console). → `docs/DEPLOY_DESIGN.md` section 6, step 6
+- [q8] Bonus: the score-change alert (owner 2026-11-25: the alert, not voice, as it serves the narrow scope better). Built on branch `score-alert` from the approved design and plan; left: Fable's whole-branch review, the merge and push on the owner's go, the owner's first runs on GitHub. Voice is not built. → `docs/ALERT_PLAN.md`, `.claude/OPEN_ISSUES.md` "The score-change alert"
+- [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console; disable the score-change workflow on GitHub, `docs/ALERT_DESIGN.md` section 6, step 6). → `docs/DEPLOY_DESIGN.md` section 6, step 6
 
 ## Done / Dropped
 

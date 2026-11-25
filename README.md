@@ -5,6 +5,7 @@ An agent that helps a logistics company's analysts decide which distribution hub
 - **Try it:** https://weather-risk-agent-7iai.onrender.com/ (sign in as `analyst` with the access code sent with the submission; it comes down after the interview), or run it locally (below).
 - **How it works:** twelve hubs, three public data sources, one measure (expected disruption days a year), all computed in plain Python. A Claude model (Haiku 5.5) reads the question, calls six tools and explains the result. Code checks every answer against a schema and every figure in it against the tool results.
 - **Does it work:** fourteen test questions, asked three times each, passed 42 of 42 in the final end-to-end check from a fresh clone (commit `27c5b6d`).
+- **Score-change alert (bonus):** a weekly GitHub job compares the ranking with the last reviewed one and opens an issue when a hub moves ("Score-change alert", below).
 
 **Read in this order:**
 
@@ -12,7 +13,7 @@ An agent that helps a logistics company's analysts decide which distribution hub
 2. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the components and how they talk, the repository structure, the data storage choice.
 3. [docs/EVAL_RESULTS.md](docs/EVAL_RESULTS.md): the evaluation, the model choice, the four example answers and the limits.
 
-The record behind them: [docs/DECISIONS.md](docs/DECISIONS.md) (why each choice was made), [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) (what the data showed and what is assumed), [docs/PLAN.md](docs/PLAN.md) (the approved plan and how the build departed from it), [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md) (the public site) and [docs/ai-session/](docs/ai-session/) (the full AI sessions).
+The record behind them: [docs/DECISIONS.md](docs/DECISIONS.md) (why each choice was made), [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) (what the data showed and what is assumed), [docs/PLAN.md](docs/PLAN.md) (the approved plan and how the build departed from it), [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md) (the public site), [docs/ALERT_DESIGN.md](docs/ALERT_DESIGN.md) (the score-change alert) and [docs/ai-session/](docs/ai-session/) (the full AI sessions).
 
 ## Run it
 
@@ -69,6 +70,47 @@ Three things the page does have no automated test: the question put back in the 
 - **Fifteen minutes before:** open the public URL, sign in and ask one question, so any fault shows before the call.
 - **If the public URL fails:** `uv run wra serve`, open http://127.0.0.1:8000/ and share the screen.
 - Keep the access code at hand, outside the repository.
+
+### Score-change alert
+
+`uv run wra alert` compares today's overall ranking with the one last reviewed, saved in `data/reviewed_scores.json`, and prints "No change" or a message naming each hub that moved. It uses no network, no model and no key. The design is in [docs/ALERT_DESIGN.md](docs/ALERT_DESIGN.md).
+
+```
+uv run wra alert            # "No change since the ranking was last reviewed", or the alert
+uv run wra alert --demo     # the same comparison with the hurricane weight doubled: a labelled demonstration
+uv run wra alert --accept   # save today's ranking as the reviewed one; commit it with the change that caused it
+```
+
+- **It nearly always says "No change".** The score covers ten finished years, 2016 to 2025. Fresh data moves it only when a source corrects past records, FEMA publishes a new release, the period moves forward, or the weights change. A fetch on 2026-11-25, a day after the stored one, moved no figure, rank or band.
+- **The weekly job** (`.github/workflows/score-alert.yml`) runs on GitHub every Wednesday. It fetches fresh data on GitHub's machine, runs `wra alert`, and on a change opens an issue labelled `score-change`, assigned to the repository's owner. It never pushes, so it never restarts the public site. The same change never opens a second issue while the first is open.
+- **The demo:** in the repository's Actions tab, "Run workflow" with "demo" ticked runs the comparison with the hurricane weight doubled on the committed data, with no fetch, and opens an issue labelled `score-change-demo`. It is the same what-if the chat answers for "What if a hurricane counted double?".
+- **A test keeps the reviewed copy honest:** if `config/scoring.toml` or `data/raw/` changes without `wra alert --accept`, `uv run pytest` fails.
+- **When a real alert arrives:** run the job again. If it repeats, run `uv run wra ingest --refresh` and `uv run wra rank overall`. If the new ranking is right, run `uv run wra alert --accept`, commit `data/raw/` with `data/reviewed_scores.json`, push, and close the issue.
+
+What the demo's issue says, as `uv run wra alert --demo` prints it:
+
+> [DEMO] Hub risk scores changed: 9 of 12 hubs, 3 changed band
+>
+> **This is a demonstration, not a real change.** The official scores have not moved. For this run only, the hurricane weight was 10 instead of 5, on the data committed in the repository.
+>
+> | Hub | Rank | Disruption days a year | Band | What moved |
+> |---|---|---|---|---|
+> | Miami (MIA) | 8 → 1 | 1.85 → 3.37 | Moderate → Very high | Hurricanes 1.52 → 3.05 |
+> | Houston (IAH) | 7 → 3 | 1.96 → 2.88 | Moderate → High | Hurricanes 0.92 → 1.84 |
+> | Memphis (MEM) | 2 → 4 | 2.44 → 2.56 | High | Hurricanes 0.12 → 0.24 |
+> | Dallas (DAL) | 6 → 7 | 2.02 → 2.08 | High | Hurricanes 0.06 → 0.12 |
+> | Chicago (ORD) | 5 → 8 | 2.03 → 2.08 | High | Hurricanes 0.05 → 0.10 |
+> | Indianapolis (IND) | 9 | 1.56 → 1.60 | Moderate | Hurricanes 0.04 → 0.08 |
+> | Atlanta (ATL) | 10 | 1.24 → 1.48 | Moderate | Hurricanes 0.24 → 0.49 |
+> | Columbus (CMH) | 11 | 0.99 → 1.02 | Low → Moderate | Hurricanes 0.03 → 0.06 |
+> | Phoenix (PHX) | 12 | 0.42 → 0.48 | Low | Hurricanes 0.06 → 0.12 |
+>
+> Rank only, own figures unchanged: Minneapolis 1 → 2, Denver 3 → 5, Kansas City 4 → 6.
+> Inputs that differ: hurricane weight 5 → 10.
+>
+> This says that figures differ, not why. A hiccup at a source can look like a change, so run the job again first. Nothing needs accepting after a demo: close this issue.
+>
+> Change id: demo-6074f5bb3a8d
 
 ## How the build sessions were run
 

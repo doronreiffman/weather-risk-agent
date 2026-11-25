@@ -58,8 +58,10 @@ config/          hubs.toml (the 12 hubs), scoring.toml (weights, warning types, 
                  agent.toml (model, time and call limits, the public site's limits)
 data/raw/        the public APIs' responses, committed: acis, fema_nri, iem_zone, iem_polygon
 data/wra.sqlite  built from data/raw by `wra ingest`, no network; git-ignored
+data/reviewed_scores.json  the ranking as last reviewed, which the score-change alert compares with
 src/wra/
-  cli.py         the `wra` command: ingest, data-report, rank, ask, chat, eval, serve
+  cli.py         the `wra` command: ingest, data-report, rank, ask, chat, eval, serve, alert
+  alert.py       the score-change alert: snapshot, comparison, issue text; pure functions
   ingest/        fetch (fetch.py, the only module that uses the network), parse, build the database
   scoring/       warning time, the KPI, confidence: pure functions, no model
   tools/         the six tools the model calls, one module each, and their registry
@@ -70,8 +72,9 @@ tests/           on a scripted fake model: no network, no paid call
 evals/runs/      the evaluation records the results document cites
 scripts/e2e.sh   the end-to-end check from a fresh clone
 Dockerfile       the public site's image
+.github/workflows/score-alert.yml  the weekly score-change job on GitHub
 docs/            SUMMARY, ARCHITECTURE, EVAL_RESULTS, DECISIONS, ASSUMPTIONS, PLAN, DEPLOY_DESIGN,
-                 DEPLOY_PLAN; ai-session/ holds the AI sessions
+                 DEPLOY_PLAN, ALERT_DESIGN, ALERT_PLAN; ai-session/ holds the AI sessions
 ```
 
 One Python package: the page is a single static file, so a separate front-end project would add a second toolchain for nothing.
@@ -93,6 +96,7 @@ One Python package: the page is a single static file, so a separate front-end pr
 - **Why:** answers are fast and repeatable, the demo does not depend on the data providers' servers, and the evaluation's expected answers stay fixed. Raw warnings are stored and the time under warning is computed by tested code, so any figure can be traced to individual warnings.
 - **Rejected:** calling the APIs for each question (slow, and answers would drift); Postgres (a running server for one reader of tens of thousands of rows); plain JSON files (every filter and count in ad-hoc Python).
 - **Refreshing:** `wra ingest --refresh` fetches everything again (48 requests).
+- **The reviewed ranking:** `data/reviewed_scores.json`, one hub per line, holds the overall ranking as last reviewed, for the score-change alert. Only `wra alert --accept` writes it, and a test fails when the committed data or weights no longer give it.
 
 ## Contracts between the model and the code
 
@@ -187,6 +191,12 @@ The target: the four assignment questions pass in all three repetitions, and at 
 `scripts/e2e.sh` checks the last commit, not the working copy. It clones the repository into a temporary folder and points the clone at the original's `.env` through the `WRA_ENV_FILE` setting (`src/wra/paths.py`), so the key is never copied or printed. It runs `uv sync`, `uv run wra ingest` from the committed raw responses, and `uv run pytest -q` inside the clone. Those steps cost nothing and run by default.
 
 With `--paid` it goes on to spend API credit. It starts `wra serve` on port 8765, with the date pinned to 2026-11-24 as in the evaluation, and, through the HTTP API only, asks the four assignment questions, one follow-up and one out-of-scope question (`src/wra/evals/e2e.py`). Each reply must parse as an `AgentReply` with the expected status, and the follow-up ("And which is the least exposed?" after the Midwest winter question) must name the last hub of the Midwest winter ranking, worked out from the scoring code, and show that ranking's table: Columbus is last in the Midwest overall ranking too. Without `--paid` the script's last line says only its free part passed. Last, it runs `uv run wra eval --reps 3 --require-target`, which fails the script when the target is missed, and copies the run record back into `evals/runs/`.
+
+## The score-change alert
+
+`wra alert` (`_alert` in `src/wra/cli.py`) runs `rank_hubs` for the overall ranking of all hubs and compares it with `data/reviewed_scores.json`: per hub the figure, the four hazard figures, the rank and the band, as shown to two decimals, and the ranking's confidence label. Weights, period, band cut-offs, FEMA's release and the data date are saved too and named in the message, but never trigger it alone. `src/wra/alert.py` holds the comparison and writes the issue's title and body as pure functions; a change id, a hash of the differences that leaves the data date out, lets the job see that the same change already has an open issue.
+
+The weekly job, `.github/workflows/score-alert.yml`, runs on GitHub's machine with permission only to read the code and write issues. It runs `wra ingest --refresh`, then `wra alert --out alert-out`, and on a change opens an issue with the preinstalled `gh`, labelled `score-change` and assigned to the repository's owner. A manual run can be a demo: the hurricane weight doubled on the committed data, with no fetch, labelled `score-change-demo`. The job never pushes, so it never redeploys the public site, and the reviewed copy changes only when a person runs `wra alert --accept` and commits it. Design: `docs/ALERT_DESIGN.md`.
 
 ## Left out on purpose
 

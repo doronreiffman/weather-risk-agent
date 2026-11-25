@@ -202,4 +202,10 @@ git commit -m "The weekly score-change job on GitHub, and its documents [skip re
 
 ## Deviations
 
-(None yet.)
+- *The job's text tests are in `tests/test_alert_job.py`, not appended to `tests/test_alert.py`.* Task 3's workflow was built alongside Task 1 (owner: "build in parallel where it makes sense"), and the two must not share a file.
+- *`Difference` gained `hub_count`.* The title's "of 12 hubs" needs the total, which the planned fields could not give.
+- *A change of the confidence label alone has its own title,* "Hub risk ranking's confidence changed: low → medium". Both planned titles count hubs, which would read "0 of 4" there.
+- *The body ends with the next step:* a demo says to close the issue; a real alert gives the design's section 6, step 5 commands. Design 5.5 asks for "what to do next" without fixing its words.
+- *The job's "No change" summary line is fixed text in the workflow,* not the command's printed line, so the command's outputs stay as planned.
+- *`uv sync --frozen` keeps the development tools,* since `uv run` would sync them back after a sync without them.
+- *The fetch measurement was corrected while writing the decision log.* The design says that in the four files compared by hand only a time stamp differed. Over all 24 changed files, 22 differ by the time stamp alone and 2 (Memphis and Phoenix, warnings by drawn area) hold the same warnings in another order. No score moved, so the design's conclusion stands: compare scores, never files.
