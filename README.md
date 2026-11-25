@@ -6,6 +6,7 @@ An agent that helps a logistics company's analysts decide which distribution hub
 - **How it works:** twelve hubs, three public data sources, one measure (expected disruption days a year), all computed in plain Python. A Claude model (Haiku 5.5) reads the question, calls six tools and explains the result. Code checks every answer against a schema and every figure in it against the tool results.
 - **Does it work:** fourteen test questions, asked three times each, passed 42 of 42 in the final end-to-end check from a fresh clone (commit `27c5b6d`).
 - **Score-change alert (bonus):** a weekly GitHub job compares the ranking with the last reviewed one and opens an issue when a hub moves ("Score-change alert", below).
+- **Spoken questions (bonus):** press Speak, say the question, check the words in the box and press Ask. The browser turns the speech into text, and this site never receives audio ("Spoken questions", below).
 
 **Read in this order:**
 
@@ -13,7 +14,7 @@ An agent that helps a logistics company's analysts decide which distribution hub
 2. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the components and how they talk, the repository structure, the data storage choice.
 3. [docs/EVAL_RESULTS.md](docs/EVAL_RESULTS.md): the evaluation, the model choice, the four example answers and the limits.
 
-The record behind them: [docs/DECISIONS.md](docs/DECISIONS.md) (why each choice was made), [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) (what the data showed and what is assumed), [docs/PLAN.md](docs/PLAN.md) (the approved plan and how the build departed from it), [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md) (the public site), [docs/ALERT_DESIGN.md](docs/ALERT_DESIGN.md) (the score-change alert) and [docs/ai-session/](docs/ai-session/) (the full AI sessions).
+The record behind them: [docs/DECISIONS.md](docs/DECISIONS.md) (why each choice was made), [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) (what the data showed and what is assumed), [docs/PLAN.md](docs/PLAN.md) (the approved plan and how the build departed from it), [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md) (the public site), [docs/ALERT_DESIGN.md](docs/ALERT_DESIGN.md) (the score-change alert), [docs/VOICE_DESIGN.md](docs/VOICE_DESIGN.md) (spoken questions) and [docs/ai-session/](docs/ai-session/) (the full AI sessions).
 
 ## Run it
 
@@ -57,18 +58,33 @@ The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_
 The public site runs on Render from the image the `Dockerfile` builds: the database is built inside it, and `.dockerignore` keeps `.env` out. The design is in [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md).
 ### Checking the page by hand before a demo
 
-Three things the page does have no automated test: the question put back in the box after a failure, the reset when the server no longer holds the conversation, and "New conversation". This check covers them in about three minutes, with one paid question.
+Four things the page does have no automated test: the question put back in the box after a failure, the reset when the server no longer holds the conversation, "New conversation", and how Speak behaves. The first list covers the first three in about three minutes, with one paid question. The second covers Speak.
 
-1. Start `uv run wra serve` and open http://127.0.0.1:8000/. Ask "Which hubs are most exposed overall?". While "Working" shows, Ask and New conversation are greyed out. The answer appears with its table, its data and confidence lines, and a "How this was computed" panel.
+1. Start `uv run wra serve` and open http://127.0.0.1:8000/. Ask "Which hubs are most exposed overall?". While "Working" shows, Ask, New conversation and Speak (where it shows) are greyed out. The answer appears with its table, its data and confidence lines, and a "How this was computed" panel.
 2. Stop the server (Ctrl+C) and start it again; leave the page open. Send "And which is the least exposed?". The page shows "New conversation. Your question is back in the box: send it again, reworded if it was a follow-up." and the question is back in the box. No model call is made.
 3. Click New conversation. The answers clear; the text in the box stays.
 4. Stop the server. Send any question. The page shows "The server could not be reached. The question is back in the box." and the question is back in the box.
+
+Spoken questions, in Chrome. All free except step 3's question (under a cent on Haiku), which can stand in for the first list's paid one.
+
+1. Start `uv run wra serve` and open http://127.0.0.1:8000/. Speak and the notice under the box show. Press Speak. The browser asks for the microphone: allow it.
+2. Say "Which hubs in the Midwest are most exposed to winter disruption?". The words appear in the box while you speak, each word once. The button reads Stop and Ask is greyed out. Pause. The button reads Speak, Ask is live, and nothing was sent: no question in the conversation, no "Working".
+3. Change one word by typing. Press Speak again and add a few words: they follow the text already there. Press Speak once more, say a few words, press Stop mid-sentence and type at once: what you type stays. Tidy the box into one real question and press Ask: the answer arrives as usual.
+4. The hub-name run. Wait a moment after each press of Speak before you talk. Say one short question for each of the twelve hub cities (Minneapolis, Memphis, Denver, Kansas City, Chicago, Dallas, Houston, Miami, Indianapolis, Atlanta, Columbus, Phoenix) and each of the four hazards (winter, flood, severe storm, hurricane), clearing the box between them and sending none. Count how many came out with the hub or hazard wrong, and note the browser.
+5. Block the microphone for the site in the browser's site settings and press Speak. The page says the microphone is blocked. Typing and Ask still work. Allow it again.
+6. In a browser without support, if one is at hand (Firefox): either no Speak button, or a plain message after pressing it. Typing works.
+7. After a deploy, on the public site: sign in and repeat steps 1 and 2. If Speak is missing, reload the page.
+8. In Safari, if at hand, with Siri turned on: steps 1 and 2.
+9. Enter to stop. Press Tab until Speak is selected, press Enter, and say a short sentence. Wait a second after you stop talking, then press Enter. Nothing is sent: no new question appears in the conversation. If listening starts again, press Stop.
+10. A long question. Say a question longer than two lines of the box. The newest words stay in sight while you speak.
+11. Stop, then Speak straight away. Press Speak, Stop and Speak again in quick succession. Listening starts again, or a plain message shows and the next press of Speak works.
 
 ### Interview day
 
 - **The day before:** run `scripts/e2e.sh` (free: a fresh clone, the database built offline, the tests), so the laptop backup is proven. Open the public URL, sign in and ask one question (paid, under a cent on Haiku).
 - **Fifteen minutes before:** open the public URL, sign in and ask one question, so any fault shows before the call.
 - **If the public URL fails:** `uv run wra serve`, open http://127.0.0.1:8000/ and share the screen.
+- **If voice will be shown:** say one question with the video call running first, since the call and the page share the microphone. Typing is the fallback.
 - Keep the access code at hand, outside the repository.
 
 ### Score-change alert
@@ -111,6 +127,16 @@ What the demo's issue says, as `uv run wra alert --demo` prints it:
 > This says that figures differ, not why. A hiccup at a source can look like a change, so run the job again first. Nothing needs accepting after a demo: close this issue.
 >
 > Change id: demo-6074f5bb3a8d
+
+### Spoken questions
+
+Press **Speak** beside Ask and say the question. The words appear in the box as you speak. When you pause, check them, fix any by typing, and press Ask. Speech never sends a question: only Ask or Enter does. The design is in [docs/VOICE_DESIGN.md](docs/VOICE_DESIGN.md).
+
+- **Browsers:** Chrome on a computer is the browser the check by hand uses; that check has not been run yet. Safari 14.1 or later should work with Siri turned on, and has not been checked by hand either. Edge is expected to work, since it follows Chrome, but is not promised. Firefox is left out of this version: the button may show, and pressing it is expected to end in a plain message. Where the browser has no speech recognition, there is no Speak button and the page works as before.
+- **Where your voice goes:** the browser turns the speech into text, not this site, and the site receives only the text you send. Chrome sends the audio to Google to do it (Chrome's own source code says so). Safari uses the same speech engine as Siri; whether a web page's speech stays on the Mac or goes to Apple follows the Mac's settings (for web pages: UNVERIFIED). Where released Edge sends the audio: UNVERIFIED.
+- **Hub names can be misheard.** One hub heard as another gives a right-looking answer to the wrong question, so read the hub names before pressing Ask. The page never changes a word itself.
+- **How well it hears:** not yet measured.
+- **Nothing else changes:** no new key, no server change and no extra cost. Only Ask reaches the model, as for a typed question.
 
 ## How the build sessions were run
 

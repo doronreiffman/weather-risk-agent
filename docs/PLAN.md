@@ -679,6 +679,10 @@ Changes forced by reality are appended here, newest last.
 
 - *Designed in `docs/ALERT_DESIGN.md` and built from `docs/ALERT_PLAN.md`; voice is not built (owner: the alert serves the narrow scope better).* Section 13's note said the alert would "compare with the stored scores", but none were stored: `data/reviewed_scores.json` now holds the ranking as last reviewed, and only `wra alert --accept` changes it. The alert is an issue opened by a weekly GitHub job. The National Weather Service feed that section 4.3 kept as a candidate is not used, since weather happening now is out of scope (section 2, answer 8).
 
+**2026-11-25, after the alert. Spoken questions (section 13's third bonus, owner).**
+
+- *Voice is built, as spoken questions only, after all (owner: "lets design spoken questions first"; the alert block above said it was not).* Designed in `docs/VOICE_DESIGN.md` (Fable) and built from `docs/VOICE_PLAN.md`. The browser recognises the speech, the words go only into the question box, and only Ask sends; the server and the API are unchanged. Firefox is left out of this version, and spoken answers are not built (owner).
+
 ---
 
 ## Appendix A. Commands that reproduce today's checks

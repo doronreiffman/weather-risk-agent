@@ -7,7 +7,7 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 ## Queue
 
 - [q29] The score-change alert's first scheduled run, Thursday 2026-11-26 07:23 UTC: read its steps (it should fetch, not demo) and its result. → `.claude/OPEN_ISSUES.md` "The score-change alert", first entry
-- [q28] Voice in the chat, the assignment's third bonus: spoken questions only (owner, 2026-11-25). Design drafted by Fable, the approach and its questions answered by the owner; nothing is built before the owner approves the design, then a plan. → `docs/VOICE_DESIGN.md`; `docs/PLAN.md` section 13
+- [q28] Voice in the chat, the assignment's third bonus: spoken questions only (owner, 2026-11-25). Designed and built; left: the owner's check by hand (README "Checking the page by hand before a demo", the spoken list, with step 4's hub-name count), the deploy push, the check on the public site. → `docs/VOICE_PLAN.md` "After the tasks"; `.claude/OPEN_ISSUES.md` "The chat page"
 - [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console; disable the score-change workflow on GitHub, `docs/ALERT_DESIGN.md` section 6, step 6). → `docs/DEPLOY_DESIGN.md` section 6, step 6
 
 ## Done / Dropped

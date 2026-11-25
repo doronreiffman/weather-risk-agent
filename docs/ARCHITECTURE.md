@@ -74,7 +74,8 @@ scripts/e2e.sh   the end-to-end check from a fresh clone
 Dockerfile       the public site's image
 .github/workflows/score-alert.yml  the weekly score-change job on GitHub
 docs/            SUMMARY, ARCHITECTURE, EVAL_RESULTS, DECISIONS, ASSUMPTIONS, PLAN, DEPLOY_DESIGN,
-                 DEPLOY_PLAN, ALERT_DESIGN, ALERT_PLAN; ai-session/ holds the AI sessions
+                 DEPLOY_PLAN, ALERT_DESIGN, ALERT_PLAN, VOICE_DESIGN, VOICE_PLAN; ai-session/ holds
+                 the AI sessions
 ```
 
 One Python package: the page is a single static file, so a separate front-end project would add a second toolchain for nothing.
@@ -160,6 +161,8 @@ On any other address it runs in public mode (`src/wra/api/public.py`, design in 
 
 The page (`src/wra/api/static/index.html`) is one file with inline script and styles, using plain `fetch`; a test checks it loads nothing from outside (`tests/test_api.py`). It escapes all reply text, then turns `**...**` into bold. It shows the verdict, caveats, tables, the data and confidence lines, and a "How this was computed" panel from the trace.
 
+Spoken questions use the browser's own speech recognition (`SpeechRecognition`, or Safari's prefixed `webkitSpeechRecognition`); where the browser has neither, there is no Speak button. Speak fills the question box, Ask stays disabled while it listens, and only Ask or Enter sends, so the API is unchanged and the server never receives audio. The speech wiring sits between two marker comments in the page. Two stand-alone functions, joining heard words to the box and turning a failure code into a message, run in Node in `tests/test_page_speech.py`, which also checks that the speech code holds none of the page's ways to send. Design: `docs/VOICE_DESIGN.md`.
+
 ## How failures surface
 
 Every agent reply has the same body. The status comes from `error_code`, never from the message text.
@@ -204,6 +207,7 @@ The weekly job, `.github/workflows/score-alert.yml`, runs on GitHub's machine wi
 - **No forced "answer" tool.** On Opus 5.5 and Sonnet 5.5 a tool call cannot be forced, so structured output shapes the answer (`docs/PLAN.md`, section 9).
 - **No live calls from tools.** A public server could be down during a demo, and an evaluation over moving data has no fixed answers.
 - **No JavaScript packages or build step.** One static page with `fetch` meets the brief.
+- **No speech service of our own.** The browser recognises speech; a vendor called from our server would add a second key and a paid call per spoken question (`docs/VOICE_DESIGN.md`, section 4).
 - **No Markdown library.** In two evaluation runs the model wrote only bold (`docs/ASSUMPTIONS.md`, milestone 4 section, point 4).
 - **No streaming.** The answer must pass validation before anything is shown.
 - **No stored conversations, logins or second process.** A conversation ends with the server.
