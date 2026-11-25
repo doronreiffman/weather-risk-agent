@@ -6,7 +6,7 @@ name: Score-change alert
 
 on:
   schedule:
-    - cron: "23 7 * * 3" # Wednesdays 07:23 UTC, away from the top of the hour
+    - cron: "23 7 * * 4" # Thursdays 07:23 UTC, away from the top of the hour
   workflow_dispatch:
     inputs:
       demo:
@@ -42,6 +42,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LABEL: ${{ (github.event_name == 'workflow_dispatch' && inputs.demo) && 'score-change-demo' || 'score-change' }}
           OWNER: ${{ github.repository_owner }}
+        # bash with -e and pipefail: a failed `gh` call fails the step instead of reading as "nothing open"
+        shell: bash
         run: |
           case "$(cat alert-out/result)" in
             no_change)
@@ -52,8 +54,9 @@ jobs:
           esac
           id="$(cat alert-out/change_id)"
           gh label create "$LABEL" --force --repo "$GITHUB_REPOSITORY" --description "Opened by the score-change alert job"
-          open="$(gh issue list --repo "$GITHUB_REPOSITORY" --label "$LABEL" --state open --json number,body \
-            --jq ".[] | select(.body | contains(\"$id\")) | .number" | head -n 1)"
+          matches="$(gh issue list --repo "$GITHUB_REPOSITORY" --label "$LABEL" --state open --json number,body \
+            --jq ".[] | select(.body | contains(\"$id\")) | .number")"
+          open="${matches%%$'\n'*}" # the first match; no pipe, so a failed lookup cannot hide behind one
           if [ -n "$open" ]; then
             echo "Already open: #$open (change id $id), so no new issue." >> "$GITHUB_STEP_SUMMARY"
             exit 0

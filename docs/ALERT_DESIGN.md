@@ -145,7 +145,7 @@ A manual run with `demo` ticked, or `uv run wra alert --demo`, compares the save
 - It uses the what-if `rank_hubs` already has, so no scoring code is added and no file is edited. Evaluation case 7 expects the chat to make the same tool call.
 - It fetches nothing. So it cannot fail on a source's bad day, and the laptop prints the same text as the issue.
 - The title starts with `[DEMO]`, the label is `score-change-demo`, the first line says the official scores have not moved, and the change id is marked too, so a demo never hides a real change.
-- Doubled rather than a quieter weight of 6 (measured: only Houston and Miami move, to High): it is the what-if the chat answers in evaluation case 7, so a reviewer can ask the chat "What if a hurricane counted double?" and see the same figures in its table.
+- Doubled rather than a smaller step such as a weight of 6 (measured: the same 9 hubs and 3 band changes, by smaller amounts): it is the what-if the chat answers in evaluation case 7, so a reviewer can ask the chat "What if a hurricane counted double?" and see the same figures in its table.
 - The honest path is shown by a manual run without `demo` and by the scheduled runs: a real fetch, "No change", no issue.
 
 ### 5.7 How it is checked

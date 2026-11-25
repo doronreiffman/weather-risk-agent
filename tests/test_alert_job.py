@@ -37,3 +37,11 @@ def test_the_alert_job_keeps_demo_and_real_issues_apart():
     text = WORKFLOW.read_text()
     assert "'score-change-demo'" in text and "'score-change'" in text
     assert "--assignee" in text
+
+
+def test_the_duplicate_check_cannot_hide_a_failed_lookup():
+    """Without `shell: bash` GitHub runs `bash -e`, with no pipefail, so `gh issue list ... | head` failing would read
+    as "no issue open" and open a second one (whole-branch review, 2026-11-25)."""
+    issue_step = next(step for step in _steps(WORKFLOW.read_text()) if "gh issue create" in step)
+    assert re.search(r"^\s*shell: bash$", issue_step, re.M)
+    assert "| head" not in issue_step
