@@ -6,7 +6,7 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q10] Deployment to a public URL. Owner 2026-11-25: go, design first, for the owner's approval before anything is built. The assignment calls it preferred, so it stands apart from the bonuses. A public URL spends the owner's API credit on every message, so it needs an access guard. → `docs/PLAN.md` section 13
+- [q10] Deployment to a public URL, on a Koyeb free instance. Design approved by the owner 2026-11-25; the build plan is next. → `docs/DEPLOY_DESIGN.md`
 - [q8] Bonuses, ask first: score-change alert, voice. Owner 2026-11-25: not now; the public URL comes first. → `docs/PLAN.md` section 13
 - [q22] Owner decision: one line in `~/.claude/output-styles/plain.md`: anything the owner must do (steps, a command, a question) goes in full in the turn's final message, since text between tool calls can scroll past unseen (session 06: the page-check steps were written mid-turn and the owner never saw them). Edit only on the owner's word. → `~/.claude/output-styles/plain.md`
 
