@@ -6,7 +6,11 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q8] Bonus: the score-change alert (owner 2026-11-25: the alert, not voice, as it serves the narrow scope better). Built on branch `score-alert` from the approved design and plan; left: Fable's whole-branch review, the merge and push on the owner's go, the owner's first runs on GitHub. Voice is not built. → `docs/ALERT_PLAN.md`, `.claude/OPEN_ISSUES.md` "The score-change alert"
+- [q25] Session 07 transcript: once the owner has exported it, scan it (counts only), reword each hit with a neutral phrase, commit it alone and push. Its index line is written. → `docs/ai-session/README.md`, `CLAUDE.md` "Sessions are a deliverable"
+- [q8] The score-change alert (bonus; the owner chose it over voice, 2026-11-25): its first runs on GitHub. → `.claude/OPEN_ISSUES.md` "The score-change alert"; `docs/ALERT_DESIGN.md` section 6
+- [q26] Owner decision: one line in project `CLAUDE.md` rule 11: a claim of "only", "none" or "every" is measured over all the cases, never a sample (session 07: a design line and a subagent's report each rested on one). Edit only on the owner's word. → `CLAUDE.md` rule 11
+- [q27] Owner decision: the zsh gotcha in project `CLAUDE.md` gains "never name a loop variable `path`" (zsh ties it to `PATH`; a subagent's loop broke on it, session 07). Edit only on the owner's word. → `CLAUDE.md` Gotchas
+- [q28] Voice in the chat, the assignment's other bonus: not built, since the owner chose the alert as serving the narrow scope better. Stays until the owner drops it or asks for it. → `docs/PLAN.md` section 13
 - [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console; disable the score-change workflow on GitHub, `docs/ALERT_DESIGN.md` section 6, step 6). → `docs/DEPLOY_DESIGN.md` section 6, step 6
 
 ## Done / Dropped

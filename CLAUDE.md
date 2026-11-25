@@ -32,7 +32,7 @@ Python with `uv` and `pytest`.
 - The shell is zsh: an unquoted `$VAR` is not split into words. Feed a loop with `while read -r a b c` over a here-doc. A loop that broke this way sent empty coordinates and got plausible-looking data back.
 - This repository commits with a repo-local personal address. The machine-wide git identity is the owner's work address, and it stays out of every tracked file and commit. Generators copy it (`uv init` did), so before each commit `git diff --cached | grep -i -c -F "$(git config --global user.email | cut -d@ -f2)"` prints 0.
 - The owner's one-month package-age rule stays npm-only here (owner 2026-11-24). Python packages install at their current versions.
-- Pushes go to the owner's personal GitHub account (`origin`, public). Git takes its credentials from `gh`, which has two accounts signed in, the work one usually active: `gh auth switch --hostname github.com` before the push and again after, each its own message; the toggle names no account. Every push to `main` redeploys the public site on Render, which restarts it and resets open conversations.
+- Pushes go to the owner's personal GitHub account (`origin`, public). Git takes its credentials from `gh`, which has two accounts signed in, the work one usually active: `gh auth switch --hostname github.com` before the push and again after, each its own message; the toggle names no account. Every push to `main` redeploys the public site on Render, which restarts it and resets open conversations, unless the commit message holds `[skip render]` (render.com/docs/deploys); which commit of a push Render reads is unverified, so every commit of such a push carries it.
 
 ## Sessions are a deliverable
 

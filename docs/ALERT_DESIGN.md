@@ -6,7 +6,7 @@ Status: **approved by the owner on 2026-11-25.** Written by Fable, checked by a 
 
 ## 1. Why, and for whom
 
-The assignment: "Bonus: a scheduled or webhook-triggered alert when a hub's risk score changes". It also says: "A narrow scope done well is better than a broad scope done shallowly." Of the two bonuses left, the owner chose this one and dropped voice, because the alert serves the narrow scope better (2026-11-25).
+The assignment: "Bonus: a scheduled or webhook-triggered alert when a hub's risk score changes". It also says: "A narrow scope done well is better than a broad scope done shallowly." Of the two bonuses left, the owner chose this one over voice, because the alert serves the narrow scope better (2026-11-25).
 
 - **In the story,** the analysts have defended a ranking to their boss. If the data behind it moves, they should hear which hubs moved and by how much.
 - **In reality,** the reviewers should see the alert without the owner: the job, its run history and one example message, all in the public repository.
