@@ -43,7 +43,11 @@ The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_
 
 `wra serve` on any address but 127.0.0.1, localhost or ::1 runs in public mode, which is how the public site is built to run. It needs an access code in `WRA_ACCESS_CODE` and refuses to start without one (exit status 2). Every route but `/healthz` then asks for sign-in in the browser's own box: the username `analyst` and the access code as the password. At most 100 questions a day (UTC) reach the model; past that a question gets a plain message, HTTP 429 and no model call. In either mode the server holds at most 200 conversations and drops the one used least recently. Both limits are in `config/agent.toml`. The daily count is kept in memory and starts again whenever the server restarts, so run the public site with a key from a separate Anthropic workspace that has its own monthly spending limit: that limit is the ceiling on spend.
 
-The public site is built to run the image the `Dockerfile` builds: the database is built inside it, and `.dockerignore` keeps `.env` out. The design is in [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md).
+The public site runs on Render from the image the `Dockerfile` builds: the database is built inside it, and `.dockerignore` keeps `.env` out. The design is in [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md).
+
+### Public demo
+
+The agent runs at **https://weather-risk-agent-7iai.onrender.com/**. Sign in with the username `analyst` and the access code sent with the submission; the code is not in this repository. It runs in public mode, as above, on a key whose Anthropic workspace has its own monthly spending limit, and it is taken down after the interview.
 
 ### Checking the page by hand before a demo
 

@@ -6,13 +6,13 @@ Order re-checked against the assignment on 2026-11-24 (see the second entry unde
 
 ## Queue
 
-- [q10] Deployment to a public URL, on Render's paid instance (owner, after the build). Built, reviewed and pushed; the deploy is next. → `docs/DEPLOY_PLAN.md` and its ledger, `docs/DEPLOY_DESIGN.md`
 - [q23] After the interview: take the public site down (delete the Render service, so billing stops; revoke the demo key in the Anthropic Console). → `docs/DEPLOY_DESIGN.md` section 6, step 6
 - [q8] Bonuses, ask first: score-change alert, voice. Owner 2026-11-25: not now; the public URL comes first. → `docs/PLAN.md` section 13
 - [q22] Owner decision: one line in `~/.claude/output-styles/plain.md`: anything the owner must do (steps, a command, a question) goes in full in the turn's final message, since text between tool calls can scroll past unseen (session 06: the page-check steps were written mid-turn and the owner never saw them). Edit only on the owner's word. → `~/.claude/output-styles/plain.md`
 
 ## Done / Dropped
 
+- [q10] Deployment to a public URL. Done 2026-11-25. Proof: live at https://weather-risk-agent-7iai.onrender.com/ on Render's 512 MB paid instance, built from the public repository github.com/doronreiffman/weather-risk-agent (`main` at `1aa19c0` when deployed); the seven free checks passed (health reply, 401 without or with a wrong sign-in on the page, a question and the API reference, http redirected to https, a forged Host header refused); the owner's browser check passed (sign-in, a wrong code refused, a question answered, New conversation) and the owner confirmed the demo workspace's monthly limit; all in session 06. Design `docs/DEPLOY_DESIGN.md`, plan `docs/DEPLOY_PLAN.md`; the README and queue updates are in the commit that moves this line.
 - [q21] The README's page check, run by hand. Done 2026-11-25. Proof: the owner ran the four steps against `wra serve` on `4bc1367` and reported all four passed (session 06). Rerunning it stays in `.claude/OPEN_ISSUES.md`.
 - [q19] The queue guard refuses a line under Done / Dropped without "Done <date>" or "dropped" (owner's go 2026-11-25). Done 2026-11-25. Proof: the commit that moves this line, with the guard's first tests (`tests/test_queue_guard.py`, 7 tests; the two for the new rule failed before the change); `uv run pytest -q` 367 passed on that tree, and the guard checked this file with the new rule when the commit was made.
 - [q20] Two global `~/.claude/CLAUDE.md` lines from session 05 (owner's go 2026-11-25). Done 2026-11-25. Proof: (a) "A subagent returns a document as text", after the `gh` line under Working habits; (b) folded into Safety's "Before any commit": stage every file the commit message names. That folder's own auto-sync commits it.
