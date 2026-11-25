@@ -1,0 +1,17 @@
+# What never goes into the public site's image (docs/DEPLOY_DESIGN.md 5.6).
+# Secrets: the host passes the key and the access code as environment variables instead.
+.env
+.env.*
+# Rebuilt inside the image
+.venv
+data/wra.sqlite
+# Not needed to run the site
+.git
+.claude
+.remember
+.superpowers
+.pytest_cache
+**/__pycache__
+evals/runs
+docs/ai-session
+tests
