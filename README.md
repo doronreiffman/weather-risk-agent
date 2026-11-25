@@ -2,7 +2,17 @@
 
 An agent that helps a logistics company's analysts decide which distribution hubs are most exposed to weather disruption.
 
-**Status: all five milestones done (2026-11-25).** The final end-to-end check (`scripts/e2e.sh --paid`) passed on commit `27c5b6d`: a fresh clone built offline, 360 tests, six questions through the API, and the evaluation at 42 of 42. Twelve hubs are loaded from three public sources into a local database and ranked by expected disruption days a year, with code-computed confidence. An agent on Claude Haiku 5.5 answers questions by calling six tools; code validates every answer, checks each number against the tool results and builds the tables. In the model comparison, with the fourteen evaluation cases asked three times each, Haiku passed 41 of 42 once a check bug was fixed, with no answer refused, and Opus 5.5 all 42; Haiku costs about one twenty-seventh as much per answer and was chosen. After the final review's fixes Haiku passed 42 of 42 ([docs/EVAL_RESULTS.md](docs/EVAL_RESULTS.md)). A one-page summary for the analysts' manager is in [docs/SUMMARY.md](docs/SUMMARY.md), and how it is built in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The API and the page are tested on a scripted stand-in for the model, which makes no paid call, and were checked live on 2026-11-24: a question and its follow-up through the API, and the four assignment questions in the page. The design is in [docs/PLAN.md](docs/PLAN.md); what the data showed and what was decided along the way are in [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) and [docs/DECISIONS.md](docs/DECISIONS.md).
+- **Try it:** https://weather-risk-agent-7iai.onrender.com/ (sign in as `analyst` with the access code sent with the submission; it comes down after the interview), or run it locally (below).
+- **How it works:** twelve hubs, three public data sources, one measure (expected disruption days a year), all computed in plain Python. A Claude model (Haiku 5.5) reads the question, calls six tools and explains the result. Code checks every answer against a schema and every figure in it against the tool results.
+- **Does it work:** fourteen test questions, asked three times each, passed 42 of 42 in the final end-to-end check from a fresh clone (commit `27c5b6d`).
+
+**Read in this order:**
+
+1. [docs/SUMMARY.md](docs/SUMMARY.md): one page, for the analysts' manager.
+2. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): the components and how they talk, the repository structure, the data storage choice.
+3. [docs/EVAL_RESULTS.md](docs/EVAL_RESULTS.md): the evaluation, the model choice, the four example answers and the limits.
+
+The record behind them: [docs/DECISIONS.md](docs/DECISIONS.md) (why each choice was made), [docs/ASSUMPTIONS.md](docs/ASSUMPTIONS.md) (what the data showed and what is assumed), [docs/PLAN.md](docs/PLAN.md) (the approved plan and how the build departed from it), [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md) (the public site) and [docs/ai-session/](docs/ai-session/) (the full AI sessions).
 
 ## Run it
 
@@ -44,11 +54,6 @@ The model and its effort level are in `config/agent.toml`; `WRA_MODEL` and `WRA_
 `wra serve` on any address but 127.0.0.1, localhost or ::1 runs in public mode, which is how the public site is built to run. It needs an access code in `WRA_ACCESS_CODE` and refuses to start without one (exit status 2). Every route but `/healthz` then asks for sign-in in the browser's own box: the username `analyst` and the access code as the password. At most 100 questions a day (UTC) reach the model; past that a question gets a plain message, HTTP 429 and no model call. In either mode the server holds at most 200 conversations and drops the one used least recently. Both limits are in `config/agent.toml`. The daily count is kept in memory and starts again whenever the server restarts, so run the public site with a key from a separate Anthropic workspace that has its own monthly spending limit: that limit is the ceiling on spend.
 
 The public site runs on Render from the image the `Dockerfile` builds: the database is built inside it, and `.dockerignore` keeps `.env` out. The design is in [docs/DEPLOY_DESIGN.md](docs/DEPLOY_DESIGN.md).
-
-### Public demo
-
-The agent runs at **https://weather-risk-agent-7iai.onrender.com/**. Sign in with the username `analyst` and the access code sent with the submission; the code is not in this repository. It runs in public mode, as above, on a key whose Anthropic workspace has its own monthly spending limit, and it is taken down after the interview.
-
 ### Checking the page by hand before a demo
 
 Three things the page does have no automated test: the question put back in the box after a failure, the reset when the server no longer holds the conversation, and "New conversation". This check covers them in about three minutes, with one paid question.

@@ -27,7 +27,7 @@ The first three runs used the agent as of commit `4e4ae6a`; the last used `7197f
 
 ## The final end-to-end run
 
-`scripts/e2e.sh --paid` on commit `27c5b6d`, which carries the fixes from the final review (`1b455ab`) and each hazard's order as a checked field of the answer (`d63c0ba`); the commits after `d63c0ba` change only documents. It ran in a fresh clone with no `.env` of its own. The database was built offline and `uv run pytest -q` passed 360 tests in the clone. Through the HTTP API, the four assignment questions, the follow-up and the Seattle question all passed (6 of 6, about 0.01 USD); the follow-up named Columbus and showed the Midwest winter table. The evaluation then ran on Haiku 5.5: **42 of 42 case runs passed, no answer refused, none repaired, target met**, 0.043 USD, all 57 answers served by Haiku 5.5 (run `20261124T234915Z-claude`). In all three repetitions the Miami and Houston answer stated each hazard's order in the checked field, and the order matched the result: Miami leads on hurricanes, Houston on floods. The four assignment answers follow the same lines as those quoted below; its Dallas answers name no warning types.
+`scripts/e2e.sh --paid` on commit `27c5b6d`, which carries the fixes from the final review (`1b455ab`) and each hazard's order as a checked field of the answer (`d63c0ba`); the commits after `d63c0ba` change only documents. It ran in a fresh clone with no `.env` of its own. The database was built offline and `uv run pytest -q` passed 360 tests in the clone. Through the HTTP API, the four assignment questions, the follow-up and the Seattle question all passed (6 of 6, about 0.01 USD); the follow-up named Columbus and showed the Midwest winter table. The evaluation then ran on Haiku 5.5: **42 of 42 case runs passed, no answer refused, none repaired, target met**, 0.043 USD, all 57 answers served by Haiku 5.5 (run `20261124T234915Z-claude`). In all three repetitions the Miami and Houston answer stated each hazard's order in the checked field, and the order matched the result: Miami leads on hurricanes, Houston on floods. The four assignment answers below are from this run.
 
 An earlier run on `1b455ab`, before the hazard order field, also passed 42 of 42 (run `20261124T232102Z-claude`, 0.039 USD).
 
@@ -68,46 +68,45 @@ The plan asks for at most four short sentences. On Opus, 6 of 57 verdicts ran to
 
 - **Fourteen cases is a regression gate, not a fine instrument.** At 42 case runs and a 90% pass rate, the usual 95% margin is about plus or minus 9 points, and repeats of the same question are not independent, so the real margin is wider.
 - **The number check confirms that each figure is in a cited result, not which hub or hazard it belongs to.** A right figure for the wrong hub or hazard passes it: "Houston leads on hurricanes at 1.52" would pass, since 1.52 is in the result as Miami's figure (final review, run offline on a scripted model). A wrong small whole number can match a rank or a count, and a claim in words goes unchecked. No saved answer swapped figures. The answer now states each hazard's order in a field code checks against the cited result, the Miami and Houston case grades that field, and a code-written note under the comparison table says which hub leads each hazard. The tables beside each verdict always show the computed figures.
-- **A claim in words can be false.** The Dallas answer below says winter drives its risk "mainly under winter storm, ice storm and blizzard warnings". That is wrong: Dallas had 6 Winter Storm Warnings, 1 Ice Storm Warning and no Blizzard Warning in 2016 to 2025. No tool result splits winter by warning type; the model took the list from the score's description, which names every type the score counts. The system prompt now tells the model to name warning types only when a result lists them for that hub (final review).
+- **A claim in words can be false.** In an earlier run (`20261124T223759Z-claude`), the Dallas answer said winter drives its risk "mainly under winter storm, ice storm and blizzard warnings". That is wrong: Dallas had 6 Winter Storm Warnings, 1 Ice Storm Warning and no Blizzard Warning in 2016 to 2025. No tool result splits winter by warning type; the model took the list from the score's description, which names every type the score counts. The system prompt now tells the model to name warning types only when a result lists them for that hub (final review); none of the final run's three Dallas answers names one.
 - **Prose quality is not graded.** The four assignment answers follow in full for a person to read.
 
 ## The four assignment answers, as the shipped model gave them
 
-From run `20261124T223759Z-claude`, repetition 1. The page shows each with the cited tables, their notes, and the data, period and confidence lines.
+From the final end-to-end run, `20261124T234915Z-claude`, repetition 1. The page shows each with the cited tables, their notes, and the data, period and confidence lines.
 
 ### 1. Which hubs in the Midwest are most exposed to winter disruption?
 
-Minneapolis (MSP) is clearly the most exposed Midwest hub to winter disruption, at **2.71** disruption days a year, and its lead over Kansas City is clear of year-to-year swings. Kansas City (MCI), Chicago (ORD) and Indianapolis (IND) follow, but their order is not settled: their gaps fall within normal year-to-year variation. Columbus (CMH) is the least exposed at **0.66** days a year.
+**Minneapolis (MSP)** is clearly the most exposed Midwest hub to winter disruption, with about 2.71 disruption days a year, and its lead over Kansas City is clear of year-to-year swings. **Kansas City (MCI)**, **Chicago (ORD)** and **Indianapolis (IND)** follow, but their gaps are within year-to-year swings, so their relative order is not settled. **Columbus (CMH)** is the least exposed at 0.66 days a year.
 
-- Confidence is low: the figures count only days under a winter weather warning, and three of the four gaps between hubs fall within year-to-year swings, so only the Minneapolis lead is firm.
-- Winter's effect on roads often outlasts the warning itself, so this score may understate winter disruption relative to floods and storms.
+- Confidence is low: the data is complete, but three of the four gaps between hubs are smaller than normal year-to-year swings, so only the top spot is firm.
+- The score counts only time under a winter warning, while winter road effects often outlast the warning, so it may understate winter's impact relative to floods and storms.
 
-Confidence: low. Table: Winter weather exposure, Midwest hubs.
+Confidence: low. Table: Winter weather exposure, Midwest hubs: expected disruption days a year.
 
 ### 2. Compare Miami and Houston in terms of hurricane and flood exposure.
 
-**Miami has the higher hurricane exposure**, at 1.52 expected disruption days a year against Houston's 0.92, and Houston sits at 0.61 of Miami's figure. **Houston has the higher flood exposure**, at 0.47 days a year against Miami's 0.21, and Miami's gap below Houston is large enough to count as clearly lower. The hurricane gap cannot be tested for certainty, because the Federal Emergency Management Agency (FEMA) gives only one long-run hurricane figure with no yearly values.
+**Miami is the more exposed hub for hurricanes**, at 1.52 expected disruption days a year against Houston's 0.92. **Houston is the more exposed hub for flooding**, at 0.47 days against Miami's 0.21, and that gap is large enough to be treated as settled. Both hurricane figures are scored as expected disruption days a year, so they are not a count of days with a storm.
 
-- Hurricane figures come from FEMA's long-run frequency (record 1851 to 2024), so the Miami and Houston hurricane gap is not tested against year-to-year swings.
-- Coastal flood warnings, which cover the shore, are not in the flood score: Houston had 0.29 such warning days a year and Miami had none, so Houston's flood lead may understate its coastal risk.
-- The figures measure weather at each hub's location only, and confidence is medium because the hurricane figures have no yearly values.
+- The hurricane gap cannot be tested against year-to-year swings, because FEMA gives one long-run hurricane figure for 1851 to 2024 with no yearly values, so the Miami-over-Houston hurricane order is less certain than the flood order.
+- Both hubs' hurricane-warning days are close to each other (Miami 1.58, Houston 1.29 a year, not scored), so the scored hurricane gap depends mostly on FEMA's long-run frequency, and this comparison covers weather at the airport locations only, not site-level flood risk.
 
-Confidence: medium. Table: Miami and Houston, compared.
+Confidence: medium. Table: Miami and Houston: expected disruption days a year, compared. Its hazard order field gave Miami first on hurricanes and Houston first on floods, checked in code against the cited result.
 
 ### 3. What percentage of days in Denver last year had snowfall?
 
-In 2025, Denver's airport weather station recorded measurable snowfall (at least 0.1 inch) on **7.1%** of observed days, which is 26 days. Another 19 days had only a trace, meaning snow fell but too little to measure, and those are counted separately.
+In 2025, **7.1%** of observed days in Denver had measurable snowfall, meaning 0.1 inch or more fell that day. A further 19 days had only a trace (snow fell but too little to measure), and those are not counted in the 7.1%.
 
-- One day in 2025 was missing from the station record and is left out of the percentage; the figure is based on 364 observed days.
+- The figure is for Denver's airport weather station (Denver International Airport), not the distribution hub site itself, and covers 2025 only; one day was missing and was left out of the percentage.
 
-Confidence: high. Table: Denver (DEN), days with measurable snowfall, 2025.
+Confidence: high. Table: Denver (DEN): days with measurable snowfall, 2025.
 
 ### 4. Why is the Dallas hub's weather disruption risk high?
 
-Dallas (DAL) is rated **High**, at 2.02 expected disruption days a year, ranking 6th of 12 hubs. Winter weather drives about half of that (47%), mainly under winter storm, ice storm and blizzard warnings, followed by flooding (31%) and severe storms (19%). Hurricanes add little (3%) because Dallas sits well inland.
+Dallas scores **2.02 expected disruption days a year**, which the tool places in the **High** band (2 or more days) and ranks 6th of 12 hubs. Winter weather drives about 47% of that figure, flooding about 31%, and severe storms about 19%; hurricanes add only about 3%. The score sits just above the High cutoff, and the hubs directly above and below it (Chicago and Houston) are very close, so Dallas is best read as mid-to-high exposure rather than an extreme outlier.
 
-- Dallas sits only just inside the High band, and Chicago (ORD) sits just above it at 2.03, so the data cannot separate the two; confidence is low, so treat this as a rough guide to relative exposure.
-- The score counts only time under a warning, so it may understate winter's impact on freight, since roads stay slow for hours after a winter event ends.
-- The figures describe weather at the Dallas airport station and say nothing about the hub's building, site-level flood risk or its importance to the business.
+- Confidence is low: the data holds all the records needed, but the gaps that exist fall within the hub's normal year-to-year swings, so the exact placement could shift with more data.
+- The score counts only time under a National Weather Service warning (an official alert that severe weather is expected or occurring over the hub). Winter's effect on freight roads lasts longer than its warning, so the score may understate winter exposure.
+- This measures weather at the Dallas airport station only; it does not show site-level flood risk or how much the hub matters to the business.
 
-Confidence: low. Table: Dallas (DAL), 2.02 expected disruption days a year, High, 6th of 12.
+Confidence: low. Table: Dallas (DAL): 2.02 expected disruption days a year, High, 6th of 12.

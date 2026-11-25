@@ -51,6 +51,49 @@ Example: asked "Which hubs in the Midwest are most exposed to winter disruption?
 | `daily_weather_stats` | hub id, snowfall or precipitation, years (null means last full year), threshold | days observed, missing, meeting the threshold, trace days, percentage |
 | `get_methodology` | none | weights, warning types, bands, period, sources, known limits |
 
+## Repository structure
+
+```
+config/          hubs.toml (the 12 hubs), scoring.toml (weights, warning types, bands, confidence),
+                 agent.toml (model, time and call limits, the public site's limits)
+data/raw/        the public APIs' responses, committed: acis, fema_nri, iem_zone, iem_polygon
+data/wra.sqlite  built from data/raw by `wra ingest`, no network; git-ignored
+src/wra/
+  cli.py         the `wra` command: ingest, data-report, rank, ask, chat, eval, serve
+  ingest/        fetch (fetch.py, the only module that uses the network), parse, build the database
+  scoring/       warning time, the KPI, confidence: pure functions, no model
+  tools/         the six tools the model calls, one module each, and their registry
+  agent/         the loop on the Claude API, the answer schema, the checks, the tables code writes
+  api/           the HTTP API, the page (static/index.html), public mode (public.py)
+  evals/         the 14 cases, the graders, the runner, the API check scripts/e2e.sh uses
+tests/           on a scripted fake model: no network, no paid call
+evals/runs/      the evaluation records the results document cites
+scripts/e2e.sh   the end-to-end check from a fresh clone
+Dockerfile       the public site's image
+docs/            SUMMARY, ARCHITECTURE, EVAL_RESULTS, DECISIONS, ASSUMPTIONS, PLAN, DEPLOY_DESIGN,
+                 DEPLOY_PLAN; ai-session/ holds the AI sessions
+```
+
+One Python package: the page is a single static file, so a separate front-end project would add a second toolchain for nothing.
+
+## Data storage
+
+**SQLite: one file, built offline from the committed raw responses.**
+
+| Table | Holds | Rows today |
+|---|---|---|
+| `hubs` | each hub's station, coordinates, county and warning zones | 12 |
+| `warning_events` | one row per warning: type, level, issue and expiry times, matched by zone or by drawn area | 17,619 |
+| `station_daily` | one row per hub per day: snowfall, rain, trace and missing flags | 43,836 |
+| `fema_nri` | FEMA's figures for each hub's county | 96 |
+| `fetch_log` | what was fetched, from where, when, with a checksum | 48 |
+| `skipped_records` | records the ingest set aside, and why | 750 |
+| `meta` | the data period | 4 |
+
+- **Why:** answers are fast and repeatable, the demo does not depend on the data providers' servers, and the evaluation's expected answers stay fixed. Raw warnings are stored and the time under warning is computed by tested code, so any figure can be traced to individual warnings.
+- **Rejected:** calling the APIs for each question (slow, and answers would drift); Postgres (a running server for one reader of tens of thousands of rows); plain JSON files (every filter and count in ad-hoc Python).
+- **Refreshing:** `wra ingest --refresh` fetches everything again (48 requests).
+
 ## Contracts between the model and the code
 
 **Tool arguments.** `src/wra/agent/tooldefs.py` generates each tool's JSON schema from its Pydantic model and sends it with `strict: true`, which makes the API guarantee the arguments match. Strict mode supports only part of JSON Schema, so numeric bounds, length limits and patterns are dropped and enforced by Pydantic in `run_tool`. Hub fields become an enumeration of the twelve ids, so the model cannot name a city with no hub.
