@@ -73,7 +73,7 @@ evals/runs/      the evaluation records the results document cites
 scripts/e2e.sh   the end-to-end check from a fresh clone
 Dockerfile       the public site's image
 .github/workflows/score-alert.yml  the weekly score-change job on GitHub
-docs/            SUMMARY, ARCHITECTURE, EVAL_RESULTS, DECISIONS, ASSUMPTIONS, PLAN, DEPLOY_DESIGN,
+docs/            OVERVIEW, SUMMARY, ARCHITECTURE, EVAL_RESULTS, DECISIONS, ASSUMPTIONS, PLAN, DEPLOY_DESIGN,
                  DEPLOY_PLAN, ALERT_DESIGN, ALERT_PLAN, VOICE_DESIGN, VOICE_PLAN; ai-session/ holds
                  the AI sessions
 ```
@@ -161,7 +161,7 @@ On any other address it runs in public mode (`src/wra/api/public.py`, design in 
 
 The page (`src/wra/api/static/index.html`) is one file with inline script and styles, using plain `fetch`; a test checks it loads nothing from outside (`tests/test_api.py`). It escapes all reply text, then turns `**...**` into bold. It shows the verdict, caveats, tables, the data and confidence lines, and a "How this was computed" panel from the trace.
 
-Spoken questions use the browser's own speech recognition (`SpeechRecognition`, or Safari's prefixed `webkitSpeechRecognition`); where the browser has neither, there is no Speak button. Speak fills the question box, Ask stays disabled while it listens, and only Ask or Enter sends, so the API is unchanged and the server never receives audio. The speech wiring sits between two marker comments in the page. Two stand-alone functions, joining heard words to the box and turning a failure code into a message, run in Node in `tests/test_page_speech.py`, which also checks that the speech code holds none of the page's ways to send. Design: `docs/VOICE_DESIGN.md`.
+Spoken questions use the browser's own speech recognition (`SpeechRecognition`, or Safari's prefixed `webkitSpeechRecognition`); where the browser has neither, there is no Speak button. Speak fills the question box until Stop is pressed, Ask stays disabled while it listens, and only Ask or Enter sends, so the API is unchanged and the server never receives audio. The speech wiring sits between two marker comments in the page. Three stand-alone functions, joining heard words to the box, adding a capital letter and an end mark when listening stops, and turning a failure code into a message, run in Node in `tests/test_page_speech.py`, which also checks that the speech code holds none of the page's ways to send. Design: `docs/VOICE_DESIGN.md`.
 
 ## How failures surface
 

@@ -681,7 +681,7 @@ Changes forced by reality are appended here, newest last.
 
 **2026-11-25, after the alert. Spoken questions (section 13's third bonus, owner).**
 
-- *Voice is built, as spoken questions only, after all (owner: "lets design spoken questions first"; the alert block above said it was not).* Designed in `docs/VOICE_DESIGN.md` (Fable) and built from `docs/VOICE_PLAN.md`. The browser recognises the speech, the words go only into the question box, and only Ask sends; the server and the API are unchanged. Firefox is left out of this version, and spoken answers are not built (owner).
+- *Voice is built, as spoken questions only, after all (owner: "lets design spoken questions first"; the alert block above said it was not).* Designed in `docs/VOICE_DESIGN.md` (Fable) and built from `docs/VOICE_PLAN.md`. The browser recognises the speech, the words go only into the question box, and only Ask sends; the server and the API are unchanged. Firefox is left out of this version, and spoken answers are not built (owner). After the owner's hand check (every step passed, 16 of 16 names right in Chrome), listening runs until Stop and the page adds a capital letter and an end mark (owner).
 
 ---
 
