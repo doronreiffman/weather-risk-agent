@@ -1,0 +1,63 @@
+# The weekly score-change alert (docs/ALERT_DESIGN.md). On GitHub's throwaway machine it fetches fresh data,
+# compares the overall ranking with the reviewed copy in data/reviewed_scores.json, and opens an issue when
+# something moved. It never pushes and never touches the public site. A manual run can tick "demo": the
+# hurricane weight doubled, on the committed data, with no fetch.
+name: Score-change alert
+
+on:
+  schedule:
+    - cron: "23 7 * * 3" # Wednesdays 07:23 UTC, away from the top of the hour
+  workflow_dispatch:
+    inputs:
+      demo:
+        description: "Demo: hurricane weight doubled, on the committed data, no fetch"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+        with:
+          version: "0.11.0" # as in the Dockerfile
+      - name: Install the project
+        run: uv sync --frozen
+      - name: Fetch fresh data
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.demo) }}
+        run: uv run --frozen wra ingest --refresh
+      - name: Build from the committed data (demo only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.demo }}
+        run: uv run --frozen wra ingest
+      - name: Compare with the reviewed ranking
+        run: uv run --frozen wra alert --out alert-out ${{ (github.event_name == 'workflow_dispatch' && inputs.demo) && '--demo' || '' }}
+      - name: Open an issue if something moved
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LABEL: ${{ (github.event_name == 'workflow_dispatch' && inputs.demo) && 'score-change-demo' || 'score-change' }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          case "$(cat alert-out/result)" in
+            no_change)
+              echo "No change since the ranking was last reviewed." >> "$GITHUB_STEP_SUMMARY"
+              exit 0 ;;
+            change) ;;
+            *) echo "unexpected result in alert-out/result" >&2; exit 1 ;;
+          esac
+          id="$(cat alert-out/change_id)"
+          gh label create "$LABEL" --force --repo "$GITHUB_REPOSITORY" --description "Opened by the score-change alert job"
+          open="$(gh issue list --repo "$GITHUB_REPOSITORY" --label "$LABEL" --state open --json number,body \
+            --jq ".[] | select(.body | contains(\"$id\")) | .number" | head -n 1)"
+          if [ -n "$open" ]; then
+            echo "Already open: #$open (change id $id), so no new issue." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          url="$(gh issue create --repo "$GITHUB_REPOSITORY" --title "$(cat alert-out/title.txt)" \
+            --body-file alert-out/body.md --label "$LABEL" --assignee "$OWNER")"
+          echo "Opened $url" >> "$GITHUB_STEP_SUMMARY"
