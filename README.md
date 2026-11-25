@@ -66,7 +66,7 @@ Three things the page does have no automated test: the question put back in the 
 ### Interview day
 
 - **The day before:** run `scripts/e2e.sh` (free: a fresh clone, the database built offline, the tests), so the laptop backup is proven. Open the public URL, sign in and ask one question (paid, under a cent on Haiku).
-- **Fifteen minutes before:** open the public URL so it wakes, and ask one question.
+- **Fifteen minutes before:** open the public URL, sign in and ask one question, so any fault shows before the call.
 - **If the public URL fails:** `uv run wra serve`, open http://127.0.0.1:8000/ and share the screen.
 - Keep the access code at hand, outside the repository.
 

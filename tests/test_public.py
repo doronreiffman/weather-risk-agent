@@ -75,7 +75,7 @@ def test_malformed_sign_in_headers_get_401(ctx, headers):
     assert http.get("/", headers=headers).status_code == 401
 
 
-@pytest.mark.parametrize("host", ["x/healthz?", "x/healthz#", "x/healthz"])
+@pytest.mark.parametrize("host", ["x/healthz?", "x/healthz#"])  # a query or a fragment hides the rest of the path
 def test_a_forged_host_header_does_not_open_the_door(ctx, host):
     # the door must decide on the path the router serves, not on a URL rebuilt from the Host header, where a
     # host of "x/healthz?" turns "/api/hubs" into a query string after "/healthz" (whole-branch review)

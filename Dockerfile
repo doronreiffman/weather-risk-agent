@@ -1,4 +1,4 @@
-# The public site's image (docs/DEPLOY_DESIGN.md 5.6 and 9). Render builds it from the repository on every push.
+# The public site's image (docs/DEPLOY_DESIGN.md 5.6 and 9). Render builds it from the repository on every push to main.
 # The database is built here, from the committed raw responses with no network, so start-up does not rebuild it.
 # The key and the access code are never in the image: the host passes them as environment variables, and
 # without WRA_ACCESS_CODE the server refuses to start.
